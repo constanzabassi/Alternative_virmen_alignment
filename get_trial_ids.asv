@@ -1,0 +1,37 @@
+function[file_trial_ids] = get_trial_ids( file_matching_trials,file_digidata_trial_info,digidata_its)
+
+for file = 1:length(digidata_its)
+%% 1) find the first trial that would have imaging data and start with this trial if it is a full trial
+
+%[~,closest_frame] = min(abs(digidata_its(file).locs(big_gaps(g)) - alignment_info(file).frame_times));
+frame_start_trial = [file_digidata_trial_info(file).estimated_digidata.frame_start_trial];
+frame_end_ITI = [file_digidata_trial_info(file).estimated_digidata.frame_end_ITI];
+trial_id = file_estimated_trial_info(file).trial_id; %within each file
+trial_id(2,:) = [file_matching_trials(file,1):file_matching_trials(file,2)]; %relative to all other files
+all_trials = 1:length(file_digidata_trial_info(file).estimated_digidata);
+
+excluded_trials = sort(union(find(isnan(frame_start_trial)),find(isnan(frame_end_ITI)))); %no frames from start trial to end ITI within a trial
+included_trials = setdiff(all_trials,excluded_trials);
+
+if included_trials(1)
+%% 2) aling data. Start by looking at first trial then shift the real iterations around until they make sense
+%     %start_trial_number = 64; end_trial_number = 86;
+% 
+%     %start_trial_its is the iti #
+%     %possible iterations IDs within file
+%     possible_iterations = trial_its.start_trial_its(start_trial_number): trial_its.end_iti_its(end_trial_number);
+%     
+%     % first say that the first iteration time in the first full trial is in the
+%     % position of the first iteration in the trua dataset (virmen data)
+%     possible_digidata_time_start = start_trials_digidata_time(start_trial_number); 
+%     %it_time_gaps
+%     %use time difference and assume first time difference to be exactly zero
+%     it_times_this_file = [data.data(1,possible_iterations)-data.data(1,possible_iterations(1))].* 86400;% difference with first iteration for each iteration in seconds!
+%     it_times_this_file = it_times_this_file*sync_sampling_rate;
+%     
+%     %start by assuming that the estimated digidata time alings perfectly with
+%     %true data- here is where I figure out how to shift over time
+%     possible_it_times = it_times_this_file + possible_digidata_time_start;
+end
+%figure(); hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(possible_it_times,0,'*c');hold off; movegui(gcf,'center');
+

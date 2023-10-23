@@ -14,11 +14,13 @@ dataCell = load(strcat(virmen_base, '_Cell.mat'));
 
 good_dataset = 0;
 
+addpath(genpath('C:\Code\Github\Alternative_virmen_alignment'));
+
 % data = load(strcat(virmen_base, '_1.mat'));
 % dataCell = load(strcat(virmen_base, '_Cell_1.mat'));
 
 %% get frame times of all files in this folder
-addpath(genpath('C:\Code\Align_signals_imaging'));addpath(genpath('Y:/Connie/Code'));
+addpath(genpath('C:\Code\Align_signals_imaging'));
 galvo_channel = 7;
 [alignment_info] = get_frame_times(imaging_base_path, sync_base_path, [], galvo_channel,1,[],[]); %7 is res galvo channel in investigator
 
@@ -26,8 +28,9 @@ galvo_channel = 7;
 spkr_channel_number = [4,8];
 sync_sampling_rate = alignment_info(1).sync_sampling_rate;
 distance_between_sounds = 3*sync_sampling_rate ;%min distance between sounds in digidata units in task is ~4 seconds between reward sound and start of trial- (passive at 10k was about 45000)
-threshold_spk = 1.3e-4;%0.0001 is what works most of the time!!! increase slightly if not working!!
-[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task(server,mousename,date,alignment_info,spkr_channel_number,'VR',distance_between_sounds,threshold_spk); %looks at files with VR in the name
+threshold_spk = 1.4e-4;%0.0001 is what works most of the time!!! increase slightly if not working!!
+distance_within_sounds = 0.22*sync_sampling_rate; %for task should be 200
+[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task(server,mousename,date,alignment_info,spkr_channel_number,'VR',distance_between_sounds,threshold_spk,distance_within_sounds); %looks at files with VR in the name
 
 %% get trial info using the virmen files!
 for tr = 1:length(dataCell.dataCell)

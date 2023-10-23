@@ -1,9 +1,9 @@
 % load data
-mousename = 'HE4-1L1R';%'HA10-1L';%;
+ mousename = 'HA10-1L';%;
 mouse = mousename;
-date = '2023-08-24';%'2023-03-30'; %;
-server = 'U:';
-data_base = 'CBHE4-1L1R_230824';%'CBHA10-1L_230330';%;
+date = '2023-03-31'; %;
+server = 'V:';
+data_base = 'CBHA10-1L_230331';%;
 sync_base_path = [ server '/Connie/RawData/' mousename '/wavesurfer/' date '/'];
 virmen_base = [server '/Connie/RawData/' mousename '/virmen/' data_base ];
 imaging_base_path=[server '\Connie\RawData\' mousename '\' date '\'];
@@ -12,13 +12,15 @@ is_stim_dataset =1;
 data = load(strcat(virmen_base, '.mat'));
 dataCell = load(strcat(virmen_base, '_Cell.mat'));
 
-good_dataset = 1;
+good_dataset = 0;
+
+addpath(genpath('C:\Code\Github\Alternative_virmen_alignment'));
 
 % data = load(strcat(virmen_base, '_1.mat'));
 % dataCell = load(strcat(virmen_base, '_Cell_1.mat'));
 
 %% get frame times of all files in this folder
-addpath(genpath('C:\Users\RUNYAN1\Documents\Align_signals_imaging'));
+addpath(genpath('C:\Code\Align_signals_imaging'));
 galvo_channel = 7;
 [alignment_info] = get_frame_times(imaging_base_path, sync_base_path, [], galvo_channel,1,[],[]); %7 is res galvo channel in investigator
 
@@ -26,7 +28,9 @@ galvo_channel = 7;
 spkr_channel_number = [4,8];
 sync_sampling_rate = alignment_info(1).sync_sampling_rate;
 distance_between_sounds = 3*sync_sampling_rate ;%min distance between sounds in digidata units in task is ~4 seconds between reward sound and start of trial- (passive at 10k was about 45000)
-[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task(server,mousename,date,alignment_info,spkr_channel_number,'VR',distance_between_sounds); %looks at files with VR in the name
+threshold_spk = 1.4e-4;%0.0001 is what works most of the time!!! increase slightly if not working!!
+distance_within_sounds = 0.22*sync_sampling_rate; %for task should be 200
+[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task(server,mousename,date,alignment_info,spkr_channel_number,'VR',distance_between_sounds,threshold_spk,distance_within_sounds); %looks at files with VR in the name
 
 %% get trial info using the virmen files!
 for tr = 1:length(dataCell.dataCell)
@@ -40,7 +44,8 @@ end
 % use virmen data structure to estimate which iterations match specific
 %events (e.g. start_trial_iteration, end_trial_iterations etc.)
 %also get the iterations where the mouse crossed 50!
-[trial_its,trial_its_time, sound_onset_its] = virmen_it_rough_estimation(data);
+%trial_its has the iteration IDs
+[trial_its,trial_its_time] = virmen_it_rough_estimation(data);
 
 %% get digidata iteration locations and difference between them
 string = 'VR';
@@ -49,29 +54,12 @@ digidata_its = get_digidata_iterations(sync_base_path,string, virmen_channel);
 
 %% find its in the data that best match the its for each trial dividing files into trials that match them
 [file_estimated_trial_info,file_matching_trials,trial_times,file_digidata_trial_info] = match_trialsperfile(digidata_its, good_dataset, trial_info,sound_condition_array,alignment_info);
-% find the start and end trials that are within the imaging frames!
-[file_trial_ids] = get_trial_ids(file_matching_trials,file_digidata_trial_info,file_estimated_trial_info);
+% find the start and end trials that are within the imaging frames!// also
+% puts trials into context of all other trials (file_digidata_trial_info)
+[file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_digidata_trial_info,file_estimated_trial_info);
 %% start by looking at first trial then shift the real iterations around until they make sense
-start_trial_number = 64; end_trial_number = 86;
-%start_trial_its is the iti #
-%possible iterations within file
-possible_iterations = start_trial_its(start_trial_number): end_iti_its(end_trial_number);
-
-% first say that the first iteration time in the first full trial is in the
-% position of the first iteration in the trua dataset (virmen data)
-possible_digidata_time_start = start_trials_digidata_time(2);%(start_trial_number); 
-%it_time_gaps
-%use time difference and assume first time difference to be exactly zero
-it_times_this_file = [data.data(1,possible_iterations)-data.data(1,possible_iterations(1))].* 86400;% difference with first iteration for each iteration in seconds!
-it_times_this_file = it_times_this_file*sync_sampling_rate;
-
-%start by assuming that the estimated digidata time alings perfectly with
-%true data- here is where I figure out how to shift over time
-possible_it_times = it_times_this_file + possible_digidata_time_start;
-figure(); hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(possible_it_times,0,'*c');hold off; movegui(gcf,'center');
-
-
-
+[possible_alignment] = determine_shift(file_trial_ids,sound_condition_array, trial_its, file_digidata_trial_info,digidata_its,data);
+%figure(); hold on;plot(ex_data(:,6));plot(ex_data(:,7)); plot(rescale(ex_data(:,4),-1,0));plot(possible_alignment(1).it_times,-.5,'*c');plot(possible_alignmen(1).sound_onsets,-.5,'*r');hold off; movegui(gcf,'center');
 %% try to estimate iterations based on positive peaks if they exist
 % [positive_peaks,positive_locs] = findpeaks(ex_data(:,virmen_channel),'MINPEAKHEIGHT',0.09,'MinPeakDistance',5);
 % positive_peaks = round(positive_peaks,1)*1e5;

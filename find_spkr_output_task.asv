@@ -97,13 +97,11 @@ if ~isempty(unfinished_sounds)
         extra_sound = unfinished_sounds(es);
         if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < distance_within_sounds
             count = count+1;
-            new_offset = find(diff(max(norm_sound(:,sound_pairs(extra_sound,1):sound_pairs(extra_sound,2))))==0,1,'first'); %use the diff to see if you can find offset of unfinished sound
+            new_offset = find(diff(norm_sound(:,sound_pairs(extra_sound,1):sound_pairs(extra_sound,2)))==0,1,'first'); %use the diff to see if you can find offset of unfinished sound
             unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,1),(new_offset+sound_pairs(extra_sound,1)-1)];
         end
     end
-    all_trial_sounds = sort([all_trial_sounds; unfinished_sounds_toadd]);
 end
-
 condition_array = []; onset_array = []; offset_array= []; tt = 0;sound_struc = {};
   for t = 1:length(all_trial_sounds)
         current_sound = all_trial_sounds(t,1):all_trial_sounds(t,2);
@@ -181,7 +179,7 @@ end
 numSounds = length(onset_array);
 numConditions = length(unique(condition_array));
 timeThreshold = distance_between_sounds;
-expectedDistance = distance_within_sounds; %distance_between*sync_sampling_rate; 
+expectedDistance = distance_between*sync_sampling_rate; 
 
 % Initialize cell arrays to store trial information for each condition
 trialsPerCondition = cell(numConditions, 1);

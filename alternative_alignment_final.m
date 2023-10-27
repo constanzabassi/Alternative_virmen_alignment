@@ -1,5 +1,5 @@
 % load data
-mousename = 'HA10-1L';%;
+ mousename = 'HA10-1L';%;
 mouse = mousename;
 date = '2023-03-31'; %;
 server = 'V:';

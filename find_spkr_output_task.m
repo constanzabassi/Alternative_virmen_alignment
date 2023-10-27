@@ -12,7 +12,12 @@ for file = 1:num_files
     sync_data=sync_data';
     sync_data=double(sync_data);
     rawSounds=sync_data(spkr_channel_number,:);
-    
+    min_threshold = 0.0007; %finds peaks above this threshold
+    freq_range = [0.2 2];
+    [pure_tones] = bandpass_sound(normr(rawSounds),freq_range,distance_between_sounds,min_threshold,sync_sampling_rate);
+%     reward_tones = bandpass(rawSounds(1,:),[0.2 2],sync_sampling_rate); %trying to obtain pure tones within sounds
+%     reward_sounds = find(abs(reward_tones)>40);
+%     for i  = 1:length(rawSounds);rawSoundsCombined(i) =max(abs(rawSounds(:,i)));end
   
     frames_times{file} = alignment_info(file).frame_times; 
     for i=1:length(spkr_channel_number)
@@ -233,6 +238,13 @@ end
 
 
 %% Display the resulting trials
+figure(111);clf
+hold on
+plot(sounds, 'b');
+plot(rescale(norm_sound(1,:),0,2));
+plot(rescale(norm_sound(2,:),0,2));
+hold off
+
 figure(110);clf
 subplot(2,1,1)
 % Plot the sound_array as a binary plot
@@ -275,4 +287,7 @@ sound_outputs(file).file = sound_struc;
 trialConditions(file).file = trialsPerCondition;
 condition_onset_array_all(file).file = condition_group_array;
 pause
+
+
+
 end

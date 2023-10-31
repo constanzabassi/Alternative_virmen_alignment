@@ -46,18 +46,13 @@ for file = 1:num_files
     end  
     x=find(max(norm_sound)<threshold_spk);
     sounds1(x)=0;
-    %[val,loc]=findpeaks(sounds1,'MinPeakDistance',200);
-    [val]=islocalmax(abs(diff(sounds1)),'MinSeparation',20,'FlatSelection','first','FlatSelection','last');
-    %figure(1);clf;hold on;plot(sounds1);plot(find(val),sounds1(find(val)),'*c');hold off
     sounds=zeros(size(sounds1));
     
-    %norm_sound = normr(rawSounds);
-    %ff=find(val);
     norm_sounds=norm_sound;
 
-    % getting rid of trial sounds that are not fully done!
-    % assumes the distance between sounds is the same (~200ms) and the
-    % sounds are ~1s in duration!
+% getting rid of trial sounds that are not fully done!
+% assumes the distance between sounds is the same (~200ms) and the
+% sounds are ~1s in duration!
 diff_sounds = diff(sounds1);
 [pks,locs] = findpeaks(abs(diff_sounds));
 sound_onset = []; sound_offset = [];
@@ -83,7 +78,7 @@ for s = 1:min([length(onset_index),length(offset_index)])%min([length(sound_onse
             sound_pairs(s,:) = nan;
         end
 end
-sound_duration = [0.95*sync_sampling_rate,1.02*sync_sampling_rate];%[0.98*sync_sampling_rate,1.02*sync_sampling_rate];
+sound_duration = [0.99*sync_sampling_rate,1.1*sync_sampling_rate];%[0.98*sync_sampling_rate,1.02*sync_sampling_rate];
 
 % Print the valid pairs for debugging
 fprintf('Number of valid pairs: %d\n', length(true_sound_pairs));
@@ -93,16 +88,27 @@ disp(true_sound_pairs);
     
 difference = [true_sound_pairs(:,2) - true_sound_pairs(:,1)]; 
 all_trial_sounds = [];
-all_trial_sounds = true_sound_pairs(find(difference >sound_duration(1) & difference < sound_duration(2)),:);
+all_trial_sounds = true_sound_pairs(find(difference >sound_duration(1) & difference < sound_duration(2)),:); %sounds that are outside limits of sound duration
 % adding code to also include sounds that are cut off early
 count = 0; unfinished_sounds = [];
 unfinished_sounds = setdiff(1:length(difference),find(difference >sound_duration(1) & difference < sound_duration(2)));
 if ~isempty(unfinished_sounds)
     for es = 1:length(unfinished_sounds)
         extra_sound = unfinished_sounds(es);
-        if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < distance_within_sounds
+        if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < distance_within_sounds && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > (distance_within_sounds-(distance_within_sounds*.15))
             count = count+1;
-            new_offset = find(diff(max(norm_sound(:,sound_pairs(extra_sound,1):sound_pairs(extra_sound,2))))==0,1,'first'); %use the diff to see if you can find offset of unfinished sound
+             %use the diff to see if you can find offset of unfinished sound
+            sound_derivative = diff(max(norm_sound(:,sound_pairs(extra_sound,1):sound_pairs(extra_sound,2))));
+            % was using first zero but it is not always accurate
+            below_change =  find(diff(sound_derivative)==0);%find(abs(sound_derivative)<1e-6);
+            %find first one that is close to other ones
+            
+            new_offset = find(diff(sound_derivative)==0,1,'first');%find(sound_derivative==0,1,'first'); 
+            if abs(sound_derivative(new_offset+1))> 1e-6
+                new_offset = below_change(2);
+                fprintf(num2str(sound_pairs(extra_sound,1)));
+                unfinished_sounds(es)
+            end
             unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,1),(new_offset+sound_pairs(extra_sound,1)-1)];
         end
     end
@@ -113,7 +119,7 @@ condition_array = []; onset_array = []; offset_array= []; tt = 0;sound_struc = {
   for t = 1:length(all_trial_sounds)
         current_sound = all_trial_sounds(t,1):all_trial_sounds(t,2);
         
-            if size(norm_sounds,1) == 2
+            if size(norm_sounds,1) == 2 %eventually need to adapt to more speakers
                 if any(norm_sounds(1,current_sound)>threshold_spk) && max(norm_sounds(2,current_sound))<threshold_spk %speaker 1
                     sounds(current_sound)=1;
     
@@ -132,43 +138,7 @@ condition_array = []; onset_array = []; offset_array= []; tt = 0;sound_struc = {
         end
   end
 
-%     for ii=1:length(ff)
-%         i=ff(ii);
-%         if size(norm_sounds,2)
-%             if norm_sounds(1,i)>.00001 && max(norm_sounds(2,i))<.00001 %speaker 1
-%                 sounds(i)=1;
-%             elseif norm_sounds(2,i)>.00001 && max(norm_sounds(1,i))<.00001 %spekear 2
-%                 sounds(i)=2;
-%             end
-%         else
-%             if norm_sounds(1,i)>.00001 && max(norm_sounds(2:4,i))<.00001 %speaker 1
-%                 sounds(i)=1;
-%             elseif norm_sounds(4,i)>.00001 && max(norm_sounds(1:3,i))<.00001 %spekear 2
-%                 sounds(i)=2;
-%             elseif norm_sounds(2,i)>.00001 && max(norm_sounds([1 3:4],i))<.00001 
-%                 sounds(i)=3;
-%             elseif norm_sounds(3,i)>.00001 && max(norm_sounds([1:2 4],i))<.00001 
-%                 sounds(i)=4;
-%             elseif norm_sounds(1,i)>.00001 && norm_sounds(2,i)>.00001 && max(norm_sounds(3:4,i))<.00001
-%                 sounds(i)=5;
-%             elseif norm_sounds(3,i)>.00001 && norm_sounds(4,i)>.00001 && max(norm_sounds(1:2,i))<.00001
-%                 sounds(i)=6;
-%             elseif norm_sounds(2,i)>.00001 && norm_sounds(3,i)>.00001 && norm_sounds(2,i)/norm_sounds(3,i)>2 && max(norm_sounds([1 4],i))<.00001
-%                 sounds(i)=7;
-%             elseif norm_sounds(2,i)>.00001 && norm_sounds(3,i)>.00001 &&norm_sounds(3,i)/norm_sounds(2,i)>2 && max(norm_sounds([1 4],i))<.00001
-%                 sounds(i)=8;
-%             else
-%                 sounds(i)=nan;
-%             end
-%         end
-%     end
-%figure(2);clf;plot(sounds);
-count=0;
-% if file ==1
-%     frame_added = 0;
-%     else
-%     frame_added =frame_added+length(frames_times{1,file-1});
-% end
+
 j=0;
 for ii=1:length(onset_array)
     if sound_struc(ii).condition > 0

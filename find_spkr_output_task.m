@@ -14,7 +14,7 @@ for file = 1:num_files
     rawSounds=sync_data(spkr_channel_number,:);
     min_threshold = 0.0007; %finds peaks above this threshold
     freq_range = [0.2 2];
-    [pure_tones] = bandpass_sound(normr(rawSounds),freq_range,distance_between_sounds,min_threshold,sync_sampling_rate);
+    %[pure_tones] = bandpass_sound(normr(rawSounds),freq_range,distance_between_sounds,min_threshold,sync_sampling_rate);
 %     reward_tones = bandpass(rawSounds(1,:),[0.2 2],sync_sampling_rate); %trying to obtain pure tones within sounds
 %     reward_sounds = find(abs(reward_tones)>40);
 %     for i  = 1:length(rawSounds);rawSoundsCombined(i) =max(abs(rawSounds(:,i)));end
@@ -78,7 +78,7 @@ for s = 1:min([length(onset_index),length(offset_index)])%min([length(sound_onse
             sound_pairs(s,:) = nan;
         end
 end
-sound_duration = [0.99*sync_sampling_rate,1.1*sync_sampling_rate];%[0.98*sync_sampling_rate,1.02*sync_sampling_rate];
+sound_duration = [0.986*sync_sampling_rate,1.1*sync_sampling_rate];%[0.98*sync_sampling_rate,1.02*sync_sampling_rate];
 
 % Print the valid pairs for debugging
 fprintf('Number of valid pairs: %d\n', length(true_sound_pairs));
@@ -90,7 +90,9 @@ difference = [true_sound_pairs(:,2) - true_sound_pairs(:,1)];
 all_trial_sounds = [];
 all_trial_sounds = true_sound_pairs(find(difference >sound_duration(1) & difference < sound_duration(2)),:); %sounds that are outside limits of sound duration
 % adding code to also include sounds that are cut off early
-count = 0; unfinished_sounds = [];
+count = 0; unfinished_sounds = [];unfinished_sounds_toadd =[];
+
+
 unfinished_sounds = setdiff(1:length(difference),find(difference >sound_duration(1) & difference < sound_duration(2)));
 if ~isempty(unfinished_sounds)
     for es = 1:length(unfinished_sounds)
@@ -104,12 +106,14 @@ if ~isempty(unfinished_sounds)
             %find first one that is close to other ones
             
             new_offset = find(diff(sound_derivative)==0,1,'first');%find(sound_derivative==0,1,'first'); 
-            if abs(sound_derivative(new_offset+1))> 1e-6
+            if length(below_change)>1 && abs(sound_derivative(new_offset+1))> 1e-6 
                 new_offset = below_change(2);
                 fprintf(num2str(sound_pairs(extra_sound,1)));
                 unfinished_sounds(es)
             end
-            unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,1),(new_offset+sound_pairs(extra_sound,1)-1)];
+            if length(new_offset)>1
+                unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,1),(new_offset+sound_pairs(extra_sound,1)-1)];
+            end
         end
     end
     all_trial_sounds = sort([all_trial_sounds; unfinished_sounds_toadd]);

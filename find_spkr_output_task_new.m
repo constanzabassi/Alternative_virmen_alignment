@@ -15,19 +15,23 @@ for file = 1:num_files
     rawSounds=sync_data(spkr_channel_number,:);
     frames_times{file} = alignment_info(file).frame_times; 
     x = rescale(rawSounds(1,:),-1,1);
-    [upperenv lowerenv] = envelope(x, 'linear');
-    figure(); hold on;plot(x,LineWidth=0.05);plot(upperenv);plot(lowerenv); hold off
+    [upperenv lowerenv] = envelope(x, 'linear');% problem
+    value_n = 5;
+    xmin = ordfilt2(x, 1, true(value_n));
+    xmax = ordfilt2(x, value_n*value_n, true(value_n));
+    figure(1);clf; 
+    hold on;plot(x,LineWidth=0.05);plot(upperenv);plot(lowerenv); hold off
     value = 5;
     x1 = tanh(value*(upperenv-lowerenv)); %scale amplitude nonlinearly
-    figure();plot(x1);
+    %x1 = tanh(value*(xmax-xmin)); %scale amplitude nonlinearly
 
     value2 = 40;
     x2 = conv2(x1,value2);%gaussian filter
-    threshold = 1;
+    threshold = 1;%30;
     x3 = heaviside(threshold-x2);
-    figure(); hold on; plot(x2);plot(x3); hold off
+    figure(2);clf ;hold on; plot(x2);plot(x3); hold off
     x4 = x3.*x;
-
+    figure(3);clf; plot(x4)
     derivative = diff(x3);
     ups = find(derivative>0);
     down = find(derivative<0);

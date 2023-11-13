@@ -19,31 +19,12 @@ for file = 1:num_files
         rescaled_sounds(s,:) = rescale(rawSounds(s,:),-1,1);
     end
 
-    %x = rescale(rawSounds(1,:),-1,1);
-    %[upperenv lowerenv] = envelope(x, 'linear');% problem
-% %     value_n = 0.005*sync_sampling_rate;
-% %     xmin = movmin(x,value_n);%ordfilt2(x, 1, true(value_n));
-% %     xmax = movmax(x,value_n);%ordfilt2(x, value_n*value_n, true(value_n));
-% %     figure(1);clf; 
-% %     %hold on;plot(x,LineWidth=0.05);plot(upperenv);plot(lowerenv); hold off
-% %     hold on;plot(x,LineWidth=0.05);plot(xmin);plot(xmax); hold off
-% %     value = 5;
-% %     %x1 = tanh(value*(upperenv-lowerenv)); %scale amplitude nonlinearly
-% %     x1 = tanh(value*(xmax-xmin)); %scale amplitude nonlinearly
-% % 
-% %     value2 =  0.01*sync_sampling_rate;
-% %     x2 = conv2(x1,value2);%gaussian filter
-% %     threshold =0.45;%
-% %     x3 = heaviside(threshold-x2);
-% %     figure(2);clf ;
-% %     hold on; plot(x2);plot(x3); hold off
-% %     x4 = x3.*x;
-% %     figure(3);clf; plot(x4)
+
     detection_threshold = 0.45;
     bin_sound_signal=[];
     pure_tone_signal=[];
     for s = 1:size(rawSounds,1)
-    [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),detection_threshold,sync_sampling_rate,0.015)
+    [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),detection_threshold,sync_sampling_rate,15); %last value is smoothing factor
     bin_sound_signal(s,:) = binary_sound_signal;
     pure_tone_signal(s,:) = pure_tone;
     end
@@ -66,13 +47,16 @@ for file = 1:num_files
     % Iterate through the original vector
     for i = 1:length(soundVector)
         if soundVector(i) == 1
-            if i == 1 || soundVector(i - 1) == 0 %&& soundVector(i - 2) == 0
+            if i == 1 || soundVector(i - 1) == 0 && soundVector(i - 2) == 0% -2 to deal with signal changing right after the offset of a sound to make sure it is included within the first group
                 % Start of a new group
                 counter = counter + 1;
             end
             groupedVector(i) = counter;
         end
     end
+    %force the signal to go to zero at the end just to get the offset of
+    %the final sound
+    groupedVector(1,end-1:end) = 0;
 
     sounds1 = groupedVector;
     diff_sounds = diff(sounds1);
@@ -91,8 +75,16 @@ for file = 1:num_files
     offset_index = setdiff(sounds1(sound_offset),unpaired_offset);
     ss = 0; sound_pairs = [];true_sound_pairs = [];
     for s = 1:min([length(onset_index),length(offset_index)])%min([length(sound_onset),length(sound_offset)])
-    
-        sound_pairs(s,:) = [sound_onset(sounds1(sound_onset+1) == onset_index(s));sound_offset(sounds1(sound_offset) == offset_index(s))];
+        onset_sound = sound_onset(sounds1(sound_onset+1) == onset_index(s));
+        offset_sound = sound_offset(sounds1(sound_offset) == offset_index(s));
+
+        %adding this to deal with small changes in the signal right at onset or offset to make sure
+        %I am using correct onset and offset
+        if length(offset_sound)>1 && offset_sound(1) - onset_sound <10 %if the distance is large then first one is most likely the correct one
+            sound_pairs(s,:) = [onset_sound;offset_sound(2)];
+        else
+            sound_pairs(s,:) = [onset_sound;offset_sound(1)];
+        end
             if sound_pairs(s,1) < size(rawSounds,2) && sound_pairs(s,2) < size(rawSounds,2) %unsure why this would be bigger than array but does happen
                 ss = ss+1;
                 true_sound_pairs(ss,:) = sound_pairs(s,:);
@@ -130,7 +122,6 @@ for file = 1:num_files
 
      numSounds = length(onset_array);
 numConditions = length(unique(condition_array));
-timeThreshold = distance_between_sounds;
 expectedDistance = distance_within_sounds; %distance_between*sync_sampling_rate; 
 
 % Initialize cell arrays to store trial information for each condition
@@ -151,7 +142,7 @@ for i = 1:numSounds
         lastOffsetTime = lastTrial(2);
         
         % Check if the current sound can be added to the last trial
-        if abs(lastOffsetTime - onsetTime) <= expectedDistance+expectedDistance*.1;
+        if abs(lastOffsetTime - onsetTime) <= expectedDistance+expectedDistance*.1
             % Extend the last trial
             trialsPerCondition{condition}(end, 2) = offsetTime;
         else
@@ -209,7 +200,8 @@ end
 
 % Adjust y-axis and labels for the conditions
 yticks(1:numConditions);
-yticklabels({'Condition 1', 'Condition 2'}); % Add labels as needed
+con_labels = {};for labels = 1:numConditions; con_labels(labels,:) = {strcat('Condition ',num2str(labels))};end
+yticklabels(con_labels);%{'Condition 1', 'Condition 2'}); % Add labels as needed
 
 hold off;
 subplot(2,1,2)
@@ -232,13 +224,11 @@ end
 hold off
 xlabel('Normalized sounds');
 title('Sound Array');
-legend('Condition 1', 'Condition 2')
-%%
-
+legend(con_labels)
+%% outputs: sound struc has all sound onset and offsets for each individual sound
 sound_outputs(file).file = sound_struc;
 trialConditions(file).file = trialsPerCondition;
 condition_onset_array_all(file).file = condition_group_array;
 pause
-
 
 end

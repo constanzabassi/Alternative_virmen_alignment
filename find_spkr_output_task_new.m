@@ -100,7 +100,6 @@ for file = 1:num_files
                 sound_pairs(s,:) = nan;
             end
     end
-    sound_duration = [0.99*sync_sampling_rate,1.1*sync_sampling_rate];%[0.98*sync_sampling_rate,1.02*sync_sampling_rate];
 
     % Print the valid pairs for debugging
     fprintf('Number of valid pairs: %d\n', length(true_sound_pairs));
@@ -118,7 +117,7 @@ for file = 1:num_files
     if ~isempty(unfinished_sounds)
         for es = 1:length(unfinished_sounds)
             extra_sound = unfinished_sounds(es);
-            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < distance_within_sounds && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > (distance_within_sounds-(distance_within_sounds*.15))
+            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < (distance_within_sounds*.1+distance_within_sounds) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > (distance_within_sounds-(distance_within_sounds*.1))
                 count = count+1;
                     unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,:)];
             end
@@ -152,7 +151,7 @@ for i = 1:numSounds
         lastOffsetTime = lastTrial(2);
         
         % Check if the current sound can be added to the last trial
-        if abs(lastOffsetTime - onsetTime) <= expectedDistance
+        if abs(lastOffsetTime - onsetTime) <= expectedDistance+expectedDistance*.1;
             % Extend the last trial
             trialsPerCondition{condition}(end, 2) = offsetTime;
         else

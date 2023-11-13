@@ -11,7 +11,7 @@ scale_value = 5;
 %x1 = tanh(value*(upperenv-lowerenv)); %scale amplitude nonlinearly
 scaled_sound_signal = tanh(scale_value*(xmax-xmin)); %scale amplitude nonlinearly
 
-value2 =  smoothing_val*sync_sampling_rate; %0.015
+value2 =  smoothing_val; %0.015
 smoothed_sound_signal = conv2(scaled_sound_signal,value2);%gaussian filter
 % threshold =0.45;%
 

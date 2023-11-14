@@ -1,5 +1,5 @@
 % [sound_outputs,trialConditions, condition_onset_array_all]=
-function [sound_outputs,trialConditions, condition_onset_array_all]= find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration) 
+function [sound_outputs_all,trialConditions, sound_outputs_trials]= find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect) 
 %pc=1 if windows, any other number if mac
 cd(strcat(server,'\Connie\RawData\',num2str(mouse),'\wavesurfer\',num2str(date)));
 sync_dir = dir(strcat('*',string,'*.abf'));
@@ -188,12 +188,14 @@ title('Sound Array');
 hold on;
 
 % Plot the trials for each condition
+sounds = [];
 for c = 1:numConditions
     currentConditionTrials = trialsPerCondition{c};
     if ~isempty(currentConditionTrials)
         for t = 1:size(currentConditionTrials, 1)
             trial = currentConditionTrials(t, :);
-            rectangle('Position', [trial(1), c-0.4, trial(2)-trial(1), 0.8], 'FaceColor', [1, 0, 0, 0.3], 'EdgeColor', 'none');
+            rectangle('Position', [trial(1), c-0.4, trial(2)-trial(1), 0.8], 'FaceColor', [0.5 0.5 0.5 0.3], 'EdgeColor', 'none');
+            sounds = [sounds,trial(1):trial(2)];
         end
     end
 end
@@ -213,7 +215,7 @@ for c = 1:numConditions
     if ~isempty(currentConditionTrials)
         for t = 1:size(currentConditionTrials, 1)
             trial = currentConditionTrials(t, :);
-            rectangle('Position', [trial(1), 1-0.4, trial(2)-trial(1), 0.8], 'FaceColor', [1, 0, 0, 0.3], 'EdgeColor', 'none');
+            rectangle('Position', [trial(1), 1-0.4, trial(2)-trial(1), 0.8], 'FaceColor', [0.5 0.5 0.5 0.3], 'EdgeColor', 'none');%[1, 0, 0, 0.3]
         end
     end
 end
@@ -226,9 +228,53 @@ xlabel('Normalized sounds');
 title('Sound Array');
 legend(con_labels)
 %% outputs: sound struc has all sound onset and offsets for each individual sound
-sound_outputs(file).file = sound_struc;
+sound_outputs_all(file).file = sound_struc;
 trialConditions(file).file = trialsPerCondition;
-condition_onset_array_all(file).file = condition_group_array;
+sound_outputs_trials(file).VR_sounds = condition_group_array;
+
+%% final step - classify pure tones only// assuming sounds look properly examined
+pure_tones_only= pure_tone_signal;
+pure_tones_only(:,sounds) = 0; %get rid of task sounds so only pure tones are left
+if ~isempty(correct)
+    %assumes ITI sound happens .1 to 1 sec after last sound of trial
+[sound_outputs_trials_file,pure_tones_trials,~,~] = determine_pure_tones(pure_tones_only,sync_sampling_rate,correct,incorrect,sound_outputs_trials(file));
+sound_outputs_trials(file).VR_sounds = sound_outputs_trials_file.VR_sounds;
+sound_outputs_trials(file).ITI_sounds = sound_outputs_trials_file.ITI_sounds;
+    
+    
+%MAKE FIGURE OF ITI SOUNDS!
+    figure(111);clf
+    trials = {};
+    trials{1} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 1);
+    trials{2} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 0);
+    colorss = [0 0.8 0.4;.9 0 0]
+hold on
+% Plot the trials for each condition
+for c = 1:2 %correct or incorrect
+    currentConditionTrials = sound_outputs_trials(file).ITI_sounds(trials{c},[2,3]);
+    if ~isnan(currentConditionTrials)
+        for t = 1:size(currentConditionTrials, 1) %all trials of the same condition
+            trial = currentConditionTrials(t, :);
+            rectangle('Position', [trial(1), 1-0.4, trial(2)-trial(1), 0.8], 'FaceColor', colorss(c,:), 'EdgeColor', 'none');%[1, 0, 0, 0.3]
+        end
+    end
+end
+
+ex_signal = rescaled_sounds;
+ex_signal(:,sounds) = 0
+for s = 1:size(rescaled_sounds,1)
+    plot(ex_signal(s,:),'color',colors_s(s,:));
+end
+    plot(soundVector,'b')
+hold off
+xlabel('Normalized sounds');
+title('ITI sounds only');
+legend(con_labels)
+
+
+end
+
+
 pause
 
 end

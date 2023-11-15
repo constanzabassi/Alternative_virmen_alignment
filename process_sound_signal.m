@@ -20,6 +20,6 @@ binary_sound_signal = heaviside(threshold-smoothed_sound_signal);
 figure(2);clf ;
 hold on; plot(smoothed_sound_signal);plot(binary_sound_signal); hold off
 pure_tone_signal = binary_sound_signal.*sound_signal;
-figure(3);clf; plot(pure_tone_signal)
+% figure(3);clf; plot(pure_tone_signal)
 
 

@@ -1,5 +1,5 @@
 % [sound_outputs,trialConditions, condition_onset_array_all]=
-function [sound_outputs_all,trialConditions, sound_outputs_trials]= find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect) 
+function [sound_outputs_all,trialConditions, sound_outputs_trials]= find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr) 
 %pc=1 if windows, any other number if mac
 cd(strcat(server,'\Connie\RawData\',num2str(mouse),'\wavesurfer\',num2str(date)));
 sync_dir = dir(strcat('*',string,'*.abf'));
@@ -15,12 +15,16 @@ for file = 1:num_files
     rawSounds=sync_data(spkr_channel_number,:);
     frames_times{file} = alignment_info(file).frame_times; 
     rescaled_sounds=[];
+    figure(109);clf; title('Rescaled Sounds')
+    hold on
     for s = 1:size(rawSounds,1)
         rescaled_sounds(s,:) = rescale(rawSounds(s,:),-1,1);
+        plot(rescaled_sounds(s,:))
     end
+    hold off
 
 
-    detection_threshold = 0.45;
+    %detection_threshold = 0.45;
     bin_sound_signal=[];
     pure_tone_signal=[];
     for s = 1:size(rawSounds,1)
@@ -118,9 +122,9 @@ for file = 1:num_files
     end
 
     %classify sounds
-     [sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (reversedSoundVector,all_trial_sounds);
+[sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (reversedSoundVector,all_trial_sounds,mult_spkr);
 
-     numSounds = length(onset_array);
+numSounds = length(onset_array);
 numConditions = length(unique(condition_array));
 expectedDistance = distance_within_sounds; %distance_between*sync_sampling_rate; 
 
@@ -179,11 +183,11 @@ figure(110);clf
 subplot(2,1,1)
 % Plot the sound_array as a binary plot
 plot(classified_sounds, 'b');
-ylim([-0.5, 2.5]);
+ylim([-0.5, numConditions+.5]);
 yticks([0, 1]);
 yticklabels({'No Sound', 'Sound'});
 xlabel('Time');
-title('Sound Array');
+title('Sound Array of Classified Sounds');
 
 hold on;
 
@@ -225,7 +229,7 @@ end
     plot(soundVector,'b')
 hold off
 xlabel('Normalized sounds');
-title('Sound Array');
+title('Sound Array of Rescaled Sounds and Sound Vector');
 legend(con_labels)
 %% outputs: sound struc has all sound onset and offsets for each individual sound
 sound_outputs_all(file).file = sound_struc;
@@ -247,7 +251,7 @@ sound_outputs_trials(file).ITI_sounds = sound_outputs_trials_file.ITI_sounds;
     trials = {};
     trials{1} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 1);
     trials{2} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 0);
-    colorss = [0 0.8 0.4;.9 0 0]
+    colorss = [0 0.8 0.4;.9 0 0];
 hold on
 % Plot the trials for each condition
 for c = 1:2 %correct or incorrect
@@ -261,7 +265,7 @@ for c = 1:2 %correct or incorrect
 end
 
 ex_signal = rescaled_sounds;
-ex_signal(:,sounds) = 0
+ex_signal(:,sounds) = 0;
 for s = 1:size(rescaled_sounds,1)
     plot(ex_signal(s,:),'color',colors_s(s,:));
 end
@@ -273,8 +277,6 @@ legend(con_labels)
 
 
 end
-
-
 pause
 
 end

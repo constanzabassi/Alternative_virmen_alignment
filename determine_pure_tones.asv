@@ -245,9 +245,9 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
                     % check if difference is equal to target differences
                     if min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) < length(pure_tone_signal) && min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) - condition_onset_array_all.VR_sounds(t,3)>time_after(1)
                         trial_options = [trial_options;sort([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))])];
-                        if ismember(i,in_diff) && trial_options(1,1) == pos_peaks(combos(i,1)) && trial_options(1,2) == pos_peaks(combos(i,2))
+                        if ismember(i,in_diff) && trial_options(1,1) == pos_peaks(combos(i,1))
                             pure_tones_trial(t,:) = [0,trial_options(1,:),t];
-                        elseif ismember(i,cor_diff) && trial_options(1,1) == pos_peaks(combos(i,1)) && trial_options(1,2) == pos_peaks(combos(i,2))
+                        elseif ismember(i,cor_diff) && trial_options(1,1) == pos_peaks(combos(i,1))
                             pure_tones_trial(t,:) = [1,trial_options(1,:),t];
                         end
 
@@ -280,9 +280,9 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
                     if min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) < condition_onset_array_all.VR_sounds(t+1,3) && min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) - condition_onset_array_all.VR_sounds(t,3)>time_after(1)
                         trial_options = [trial_options;sort([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))])];
                         
-                        if ismember(i,in_diff) && trial_options(1,1) == pos_peaks(combos(i,1)) && trial_options(1,2) == pos_peaks(combos(i,2))
+                        if ismember(i,in_diff) && trial_options(1,1) == pos_peaks(combos(i,1))
                             pure_tones_trial(t,:) = [0,trial_options(1,:),t];
-                        elseif ismember(i,cor_diff) && trial_options(1,1) == pos_peaks(combos(i,1)) && trial_options(1,2) == pos_peaks(combos(i,2))
+                        elseif ismember(i,cor_diff) && trial_options(1,1) == pos_peaks(combos(i,1))
                             pure_tones_trial(t,:) = [1,trial_options(1,:),t];
                         end   
                         pure_tones = [pure_tones;trial_options(1,:)];
@@ -397,21 +397,17 @@ figure(112);clf; hold on; title('ITI Pure tones with NaN')
 hold on
 plot(diff(pure_tone_signal(1,:)));
 plot((pure_tone_signal(1,:)));
-plot(combined_pure_tones(:,2),0,'*c')
 if length(find(isnan(combined_pure_tones(:,1))))>0  
     
     plot(condition_onset_array_all.VR_sounds([find(isnan(combined_pure_tones(:,1)))],3),0,'*m');
 end
 hold off
-legend('Pure Tones Diff','Pure Tones regular','Start Pure Tone','Last sound near NaN')
+legend('Pure Tones Diff','Pure Tones regular','Last sound near NaN')
 
 %make sure they match what you are saying
 final_diff = combined_pure_tones(:,3) - combined_pure_tones(:,2);
-if all(combined_pure_tones(find(combined_pure_tones(:,3) - combined_pure_tones(:,2)>target_differences_incorrect(1)-1),1) == 0) && all(combined_pure_tones(find(combined_pure_tones(:,3) - combined_pure_tones(:,2)<target_differences_incorrect(1)-1),1) == 1)
-    fprintf('Values verified to be correct\n')
-else
-    fprintf("Values don't match the expected correct/incorrect lengths\n")
-    pause
+if combined_pure_tones(find(combined_pure_tones(:,3) - combined_pure_tones(:,2)>target_differences_incorrect(1)-1),1) == 0 && combined_pure_tones(find(combined_pure_tones(:,3) - combined_pure_tones(:,2)<target_differences_incorrect(1)-1),1) == 1
+    fprintf('Values ')
 end
 
 

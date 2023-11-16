@@ -2,7 +2,7 @@ function [binary_sound_signal,pure_tone_signal] = process_sound_signal(sound_sig
 % process sound signal by taking the max and min of the signal
 % scaling ampltude nonlinearly multiplied by scale_value
 
-smooth_val = 0.005*sync_sampling_rate;
+smooth_val = 0.007*sync_sampling_rate; % usually 0.005 works well
 xmin = movmin(sound_signal,smooth_val);%ordfilt2(x, 1, true(value_n));
 xmax = movmax(sound_signal,smooth_val);%ordfilt2(x, value_n*value_n, true(value_n));
 %     figure(1);clf; 
@@ -17,8 +17,10 @@ smoothed_sound_signal = conv2(scaled_sound_signal,value2);%gaussian filter
 
 %sounds at 0, anything else 1
 binary_sound_signal = heaviside(threshold-smoothed_sound_signal);
-figure(2);clf ;
+
+%nexttile
 hold on; plot(smoothed_sound_signal);plot(binary_sound_signal); hold off
+
 pure_tone_signal = binary_sound_signal.*sound_signal;
 % figure(3);clf; plot(pure_tone_signal)
 

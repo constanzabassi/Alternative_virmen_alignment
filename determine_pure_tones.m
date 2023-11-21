@@ -103,7 +103,7 @@ all_differences = abs(pos_peaks(combos(:,2)) - pos_peaks(combos(:,1)));
 in_diff = find(all_differences>target_differences_incorrect(1) & all_differences < target_differences_incorrect(end));
 cor_diff = find(all_differences>target_differences(1) & all_differences < target_differences(end));
 %  pure_tones_trial = zeros(size(condition_onset_array_all.VR_sounds,1),4);
-good_diff=sort([ in_diff,cor_diff]); 
+good_diff=([ in_diff,cor_diff]); 
 for t = 1:size(condition_onset_array_all.VR_sounds,1)
     if t == size(condition_onset_array_all.VR_sounds,1)
             for ii = 1:length(good_diff)
@@ -123,10 +123,10 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
                         pure_tones = [pure_tones;trial_options(1,:)];
                         for tt = 2:size(trial_options,1)
                             if size(trial_options,1)>1 && trial_options(tt,1) - max(pure_tones(:,2))> min_distance_between_pure_tones*sync_sampling_rate %if there are multiple peaks and they are at least 1 sec apart
-                                if ismember(i,in_diff)
-                                    pure_tones_trial2 = [pure_tones_trial2;0,trial_options(tt,:),t];
-                                else
+                                if ismember(i,cor_diff)
                                     pure_tones_trial2 = [pure_tones_trial2;1,trial_options(tt,:),t];
+                                else
+                                    pure_tones_trial2 = [pure_tones_trial2;0,trial_options(tt,:),t];
                                 end
                                 pure_tones = [pure_tones;trial_options(tt,:)];
                             end
@@ -142,9 +142,6 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
 
             possible_values = [];
 
-%             if good_diff(ii) == 59410 && t == 7
-%                 t
-%             end
                     %find differences between each peak value
                     i = good_diff(ii);
                     difference = all_differences(i);
@@ -160,10 +157,10 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
                         pure_tones = [pure_tones;trial_options(1,:)];
                         for tt = 2:size(trial_options,1)
                             if size(trial_options,1)>1 && trial_options(tt,1) - max(pure_tones(:,2))> min_distance_between_pure_tones*sync_sampling_rate %if there are multiple peaks and they are at least 1 sec apart
-                                if ismember(i,in_diff)
-                                    pure_tones_trial2 = [pure_tones_trial2;0,trial_options(tt,:),t];
-                                else
+                                if ismember(i,cor_diff)
                                     pure_tones_trial2 = [pure_tones_trial2;1,trial_options(tt,:),t];
+                                else
+                                    pure_tones_trial2 = [pure_tones_trial2;0,trial_options(tt,:),t];
                                 end
                                 pure_tones = [pure_tones;trial_options(tt,:)];
                             end

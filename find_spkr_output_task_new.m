@@ -1,5 +1,5 @@
 % [sound_outputs,trialConditions, condition_onset_array_all]=
-function [sound_outputs_all,trialConditions, sound_outputs_trials]= find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr) 
+function [sound_outputs_all,trialConditions, sound_outputs_trials]= find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr,smoothing_factor) 
 %pc=1 if windows, any other number if mac
 cd(strcat(server,'\Connie\RawData\',num2str(mouse),'\wavesurfer\',num2str(date)));
 sync_dir = dir(strcat('*',string,'*.abf'));
@@ -27,8 +27,9 @@ for file = 1:num_files
     %detection_threshold = 0.45;
     bin_sound_signal=[];
     pure_tone_signal=[];
+    figure(120);clf; 
     for s = 1:size(rawSounds,1)
-    [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),detection_threshold,sync_sampling_rate,15); %last value is smoothing factor
+    [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),detection_threshold,sync_sampling_rate,smoothing_factor); %last value is smoothing factor
     bin_sound_signal(s,:) = binary_sound_signal;
     pure_tone_signal(s,:) = pure_tone;
     end
@@ -97,9 +98,9 @@ for file = 1:num_files
             end
     end
 
-    % Print the valid pairs for debugging
-    fprintf('Number of valid pairs: %d\n', length(true_sound_pairs));
-    disp(true_sound_pairs);
+%     % Print the valid pairs for debugging
+%     fprintf('Number of valid pairs: %d\n', length(true_sound_pairs));
+%     disp(true_sound_pairs);
     
     %distance_between = 0.22; %distance between sounds within a trial
         
@@ -113,7 +114,8 @@ for file = 1:num_files
     if ~isempty(unfinished_sounds)
         for es = 1:length(unfinished_sounds)
             extra_sound = unfinished_sounds(es);
-            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < (distance_within_sounds*.1+distance_within_sounds) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > (distance_within_sounds-(distance_within_sounds*.1))
+            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < (distance_within_sounds*.1+distance_within_sounds) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > (distance_within_sounds-(distance_within_sounds*.1)) ...
+                    && (difference(extra_sound-1) >sound_duration(1) & difference(extra_sound-1) < sound_duration(2))==1
                 count = count+1;
                     unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,:)];
             end
@@ -146,7 +148,7 @@ for i = 1:numSounds
         lastOffsetTime = lastTrial(2);
         
         % Check if the current sound can be added to the last trial
-        if abs(lastOffsetTime - onsetTime) <= expectedDistance+expectedDistance*.1
+        if abs(lastOffsetTime - onsetTime) <= expectedDistance+expectedDistance*.1 && abs(lastOffsetTime - onsetTime) >= expectedDistance-expectedDistance*.1
             % Extend the last trial
             trialsPerCondition{condition}(end, 2) = offsetTime;
         else
@@ -172,6 +174,7 @@ for i = 1:numSounds
     
     condition_group_array(groupNum, 3) = offsetTime;
     condition_group_array(groupNum, 4) = groupNum;
+    
     onsettimes=[];
 end
 
@@ -241,7 +244,7 @@ pure_tones_only= pure_tone_signal;
 pure_tones_only(:,sounds) = 0; %get rid of task sounds so only pure tones are left
 if ~isempty(correct)
     %assumes ITI sound happens .1 to 1 sec after last sound of trial
-[sound_outputs_trials_file,pure_tones_trials,~,~] = determine_pure_tones(pure_tones_only,sync_sampling_rate,correct,incorrect,sound_outputs_trials(file));
+[sound_outputs_trials_file,pure_tones_trials] = determine_pure_tones(pure_tones_only,sync_sampling_rate,correct,incorrect,sound_outputs_trials(file));
 sound_outputs_trials(file).VR_sounds = sound_outputs_trials_file.VR_sounds;
 sound_outputs_trials(file).ITI_sounds = sound_outputs_trials_file.ITI_sounds;
     

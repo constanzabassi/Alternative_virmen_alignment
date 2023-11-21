@@ -23,37 +23,69 @@ end
 % Define the minimum threshold in milliseconds
 min_threshold = 3.8*digidata_its(file).sync_sampling_rate; %distance would be 4 sec
 max_threshold = 6.0 * digidata_its(file).sync_sampling_rate; %max distance would be 6 sec
-% List of gap differences (you provided this list)
+%%
+% List of gap differences 
 gap_diffs = diff(digidata_its(file).locs(big_gaps));
 
 %Use sound information to see if gaps are about where they should be 
 %keep in mind that if it's 8 locs I might be missing some sounds
 %iterate through gaps
-probable_start_trial_gaps = [];
+probable_end_iti_gaps = [];
 probable_end_trial_gaps=[];
+gaps_to_eliminate = [];
+good_g = [];
 for g = 1:length(digidata_its(file).locs(big_gaps))
 %1) use ITI sounds to find gaps that are near the start of the next trial
 difference = digidata_its(file).locs(big_gaps(g)) - sound_condition_array(file).ITI_sounds(:,3);
-[a,b]=find(difference>0,1,'last'); %finds closest gap
+[a,~]=find(difference>0,1,'last'); %finds closest gap
 %temp2 = [temp2,difference(a)]; % actual difference
 % seems like if it's correct the difference is between 3.1s and 3.2s
 % if it's incorrect the differencec is between 5.2s and maybe 5.3s?
-if  any(sound_condition_array(file).ITI_sounds(a,1))==1 && any(difference(a) > 3.1*digidata_its(file).sync_sampling_rate) && any(difference(a) < 3.2*digidata_its(file).sync_sampling_rate)
-    probable_start_trial_gaps = [probable_start_trial_gaps,digidata_its(file).locs(big_gaps(g))];
-elseif  any(sound_condition_array(file).ITI_sounds(a,1))==0  && any(difference(a) > 5.2*digidata_its(file).sync_sampling_rate) && any(difference(a) < 5.3*digidata_its(file).sync_sampling_rate)
-    probable_start_trial_gaps = [probable_start_trial_gaps,digidata_its(file).locs(big_gaps(g))];
+if  any(sound_condition_array(file).ITI_sounds(a,1)==1) && any(difference(a) > 3*digidata_its(file).sync_sampling_rate) && any(difference(a) < 3.3*digidata_its(file).sync_sampling_rate)
+    probable_end_iti_gaps(a,1) = [digidata_its(file).locs(big_gaps(g))];
+    probable_end_iti_gaps(a,2) = [sound_condition_array(file).ITI_sounds(a,4)];
+    good_g = [good_g,g];
+elseif  any(sound_condition_array(file).ITI_sounds(a,1)==0 ) && any(difference(a) > 5*digidata_its(file).sync_sampling_rate) && any(difference(a) < 5.4*digidata_its(file).sync_sampling_rate)
+    probable_end_iti_gaps (a,1) =[digidata_its(file).locs(big_gaps(g))];
+    probable_end_iti_gaps(a,2) = [sound_condition_array(file).ITI_sounds(a,4)];%probable_end_iti_gaps(a+1,2) = [sound_condition_array(file).ITI_sounds(a+1,1)];
+    good_g = [good_g,g];
 end
 %2) find sounds that are close to the end of the trial and compare to gaps
 %that should also be close to the end of the trial
-difference_VR = digidata_its(file).locs(big_gaps(g)) - sound_condition_array(file).VR_sounds(:,3);
-[a,b]=min(abs(difference_VR)); %finds closest gap
-if  any(difference_VR(b) < .02*digidata_its(file).sync_sampling_rate)
-    probable_end_trial_gaps = [probable_end_trial_gaps,digidata_its(file).locs(big_gaps(g))];
+difference_VR = abs(digidata_its(file).locs(big_gaps(g)) - sound_condition_array(file).VR_sounds(:,3));
+[~,b]=min((difference_VR)); %finds closest gap
+if  any(difference_VR(b) < .1*digidata_its(file).sync_sampling_rate) %might need to change to 0.2 since that might be the greatest difference
+    probable_end_trial_gaps(b,1) = [digidata_its(file).locs(big_gaps(g))];
+    probable_end_trial_gaps(b,2) = [sound_condition_array(file).VR_sounds(b,4)];
+    good_g = [good_g,g];
 end
 
+%find difference between gaps to get rid of gaps that are too close
+%together and don't meet the criteria above
+if  ismember(g,good_g) && g<length(gap_diffs) && gap_diffs(g) < min_threshold
+    if good_g(end)<length(digidata_its(file).locs(big_gaps)) 
+    gaps_to_eliminate = [gaps_to_eliminate,digidata_its(file).locs(big_gaps(g+1))];
+    end
+end
 end
 
-end_trials_digidata_time = digidata_its(file).locs(find(digidata_its(file).it_gaps_good>.8*digidata_its(file).sync_sampling_rate));
+
+%%
+%start_trials_digidata_time =  digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate)+1);
+end_trials_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps>.8*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);
+end_iti_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);%digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate));
+
+% pair up the probable end trial and end iti gaps
+% pair up so end trial goes first and then end iti
+trial_pairs = cell(max(length(probable_end_trial_gaps),length(probable_end_iti_gaps)),1);
+for t = 1:min(length(probable_end_trial_gaps),length(probable_end_iti_gaps))
+    if probable_end_trial_gaps(t) < probable_end_iti_gaps(t) && probable_end_trial_gaps(t) > 0
+        trial_pairs{t} = [probable_end_trial_gaps(t),probable_end_iti_gaps(t)];
+    elseif probable_end_trial_gaps(t) >0
+        trial_pairs{t} = [probable_end_trial_gaps(t), nan];
+    end
+end
+
 % % Initialize an array to store gaps to eliminate
 % gaps_to_eliminate = [];
 % % Iterate through gap differences to find gaps too close together

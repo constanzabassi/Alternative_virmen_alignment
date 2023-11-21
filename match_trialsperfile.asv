@@ -23,7 +23,6 @@ end
 % Define the minimum threshold in milliseconds
 min_threshold = 3.8*digidata_its(file).sync_sampling_rate; %distance would be 4 sec
 max_threshold = 6.0 * digidata_its(file).sync_sampling_rate; %max distance would be 6 sec
-
 %%
 % List of gap differences 
 gap_diffs = diff(digidata_its(file).locs(big_gaps));
@@ -44,20 +43,27 @@ difference = digidata_its(file).locs(big_gaps(g)) - sound_condition_array(file).
 % if it's incorrect the differencec is between 5.2s and maybe 5.3s?
 if  any(sound_condition_array(file).ITI_sounds(a,1)==1) && any(difference(a) > 3*digidata_its(file).sync_sampling_rate) && any(difference(a) < 3.3*digidata_its(file).sync_sampling_rate)
     probable_end_iti_gaps(a,1) = [digidata_its(file).locs(big_gaps(g))];
-    probable_end_iti_gaps(a,2) = [sound_condition_array(file).ITI_sounds(a,4)];
+    probable_end_iti_gaps(a,2) = [sound_condition_array(file).ITI_sounds(a,1)];
     good_g = [good_g,g];
-elseif  any(sound_condition_array(file).ITI_sounds(a,1)==0 ) && any(difference(a) > 5*digidata_its(file).sync_sampling_rate) && any(difference(a) < 5.4*digidata_its(file).sync_sampling_rate)
+elseif  any(sound_condition_array(file).ITI_sounds(a,1)==0 ) && any(difference(a) > 5*digidata_its(file).sync_sampling_rate) && any(difference(a) < 5.5*digidata_its(file).sync_sampling_rate)
     probable_end_iti_gaps (a,1) =[digidata_its(file).locs(big_gaps(g))];
-    probable_end_iti_gaps(a,2) = [sound_condition_array(file).ITI_sounds(a,4)];%probable_end_iti_gaps(a+1,2) = [sound_condition_array(file).ITI_sounds(a+1,1)];
+    probable_end_iti_gaps(a,2) = [sound_condition_array(file).ITI_sounds(a,1)];%probable_end_iti_gaps(a+1,2) = [sound_condition_array(file).ITI_sounds(a+1,1)];
     good_g = [good_g,g];
 end
 %2) find sounds that are close to the end of the trial and compare to gaps
 %that should also be close to the end of the trial
 difference_VR = abs(digidata_its(file).locs(big_gaps(g)) - sound_condition_array(file).VR_sounds(:,3));
+difference_VR_noabs = (digidata_its(file).locs(big_gaps(g)) - sound_condition_array(file).VR_sounds(:,3));
 [~,b]=min((difference_VR)); %finds closest gap
-if  any(difference_VR(b) < .1*digidata_its(file).sync_sampling_rate) %might need to change to 0.2 since that might be the greatest difference
+if  any(difference_VR(b) < .2*digidata_its(file).sync_sampling_rate) %might need to change to 0.2 since that might be the greatest difference
+%     if difference_VR_noabs(b) < 0 %use sound to say this is where the last gap happens
+%         probable_end_trial_gaps(b,1) = sound_condition_array(file).VR_sounds(b,3);
+%     else
+%         probable_end_trial_gaps(b,1) = [digidata_its(file).locs(big_gaps(g))];
+%     end
+
     probable_end_trial_gaps(b,1) = [digidata_its(file).locs(big_gaps(g))];
-    probable_end_trial_gaps(b,2) = [sound_condition_array(file).VR_sounds(b,4)];
+    probable_end_trial_gaps(b,2) = [sound_condition_array(file).VR_sounds(b,1)];
     good_g = [good_g,g];
 end
 
@@ -76,27 +82,61 @@ end
 end_trials_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps>.8*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);
 end_iti_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);%digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate));
 
+unpaired = {};
+unpaired.iti = setdiff(end_iti_digidata_time,probable_end_iti_gaps(:,1));
+unpaired.trial = setdiff(end_trials_digidata_time,probable_end_trial_gaps(:,1));
 % pair up the probable end trial and end iti gaps
 % pair up so end trial goes first and then end iti
-trial_pairs = cell(max(length(probable_end_trial_gaps),length(probable_end_iti_gaps)),1);
+trial_pairs = zeros(max(length(probable_end_trial_gaps),length(probable_end_iti_gaps)),2);
+possible_outcome = [];
 for t = 1:min(length(probable_end_trial_gaps),length(probable_end_iti_gaps))
-    if probable_end_trial_gaps(t) < probable_end_iti_gaps(t) && probable_end_trial_gaps(t) > 0
-        trial_pairs{t} = [probable_end_trial_gaps(t),probable_end_iti_gaps(t)];
+    if probable_end_trial_gaps(t) < probable_end_iti_gaps(t) && probable_end_trial_gaps(t) > 0 %%assumes that you always start with the end trial which might not always be the case!
+        trial_pairs(t,:) = [probable_end_trial_gaps(t),probable_end_iti_gaps(t)];
     elseif probable_end_trial_gaps(t) >0
-        trial_pairs{t} = [probable_end_trial_gaps(t), nan];
-    end
-end
-
-pairs = cell(1,min(length(end_iti_digidata_time),length(end_trials_digidata_time)));
-% try to assign gaps to trials that don't have sounds being played
-for t = 1:max(length(end_iti_digidata_time),length(end_trials_digidata_time))
-    if end_iti_digidata_time(t) < end_trials_digidata_time(t)
+        difference = end_iti_digidata_time-probable_end_trial_gaps(t); 
+        [~,a]=find(difference>5.750*digidata_its(file).sync_sampling_rate & difference < 5.97*digidata_its(file).sync_sampling_rate); %finds closest gap incorrect will be ~5.8sec and correct should be ~4sec
+        [~,b]=find(difference>3.85*digidata_its(file).sync_sampling_rate & difference < 4.05*digidata_its(file).sync_sampling_rate); %finds closest gap incorrect will be ~5.8sec and correct should be ~4sec
+        trial_pairs(t,:) = [probable_end_trial_gaps(t), end_iti_digidata_time(a),end_iti_digidata_time(b)];
+    elseif probable_end_iti_gaps(t) >0
+        difference = probable_end_iti_gaps(t) - end_trials_digidata_time; 
+        [~,a]=find(difference>5.750*digidata_its(file).sync_sampling_rate & difference < 5.97*digidata_its(file).sync_sampling_rate); %finds closest gap incorrect will be ~5.8sec and correct should be ~4sec
+        [~,b]=find(difference>3.85*digidata_its(file).sync_sampling_rate & difference < 4.05*digidata_its(file).sync_sampling_rate); %finds closest gap incorrect will be ~5.8sec and correct should be ~4sec
+        trial_pairs(t,:) = [end_trials_digidata_time(a),end_trials_digidata_time(b),probable_end_iti_gaps(t)];
+    elseif t>1 && t<min(length(probable_end_trial_gaps),length(probable_end_iti_gaps)) % if both probable are zero then there is no sound nearby and need to figure it out on it's own OR call it a nan?
+       difference = unpaired.trial - trial_pairs(t-1,1);
+       [~,a]=find(difference>8*digidata_its(file).sync_sampling_rate ); 
+       difference2 = unpaired.iti - trial_pairs(t-1,2);
+       [~,b]=find(difference2>8*digidata_its(file).sync_sampling_rate ); 
+       trial_pairs(t,:) = [unpaired.trial(a(1)),unpaired.iti(b(1))];
     else
+        trial_pairs(t,:) =[nan,nan];
     end
 end
 
-ex_data_good = abfload('V:\Connie\RawData\HA10-1L\wavesurfer\2023-03-24\01_VR_8loc_0000.abf');
-figure();hold on;plot(ex_data_good(:,7));plot(ex_data_good(:,6)); plot(rescale(ex_data_good(:,4),-1,0));plot(rescale(ex_data_good(:,8),-1,0));hold off; movegui(gcf,'center');
+end_trials_digidata_time = trial_pairs(:,1);
+[~,indx] = intersect( digidata_its(file).locs,end_trials_digidata_time(:));
+end_iti_digidata_time = trial_pairs(:,2);
+[~,indxiti] = intersect( digidata_its(file).locs,end_iti_digidata_time(:));
+
+start_iti_digidata_time = digidata_its(file).locs(indx+1);
+start_trials_digidata_time =  digidata_its(file).locs(indxiti+1);
+
+% start_iti_digidata_time = digidata_its(file).locs(find(digidata_its(file).it_gaps_good>.8*digidata_its(file).sync_sampling_rate)+1);
+% start_trials_digidata_time =  digidata_its(file).locs(find(digidata_its(file).it_gaps_good >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps_good < .55*digidata_its(file).sync_sampling_rate)+1);
+
+% build outcome array based on sounds and ITI sounds!
+possible_outcome = [];
+for t = 1:length(sound_condition_array(file).VR_sounds)
+    possible_outcome(t,:) = [sound_condition_array(file).ITI_sounds(t,1),sound_condition_array(file).VR_sounds(t,1)];
+end
+ex_data = abfload(strcat(digidata_its(file).directory));
+figure(55);clf;
+hold on;plot(ex_data(:,7));plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0),'-r'); plot(rescale(ex_data(:,5),-1,0),'-b');plot(rescale(ex_data(:,8),-1,0),'-m');hold off; movegui(gcf,'center');
+
+ex_data_good = abfload('U:\Connie\RawData\HA10-1L\wavesurfer\2023-03-24\04_VR_8loc_0000.abf');
+figure(56);clf;
+hold on;plot(ex_data_good(:,7));plot(ex_data_good(:,6)); plot(rescale(ex_data_good(:,4),-1,0),'-r'); plot(rescale(ex_data_good(:,8),-1,0),'-m');hold off; movegui(gcf,'center');
+
 % % Initialize an array to store gaps to eliminate
 % gaps_to_eliminate = [];
 % % Iterate through gap differences to find gaps too close together

@@ -84,27 +84,44 @@ function [condition_onset_array_all,pure_tones_trial] = determine_pure_tones(pur
 %% 3rd try
 %% change code to adjust when there are speakers missing but still want the ITI
 min_distance_between_pure_tones = 9;%in seconds
-pos_peaks = []; pos_peaks = [];
+pos_peaks = []; pos_peaks2 = [];
+
+%reprocessing signal
+%binary_pure_signal = heaviside(abs(pure_tone_signal)*-1);
 for s = 1:size(pure_tone_signal,1)
-    [~,pos_peaks2] = findpeaks(abs(diff(pure_tone_signal(s,:))),'MinPeakHeight', 0.005);
+    [~,pos_peaks2] = findpeaks(abs(diff(pure_tone_signal(s,:))),'MinPeakHeight', 0.005);%findpeaks(abs(diff(binary_pure_signal(s,:))),'MinPeakHeight', 0.005);%
     pos_peaks = [pos_peaks,pos_peaks2];
 end
+pos_peaks = unique(pos_peaks);
 correct_length = correct_length*sync_sampling_rate;
 incorrect_length = incorrect_length*sync_sampling_rate;
 time_after = [0.1*sync_sampling_rate,1*sync_sampling_rate]; %examples were 0.188 0.192 0.193 (incorrect), .523 .664 0.687 correct
 target_differences = [correct_length-correct_length*.04:correct_length*.04+correct_length];
-target_differences_incorrect = [incorrect_length-incorrect_length*.04:incorrect_length+incorrect_length*.04];
+target_differences_incorrect = [incorrect_length-incorrect_length*.02:incorrect_length+incorrect_length*.02];
 
 combos = nchoosek(1:length(pos_peaks),2);
-pure_tones = [];inpure_tones = [];trial_options=[];trial_options2=[]; possible_values = [];pure_tones_trial = [];
+pure_tones = [];trial_options=[];trial_options2=[]; possible_values = [];pure_tones_trial = [];
 pure_tones2 = [];pure_tones2 = [];pure_tones_trial2 = [];
 
-all_differences = abs(pos_peaks(combos(:,2)) - pos_peaks(combos(:,1)));
+all_differences = abs(pos_peaks(combos(:,2)) - pos_peaks(combos(:,1))); 
 in_diff = find(all_differences>target_differences_incorrect(1) & all_differences < target_differences_incorrect(end));
 cor_diff = find(all_differences>target_differences(1) & all_differences < target_differences(end));
 %  pure_tones_trial = zeros(size(condition_onset_array_all.VR_sounds,1),4);
-good_diff=([ in_diff,cor_diff]); 
+
+% write code to get rid of correct peaks if the incorrect peaks are really
+% nearby
+corr_peakss = pos_peaks(combos(cor_diff,2));
+incorr_peakss = pos_peaks(combos(in_diff,2));
+corr_to_eliminate = [];
+for ii = 1:length(incorr_peakss)
+    corr_to_eliminate=[corr_to_eliminate,find(abs(corr_peakss - incorr_peakss(ii))<.2*sync_sampling_rate)];
+end
+corr_to_eliminate = unique(corr_to_eliminate);
+cor_diff(corr_to_eliminate) = [];
+
+good_diff=sort([ in_diff,cor_diff]); 
 for t = 1:size(condition_onset_array_all.VR_sounds,1)
+    
     if t == size(condition_onset_array_all.VR_sounds,1)
             for ii = 1:length(good_diff)
                 possible_values = [];
@@ -138,12 +155,18 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
             trial_options2=[];
 
     else
+        
           for ii = 1:length(good_diff)
-
+            
+%          if t == 11 
+%             t
+%         end
             possible_values = [];
+            
 
                     %find differences between each peak value
                     i = good_diff(ii);
+                    %[pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]
                     difference = all_differences(i);
                     % check if difference is equal to target differences
                     if min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) < condition_onset_array_all.VR_sounds(t+1,3) && min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) - condition_onset_array_all.VR_sounds(t,3)>time_after(1)
@@ -153,8 +176,12 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
                             pure_tones_trial(t,:) = [1,trial_options(1,:),t];
                         elseif ismember(i,in_diff) && trial_options(1,1) == pos_peaks(combos(i,1)) && trial_options(1,2) == pos_peaks(combos(i,2))
                             pure_tones_trial(t,:) = [0,trial_options(1,:),t];
-                        end   
+                        end    
                         pure_tones = [pure_tones;trial_options(1,:)];
+                        %this loop to deal with multiple peaks inside pure
+                        %tone - it is likely peaks could find a correct
+                        %even though it is incorrect just bc there are so
+                        %many peaks
                         for tt = 2:size(trial_options,1)
                             if size(trial_options,1)>1 && trial_options(tt,1) - max(pure_tones(:,2))> min_distance_between_pure_tones*sync_sampling_rate %if there are multiple peaks and they are at least 1 sec apart
                                 if ismember(i,cor_diff)
@@ -164,8 +191,9 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
                                 end
                                 pure_tones = [pure_tones;trial_options(tt,:)];
                             end
-
+                            
                         end
+                        
                     end
                     
             end

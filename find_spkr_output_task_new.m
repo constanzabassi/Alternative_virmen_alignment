@@ -190,7 +190,7 @@ ylim([-0.5, numConditions+.5]);
 yticks([0, 1]);
 yticklabels({'No Sound', 'Sound'});
 xlabel('Time');
-title('Sound Array of Classified Sounds');
+title(strcat('Sound Array of Classified Sounds in file ', num2str(file)));
 
 hold on;
 
@@ -275,7 +275,7 @@ end
     plot(soundVector,'b')
 hold off
 xlabel('Normalized sounds');
-title('ITI sounds only');
+title(strcat('ITI sounds only in file ', num2str(file)));
 legend(con_labels)
 
 

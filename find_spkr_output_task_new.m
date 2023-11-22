@@ -1,5 +1,6 @@
 % [sound_outputs,trialConditions, condition_onset_array_all]=
-function [sound_outputs_all,trialConditions, sound_outputs_trials]= find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr,smoothing_factor) 
+function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_new(server,mouse,date,alignment_info,string,sound_info) 
+%find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr,smoothing_factor) 
 %pc=1 if windows, any other number if mac
 cd(strcat(server,'\Connie\RawData\',num2str(mouse),'\wavesurfer\',num2str(date)));
 sync_dir = dir(strcat('*',string,'*.abf'));
@@ -12,7 +13,7 @@ for file = 1:num_files
     sync_sampling_rate = 1/sync_sampling_interval*1e6;
     sync_data=sync_data';
     sync_data=double(sync_data);
-    rawSounds=sync_data(spkr_channel_number,:);
+    rawSounds=sync_data(sound_info.spkr_channel_number,:);
     frames_times{file} = alignment_info(file).frame_times; 
     rescaled_sounds=[];
     figure(109);clf; title('Rescaled Sounds')
@@ -29,7 +30,7 @@ for file = 1:num_files
     pure_tone_signal=[];
     figure(120);clf; 
     for s = 1:size(rawSounds,1)
-    [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),detection_threshold,sync_sampling_rate,smoothing_factor); %last value is smoothing factor
+    [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),sound_info.detection_threshold,sync_sampling_rate,sound_info.smoothing_factor); %last value is smoothing factor
     bin_sound_signal(s,:) = binary_sound_signal;
     pure_tone_signal(s,:) = pure_tone;
     end
@@ -106,16 +107,16 @@ for file = 1:num_files
         
     difference = [true_sound_pairs(:,2) - true_sound_pairs(:,1)]; 
     all_trial_sounds = [];
-    all_trial_sounds = true_sound_pairs(find(difference >sound_duration(1) & difference < sound_duration(2)),:); %sounds that are outside limits of sound duration
+    all_trial_sounds = true_sound_pairs(find(difference >sound_info.sound_duration(1) & difference < sound_info.sound_duration(2)),:); %sounds that are outside limits of sound duration
     % adding code to also include sounds that are cut off early
     count = 0; unfinished_sounds = [];unfinished_sounds_toadd =[];
     
-    unfinished_sounds = setdiff(1:length(difference),find(difference >sound_duration(1) & difference < sound_duration(2)));
+    unfinished_sounds = setdiff(1:length(difference),find(difference >sound_info.sound_duration(1) & difference < sound_info.sound_duration(2)));
     if ~isempty(unfinished_sounds)
         for es = 1:length(unfinished_sounds)
             extra_sound = unfinished_sounds(es);
-            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < (distance_within_sounds*.1+distance_within_sounds) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > (distance_within_sounds-(distance_within_sounds*.1)) ...
-                    && (difference(extra_sound-1) >sound_duration(1) & difference(extra_sound-1) < sound_duration(2))==1
+            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < (sound_info.distance_within_sounds*.1+sound_info.distance_within_sounds) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > (sound_info.distance_within_sounds-(sound_info.distance_within_sounds*.1)) ...
+                    && (difference(extra_sound-1) >sound_info.sound_duration(1) & difference(extra_sound-1) < sound_info.sound_duration(2))==1
                 count = count+1;
                     unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,:)];
             end
@@ -124,11 +125,13 @@ for file = 1:num_files
     end
 
     %classify sounds
-[sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (reversedSoundVector,all_trial_sounds,mult_spkr);
+[sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (reversedSoundVector,all_trial_sounds,sound_info.mult_spkr);
+load('U:\Connie\condition_per_speaker');
+[updated_condition_array] = convert_sound_conditions(condition_array,conditions_per_speaker,sound_info.speaker_ids);
 
 numSounds = length(onset_array);
 numConditions = length(unique(condition_array));
-expectedDistance = distance_within_sounds; %distance_between*sync_sampling_rate; 
+expectedDistance = sound_info.distance_within_sounds; %distance_between*sync_sampling_rate; 
 
 % Initialize cell arrays to store trial information for each condition
 trialsPerCondition = cell(numConditions, 1);
@@ -157,7 +160,7 @@ for i = 1:numSounds
         end
     end
     % add to sound struct
-    if i > 1 && onsetTime - offset_array(i - 1) <= distance_between_sounds
+    if i > 1 && onsetTime - offset_array(i - 1) <= sound_info.distance_between_sounds
         % Assign the same group number as the previous sound
         sound_struc(i).trial_num = sound_struc(i - 1).trial_num;
         
@@ -242,9 +245,9 @@ sound_outputs_trials(file).VR_sounds = condition_group_array;
 %% final step - classify pure tones only// assuming sounds look properly examined
 pure_tones_only= pure_tone_signal;
 pure_tones_only(:,sounds) = 0; %get rid of task sounds so only pure tones are left
-if ~isempty(correct)
+if ~isempty(sound_info.correct)
     %assumes ITI sound happens .1 to 1 sec after last sound of trial
-[sound_outputs_trials_file,pure_tones_trials] = determine_pure_tones(pure_tones_only,sync_sampling_rate,correct,incorrect,sound_outputs_trials(file));
+[sound_outputs_trials_file,pure_tones_trials] = determine_pure_tones(pure_tones_only,sync_sampling_rate,sound_info.correct,sound_info.incorrect,sound_outputs_trials(file));
 sound_outputs_trials(file).VR_sounds = sound_outputs_trials_file.VR_sounds;
 sound_outputs_trials(file).ITI_sounds = sound_outputs_trials_file.ITI_sounds;
     

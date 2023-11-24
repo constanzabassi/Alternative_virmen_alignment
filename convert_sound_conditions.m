@@ -1,5 +1,5 @@
 function updated_condition_array = convert_sound_conditions(condition_array,conditions_per_speaker,speaker_ids)
-speaker_ids = [1,2,4];
+%speaker_ids = [1,2,4];
 total_speakers = 1:4;
 updated_condition_array={};
 if length(speaker_ids ) == 3

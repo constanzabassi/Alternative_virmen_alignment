@@ -139,7 +139,7 @@ expectedDistance = sound_info.distance_within_sounds; %distance_between*sync_sam
 trialsPerCondition = cell(numConditions, 1);
 groupNum = 0; % Initialize group number
 onsettimes= [];
-condition_group_array = [];
+condition_group_array = {};%[];
 % Iterate over each sound
 for i = 1:numSounds
     onsetTime = onset_array(i);
@@ -171,14 +171,15 @@ for i = 1:numSounds
         groupNum = groupNum + 1;
         sound_struc(i).trial_num = groupNum;
         onsettimes = [onsettimes,onsetTime];
-        condition_group_array(groupNum, 2) = onsettimes(1);
+        condition_group_array{groupNum, 2} = onsettimes(1);
     end
     
     % Store condition and group number information
-    condition_group_array(groupNum, 1) = condition;
+    condition_group_array{groupNum, 1}  = condition;
     
-    condition_group_array(groupNum, 3) = offsetTime;
-    condition_group_array(groupNum, 4) = groupNum;
+    condition_group_array{groupNum, 3}  = offsetTime;
+    condition_group_array{groupNum, 4}  = groupNum;
+    condition_group_array{groupNum, 5}  = updated_condition_array{1,i}; %actual condition
     
     onsettimes=[];
 end
@@ -285,6 +286,14 @@ legend(con_labels)
 
 
 end
+
+%if it has nans for condition
+for t = 1:length(sound_outputs_trials(file).VR_sounds)
+    if isnan(sound_outputs_trials(file).VR_sounds{t,1}) && mult_spkr == 1
+        sound_outputs_trials(file).VR_sounds{t,5} =
+    end
+end
+
 pause
 
 end

@@ -127,7 +127,17 @@ for file = 1:num_files
     %classify sounds
 [sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (reversedSoundVector,all_trial_sounds,sound_info.mult_spkr);
 load('U:\Connie\condition_per_speaker');
-[updated_condition_array] = convert_sound_conditions(condition_array,conditions_per_speaker,sound_info.speaker_ids);
+
+%convert to true condition values if there are multiple speakers
+if sound_info.mult_spkr == 1
+    [updated_condition_array] = convert_sound_conditions(condition_array,conditions_per_speaker,sound_info.speaker_ids);
+    for t = 1:length(sound_struc);sound_struc(t).true_condition = updated_condition_array{1,t};end
+else %true condition is equal to the condition array
+    for t = 1:length(sound_struc)
+        sound_struc(t).true_condition = sound_struc(t).condition;
+        updated_condition_array{1,t} = sound_struc(t).condition;
+    end
+end
 
 numSounds = length(onset_array);
 numConditions = length(unique(condition_array));
@@ -137,7 +147,7 @@ expectedDistance = sound_info.distance_within_sounds; %distance_between*sync_sam
 trialsPerCondition = cell(numConditions, 1);
 groupNum = 0; % Initialize group number
 onsettimes= [];
-condition_group_array = [];
+condition_group_array = {};%[];
 % Iterate over each sound
 for i = 1:numSounds
     onsetTime = onset_array(i);
@@ -169,14 +179,15 @@ for i = 1:numSounds
         groupNum = groupNum + 1;
         sound_struc(i).trial_num = groupNum;
         onsettimes = [onsettimes,onsetTime];
-        condition_group_array(groupNum, 2) = onsettimes(1);
+        condition_group_array{groupNum, 2} = onsettimes(1);
     end
     
     % Store condition and group number information
-    condition_group_array(groupNum, 1) = condition;
+    condition_group_array{groupNum, 1}  = condition;
     
-    condition_group_array(groupNum, 3) = offsetTime;
-    condition_group_array(groupNum, 4) = groupNum;
+    condition_group_array{groupNum, 3}  = offsetTime;
+    condition_group_array{groupNum, 4}  = groupNum;
+    condition_group_array{groupNum, 5}  = updated_condition_array{1,i}; %actual condition
     
     onsettimes=[];
 end
@@ -283,6 +294,15 @@ legend(con_labels)
 
 
 end
+
+%if it has nans for condition
+for t = 1:length(sound_outputs_trials(file).VR_sounds)
+    if isnan(sound_outputs_trials(file).VR_sounds{t,1}) && sound_info.mult_spkr == 1
+         id = setdiff(1:4,sound_info.speaker_ids);
+        sound_outputs_trials(file).VR_sounds{t,5} = setdiff(find(conditions_per_speaker(:,id)),[find(conditions_per_speaker(:,sound_info.speaker_ids(1)));find(conditions_per_speaker(:,sound_info.speaker_ids(2)));find(conditions_per_speaker(:,sound_info.speaker_ids(3)))]);
+    end
+end
+
 pause
 
 end

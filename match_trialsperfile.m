@@ -1,4 +1,4 @@
-function [file_digidata_trial_info,file_matching_trials] = match_trialsperfile(digidata_its, good_dataset, trial_info,sound_condition_array,alignment_info)
+function [file_digidata_trial_info,file_matching_trials] = match_trialsperfile(digidata_its, good_dataset, trial_info,sound_condition_array)
 %initialize variable to save trials
 file_matching_trials = [];
 

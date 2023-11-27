@@ -1,4 +1,7 @@
-function [file_estimated_trial_info,file_matching_trials,trial_times,file_digidata_trial_info] = match_trialsperfile(digidata_its, good_dataset, trial_info,sound_condition_array,alignment_info)
+function [file_digidata_trial_info,file_matching_trials] = match_trialsperfile(digidata_its, good_dataset, trial_info,sound_condition_array,alignment_info)
+%initialize variable to save trials
+file_matching_trials = [];
+
 % find its in the data that best match the its for each trial dividing files into trials that match them
 for file = 1:length(digidata_its)
 file
@@ -52,8 +55,8 @@ elseif  any(sound_condition_array(file).ITI_sounds(a,1)==0 ) && any(difference(a
 end
 %2) find sounds that are close to the end of the trial and compare to gaps
 %that should also be close to the end of the trial
-difference_VR = abs(digidata_its(file).locs(big_gaps(g)) - sound_condition_array(file).VR_sounds(:,3));
-difference_VR_noabs = (digidata_its(file).locs(big_gaps(g)) - sound_condition_array(file).VR_sounds(:,3));
+difference_VR = abs(digidata_its(file).locs(big_gaps(g)) - [sound_condition_array(file).VR_sounds{:,3}]);
+difference_VR_noabs = (digidata_its(file).locs(big_gaps(g)) - [sound_condition_array(file).VR_sounds{:,3}]);
 [~,b]=min((difference_VR)); %finds closest gap
 if  any(difference_VR(b) < .2*digidata_its(file).sync_sampling_rate) %might need to change to 0.2 since that might be the greatest difference
 %     if difference_VR_noabs(b) < 0 %use sound to say this is where the last gap happens
@@ -63,7 +66,7 @@ if  any(difference_VR(b) < .2*digidata_its(file).sync_sampling_rate) %might need
 %     end
 
     probable_end_trial_gaps(b,1) = [digidata_its(file).locs(big_gaps(g))];
-    probable_end_trial_gaps(b,2) = [sound_condition_array(file).VR_sounds(b,1)];
+    probable_end_trial_gaps(b,2) = [sound_condition_array(file).VR_sounds{b,1}];
     good_g = [good_g,g];
 end
 
@@ -77,8 +80,9 @@ end
 end
 
 
-%%
-%start_trials_digidata_time =  digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate)+1);
+%% get some digidata time information
+
+%get indices without gaps to eliminate
 end_trials_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps>.8*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);
 end_iti_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);%digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate));
 
@@ -87,7 +91,7 @@ unpaired.iti = setdiff(end_iti_digidata_time,probable_end_iti_gaps(:,1));
 unpaired.trial = setdiff(end_trials_digidata_time,probable_end_trial_gaps(:,1));
 % pair up the probable end trial and end iti gaps
 % pair up so end trial goes first and then end iti
-trial_pairs = zeros(max(length(probable_end_trial_gaps),length(probable_end_iti_gaps)),2);
+trial_pairs = zeros(min(length(probable_end_trial_gaps),length(probable_end_iti_gaps)),2);
 possible_outcome = [];
 for t = 1:min(length(probable_end_trial_gaps),length(probable_end_iti_gaps))
     if probable_end_trial_gaps(t) < probable_end_iti_gaps(t) && probable_end_trial_gaps(t) > 0 %%assumes that you always start with the end trial which might not always be the case!
@@ -118,86 +122,41 @@ end_trials_digidata_time = trial_pairs(:,1);
 end_iti_digidata_time = trial_pairs(:,2);
 [~,indxiti] = intersect( digidata_its(file).locs,end_iti_digidata_time(:));
 
+%use end ITI and end trial indices to get these
 start_iti_digidata_time = digidata_its(file).locs(indx+1);
 start_trials_digidata_time =  digidata_its(file).locs(indxiti+1);
 
-% start_iti_digidata_time = digidata_its(file).locs(find(digidata_its(file).it_gaps_good>.8*digidata_its(file).sync_sampling_rate)+1);
-% start_trials_digidata_time =  digidata_its(file).locs(find(digidata_its(file).it_gaps_good >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps_good < .55*digidata_its(file).sync_sampling_rate)+1);
+file_digidata_trial_info(file).start_iti_digidata_time = start_iti_digidata_time;
+file_digidata_trial_info(file).start_trials_digidata_time = start_trials_digidata_time;
+file_digidata_trial_info(file).end_trials_digidata_time = end_trials_digidata_time;
+file_digidata_trial_info(file).end_iti_digidata_time = end_iti_digidata_time;
 
 % build outcome array based on sounds and ITI sounds!
-possible_outcome = [];
+possible_outcome = {};
+count_t = 0;trial_id = []; weird_trials = [];
 for t = 1:length(sound_condition_array(file).VR_sounds)
-    possible_outcome(t,:) = [sound_condition_array(file).ITI_sounds(t,1),sound_condition_array(file).VR_sounds(t,1)];
+     %test for weird trials where sound plays during ITI (virmen bug)
+    if find(sound_condition_array(file).VR_sounds{t,2} > file_digidata_trial_info(file).start_iti_digidata_time & sound_condition_array(file).VR_sounds{t,2} <file_digidata_trial_info(file).end_iti_digidata_time & (file_digidata_trial_info(file).end_iti_digidata_time - file_digidata_trial_info(file).start_iti_digidata_time)<5.750*digidata_its(file).sync_sampling_rate)
+        weird_trials = [weird_trials,t];
+        file_digidata_trial_info(file).weird_trial = weird_trials;
+    end
+    %could change possible outcome for weird trials if the matching doesnt
+    %work- seems to still work even with these incorrectly labeled trials
+    possible_outcome{t,1} = [sound_condition_array(file).ITI_sounds(t,1)]; % correct vs incorrect
+    possible_outcome{t,2} = [sound_condition_array(file).VR_sounds{t,5}]; % sound condition
+    count_t = count_t+1;
+    trial_id = [trial_id,count_t];
+
 end
-ex_data = abfload(strcat(digidata_its(file).directory));
-figure(55);clf;
-hold on;plot(ex_data(:,7));plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0),'-r'); plot(rescale(ex_data(:,5),-1,0),'-b');plot(rescale(ex_data(:,8),-1,0),'-m');hold off; movegui(gcf,'center');
+file_digidata_trial_info(file).estimated_digidata = possible_outcome;
+file_digidata_trial_info(file).trial_id = trial_id;
 
-ex_data_good = abfload('U:\Connie\RawData\HA10-1L\wavesurfer\2023-03-24\04_VR_8loc_0000.abf');
-figure(56);clf;
-hold on;plot(ex_data_good(:,7));plot(ex_data_good(:,6)); plot(rescale(ex_data_good(:,4),-1,0),'-r'); plot(rescale(ex_data_good(:,8),-1,0),'-m');hold off; movegui(gcf,'center');
 
-% % Initialize an array to store gaps to eliminate
-% gaps_to_eliminate = [];
-% % Iterate through gap differences to find gaps too close together
-% bad_vals = [];
-% for i = 1:length(gap_diffs)-1
-%     if gap_diffs(i) < min_threshold
-%         % Check if the next gap is far from others
-%         if i == 1 || (i > 1 && gap_diffs(i-1) >= min_threshold)
-%             gaps_to_eliminate = [gaps_to_eliminate, i+1];
-%         else
-%             gaps_to_eliminate = [gaps_to_eliminate, i];
-%         end
-%     end
-%     if i >1 && i<length(gap_diffs)-1 && ~ismember(i,gaps_to_eliminate)
-%         % Check if the gap differences in front and after the current one are between 3800 and 6000
-%         if [(i > 1 && gap_diffs(i-1) >= min_threshold && gap_diffs(i-1) <= max_threshold) && ...
-%            (i < length(gap_diffs)-1 && gap_diffs(i+1) >= min_threshold && gap_diffs(i+1) <= max_threshold)]==0
-%             bad_vals = [bad_vals,i];
-%             %gaps_to_eliminate = [gaps_to_eliminate, i];
-%         end
-%     end
-% end
-% dif_bad_vals = diff(bad_vals);
-% gaps_to_eliminate = [gaps_to_eliminate, bad_vals(find(dif_bad_vals==1))+2];%plus 2 bc diff twice
-% 
-% % Iterate through gap differences to find gaps too close together
-% % for i = 1:length(gap_diffs)-1
-% %     if gap_diffs(i) < min_threshold
-% %         % Check if the next gap is far from others
-% %         if i == 1 || (i > 1 && gap_diffs(i-1) >= min_threshold)
-% %             gaps_to_eliminate = [gaps_to_eliminate, i+1];
-% %         else
-% %             gaps_to_eliminate = [gaps_to_eliminate, i];
-% %         end
-% %     end
-% % end
-% % Eliminate duplicate values from the gaps_to_eliminate array
-% gaps_to_eliminate = unique(gaps_to_eliminate);
-% big_gaps_all = big_gaps;
-% digidata_its(file).locs_corrected = digidata_its(file).locs;
-% digidata_its(file).locs_corrected(big_gaps(gaps_to_eliminate)) = [];
-% digidata_its(file).it_gaps_good = diff(digidata_its(file).locs_corrected);
-% big_gaps(gaps_to_eliminate)=[];
-% 
-% %try to define trial events using gaps
-% end_trials_digidata_time = digidata_its(file).locs(find(digidata_its(file).it_gaps_good>.8*digidata_its(file).sync_sampling_rate));
-% start_iti_digidata_time = digidata_its(file).locs(find(digidata_its(file).it_gaps_good>.8*digidata_its(file).sync_sampling_rate)+1);
-% % incorrect_trials_digidata_time = find(digidata_its(file).it_gaps_good >.8*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps_good < .95*digidata_its(file).sync_sampling_rate);
-% % correct_trials_digidata_time = find(digidata_its(file).it_gaps_good > .95*digidata_its(file).sync_sampling_rate);
-% start_trials_digidata_time =  digidata_its(file).locs(find(digidata_its(file).it_gaps_good >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps_good < .55*digidata_its(file).sync_sampling_rate)+1);
-% end_iti_digidata_time = digidata_its(file).locs(find(digidata_its(file).it_gaps_good >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps_good < .55*digidata_its(file).sync_sampling_rate));
-% digidata_time.start_trials_digidata_time = start_trials_digidata_time;
-% digidata_time.end_trials_digidata_time = end_trials_digidata_time;
-% digidata_time.start_iti_digidata_time = start_iti_digidata_time; 
-% digidata_time.end_iti_digidata_time = end_iti_digidata_time;
-% trial_times(file) = digidata_time;
-% 
-% %write code to say if this big gap is followed by another big gap at this time point then!
-% difference_between_gaps = diff(big_gaps);
-% 
-% possible_outcomes = {};
+% ex_data = abfload(strcat(digidata_its(file).directory));
+% figure(55);clf;
+% hold on;plot(ex_data(:,7));plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0),'-r'); plot(rescale(ex_data(:,5),-1,0),'-b');plot(rescale(ex_data(:,8),-1,0),'-m');hold off; movegui(gcf,'center');
+
+
 % count = 0;
 % previous_trial = []; % keep track of which gaps were used
 % for g = 2:length(difference_between_gaps)
@@ -289,75 +248,75 @@ hold on;plot(ex_data_good(:,7));plot(ex_data_good(:,6)); plot(rescale(ex_data_go
 %     end
 %     
 % end
-% %check to make sure we are not skipping any trials!!
-% ex_start = start_trials_digidata_time;
-% ex_start(end) = []; %delete bc it would not be in the difference matrix
-% no_skips = ismember(ex_start,[possible_outcomes.start_trial_digidata_time]);
-% if sum(find(no_skips == 0))>1
-%     fprintf('Something is wrong, might be skipping trials\n');
-% else
-%     fprintf('Trials seem fine\n');
+%% estimate trials that most closely resemble each other (works for 2 locations)
+% 
+% % Example data (replace with your actual data)
+% trueMatrix = [trial_info.correct; trial_info.condition]'; % Replace with your true trial information matrix
+% estimatedMatrix = estimated_trial_info; % Replace with your estimated trial information matrix
+% 
+% sectionSize = size(estimatedMatrix, 1);
+% numSections = size(trueMatrix, 1) - sectionSize + 1;
+% mseValues = zeros(numSections, 1);
+% 
+% for i = 1:numSections
+%     trueSection = trueMatrix(i:i+sectionSize-1, :);
+%     mseValues(i) = nanmean((trueSection - estimatedMatrix).^2, 'all');
 % end
 % 
-% ex_data = abfload(strcat(digidata_its(file).directory));
-% if ~isempty(gaps_to_eliminate)
-%     
-% figure(file);clf;title(strcat('File ',num2str(file),' has weird gaps (deleted in red)'))
-% hold on;plot(ex_data(:,7));plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(digidata_its(file).locs(big_gaps_all),0,'*c');plot(digidata_its(file).locs(big_gaps_all(gaps_to_eliminate)),0,'*r');hold off; movegui(gcf,'center');
-% else
-%     figure(file);clf;
-%     title(strcat(num2str(file),' file has no weird gaps'))
-%     hold on;plot(ex_data(:,7));plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(digidata_its(file).locs(big_gaps_all),0,'*c');hold off; movegui(gcf,'center');
-% end
-% % combine sound condition and trial outcome based on digidata time!
-% % finds difference between start trial and sound offset
-% estimated_trial_info = [];weird_trials = []; count_t=0;trial_id = [];
-% for t = 1:length(possible_outcomes)
-%     %[val,closest_sound] = min(abs(possible_outcomes(t).digidata_time - sound_condition_array(file).file(:,3)));
-%     if ~isnan(possible_outcomes(t).frame_start_trial)== 1%if it's 1 then the trial might be too short to look at
-%         count_t = count_t+1;
-%         [closest_sound] = find(possible_outcomes(t).end_trials_digidata_time - sound_condition_array(file).file(:,3)<0,1)-1; %find first value where it becomes negative and use the one before it
-%         estimated_trial_info(count_t,:) = [possible_outcomes(t).correct;sound_condition_array(file).file(closest_sound,1)];
-%         trial_id(count_t) = t;
-%         if sound_condition_array(file).file(closest_sound,2)< possible_outcomes(t).start_trial_digidata_time  %if the sound plays during the ITI make it a NaN
-%                 weird_trials = [weird_trials,count_t];
-%                 estimated_trial_info(count_t,:) = [possible_outcomes(t).correct;nan];
-%         end
-%     end
-% end
-% file_estimated_trial_info(file).estimated_trial_info = estimated_trial_info;
-% file_estimated_trial_info(file).trial_id = trial_id;
-% file_estimated_trial_info(file).weird_trials = weird_trials;
-% file_digidata_trial_info(file).estimated_digidata = possible_outcomes;
-% %figure(); hold on;plot(ex_data(:,6));plot(possible_correct_trial,ex_data(possible_correct_trial,6),'*c');plot(possible_incorrect_trial,ex_data(possible_incorrect_trial,6),'*r');hold off
-%% estimate trials that most closely resemble each other
+% [minMSE, bestTrueSectionIndex] = min(mseValues);
+% 
+% file_matching_trials(file,:) = [bestTrueSectionIndex, bestTrueSectionIndex + sectionSize - 1];
+% fprintf('Best matching true section of trials: %d to %d\n', bestTrueSectionIndex, bestTrueSectionIndex + sectionSize - 1);
+% fprintf('Minimum MSE value: %.4f\n', minMSE);
 
+%%
 % Example data (replace with your actual data)
 trueMatrix = [trial_info.correct; trial_info.condition]'; % Replace with your true trial information matrix
-estimatedMatrix = estimated_trial_info; % Replace with your estimated trial information matrix
+estimatedMatrix = possible_outcome; % Replace with your estimated trial information matrix
 
-sectionSize = size(estimatedMatrix, 1);
-numSections = size(trueMatrix, 1) - sectionSize + 1;
-mseValues = zeros(numSections, 1);
+% Assuming trueMatrix and estimatedMatrix are appropriately defined
+sizeTrueMatrix = size(trueMatrix);
+trueConditions = cell(sizeTrueMatrix(1), 1);
 
-for i = 1:numSections
-    trueSection = trueMatrix(i:i+sectionSize-1, :);
-    mseValues(i) = nanmean((trueSection - estimatedMatrix).^2, 'all');
+%Convert arrays into string - helps deal with multiple conditions
+for i = 1:sizeTrueMatrix(1)
+    conditionStr = strjoin(cellstr(num2str(trueMatrix(i, 2))));
+    correctness = trueMatrix(i, 1); % assuming 1st column contains correctness
+    if isnan(correctness)
+        correctnessStr = 'NaN';
+    else
+        correctnessStr = num2str(correctness);
+    end
+    trueConditions{i} = strcat(correctnessStr, '_', conditionStr);
 end
 
-[minMSE, bestTrueSectionIndex] = min(mseValues);
+size_estimatedMatrix = size(estimatedMatrix);
+estimatedConditions = cell(size_estimatedMatrix(1), 1);
+for i = 1:size_estimatedMatrix(1)
+    conditionStr = strjoin(cellstr(num2str(estimatedMatrix{i, 2})));
+    correctness = estimatedMatrix{i, 1};
+    if isnan(correctness)
+        correctnessStr = 'NaN';
+    else
+        correctnessStr = num2str(correctness);
+    end
+    estimatedConditions{i} = strcat(correctnessStr, '_', conditionStr);
+end
 
-file_matching_trials(file,:) = [bestTrueSectionIndex, bestTrueSectionIndex + sectionSize - 1];
-fprintf('Best matching true section of trials: %d to %d\n', bestTrueSectionIndex, bestTrueSectionIndex + sectionSize - 1);
-fprintf('Minimum MSE value: %.4f\n', minMSE);
+
+%% match trials using levenshteinDistance (smallest change to strings gives distance)
+bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedConditions)
+file_matching_trials(file,:) = [bestTrialIndices(1), bestTrialIndices(2)];
+
 end
 % verify that trials make sense... they go in chronological order
 for file = 1:length(digidata_its) 
     if file > 1
-        if file_matching_trials(file,1)>file_matching_trials(file-1,2) == 1
+        if file_matching_trials(file,1)>=file_matching_trials(file-1,2) == 1
             fprintf('Trial order makes sense!\n'); %\n next line
         else
             fprintf('Error! Trials are out of order! Need to go back and check\n')
         end
     end
 end
+

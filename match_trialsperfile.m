@@ -25,7 +25,7 @@ end
 % get rid of gaps too close together
 % Define the minimum threshold in milliseconds
 min_threshold = 3.8*digidata_its(file).sync_sampling_rate; %distance would be 4 sec
-max_threshold = 6.0 * digidata_its(file).sync_sampling_rate; %max distance would be 6 sec
+%max_threshold = 6.0 * digidata_its(file).sync_sampling_rate; %max distance would be 6 sec
 %%
 % List of gap differences 
 gap_diffs = diff(digidata_its(file).locs(big_gaps));
@@ -89,8 +89,20 @@ end_iti_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).
 unpaired = {};
 unpaired.iti = setdiff(end_iti_digidata_time,probable_end_iti_gaps(:,1));
 unpaired.trial = setdiff(end_trials_digidata_time,probable_end_trial_gaps(:,1));
+% adjust in case iti happens before trial and was not detected during
+% sounds
+difference = unpaired.iti - probable_end_trial_gaps(1);
+if any(difference>5.750*digidata_its(file).sync_sampling_rate & difference < 5.97*digidata_its(file).sync_sampling_rate)  %if ITI comes before end trial
+    unpair_id = find(difference>5.750*digidata_its(file).sync_sampling_rate & difference < 5.97*digidata_its(file).sync_sampling_rate);
+    probable_end_iti_gaps = [probable_end_iti_gaps;[unpaired.iti(unpair_id),0]];
+elseif any(difference>3.85*digidata_its(file).sync_sampling_rate & difference < 4.05*digidata_its(file).sync_sampling_rate)
+    unpair_id = find(difference>3.85*digidata_its(file).sync_sampling_rate & difference < 4.05*digidata_its(file).sync_sampling_rate);
+    probable_end_iti_gaps = [probable_end_iti_gaps;[unpaired.iti(unpair_id),1]];
+end
+probable_end_iti_gaps = sortrows(probable_end_iti_gaps,1);
 % pair up the probable end trial and end iti gaps
 % pair up so end trial goes first and then end iti
+
 trial_pairs = zeros(min(length(probable_end_trial_gaps),length(probable_end_iti_gaps)),2);
 possible_outcome = [];
 for t = 1:min(length(probable_end_trial_gaps),length(probable_end_iti_gaps))
@@ -142,20 +154,22 @@ for t = 1:length(sound_condition_array(file).VR_sounds)
     end
     %could change possible outcome for weird trials if the matching doesnt
     %work- seems to still work even with these incorrectly labeled trials
-    possible_outcome{t,1} = [sound_condition_array(file).ITI_sounds(t,1)]; % correct vs incorrect
+    possible_outcome{t,1} = [sound_condition_array(file).ITI_sounds(find(sound_condition_array(file).ITI_sounds(:,4) == t),1)]; % correct vs incorrect (have to make sure the trials match! fourth column)
     possible_outcome{t,2} = [sound_condition_array(file).VR_sounds{t,5}]; % sound condition
+    %determine trial number relative to sound trials!
+    [~,small_difference] = min(abs(sound_condition_array(file).VR_sounds{t,3} - end_trials_digidata_time));
     count_t = count_t+1;
-    trial_id = [trial_id,count_t];
+    trial_id = [trial_id,small_difference];
 
 end
 file_digidata_trial_info(file).estimated_digidata = possible_outcome;
 file_digidata_trial_info(file).trial_id = trial_id;
 
 
-% ex_data = abfload(strcat(digidata_its(file).directory));
-% figure(55);clf;
-% hold on;plot(ex_data(:,7));plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0),'-r'); plot(rescale(ex_data(:,5),-1,0),'-b');plot(rescale(ex_data(:,8),-1,0),'-m');hold off; movegui(gcf,'center');
-
+ex_data = abfload(strcat(digidata_its(file).directory));
+figure(55);clf;
+hold on;plot(ex_data(:,7));plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0),'-r'); plot(rescale(ex_data(:,5),-1,0),'-b');plot(rescale(ex_data(:,8),-1,0),'-m');plot(end_trials_digidata_time,0,'*c');plot(start_trials_digidata_time,0,'*g');plot(end_iti_digidata_time,0,'*y');hold off; movegui(gcf,'center');
+pause
 
 % count = 0;
 % previous_trial = []; % keep track of which gaps were used

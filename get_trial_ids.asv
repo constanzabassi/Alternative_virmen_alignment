@@ -1,37 +1,57 @@
-function[file_trial_ids] = get_trial_ids( file_matching_trials,file_digidata_trial_info,digidata_its)
+function [file_trial_ids,file_estimated_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,sync_base_path,task_info)
 
-for file = 1:length(digidata_its)
+for file = 1:size(file_matching_trials,1)
 %% 1) find the first trial that would have imaging data and start with this trial if it is a full trial
-
-%[~,closest_frame] = min(abs(digidata_its(file).locs(big_gaps(g)) - alignment_info(file).frame_times));
-frame_start_trial = [file_digidata_trial_info(file).estimated_digidata.frame_start_trial];
-frame_end_ITI = [file_digidata_trial_info(file).estimated_digidata.frame_end_ITI];
+frame_start_trial = [file_estimated_trial_info(file).frame_start_trial];
+frame_end_ITI = [file_estimated_trial_info(file).frame_end_iti];
 trial_id = file_estimated_trial_info(file).trial_id; %within each file
-trial_id(2,:) = [file_matching_trials(file,1):file_matching_trials(file,2)]; %relative to all other files
-all_trials = 1:length(file_digidata_trial_info(file).estimated_digidata);
+trial_id(2,:) = [file_matching_trials(file,1):file_matching_trials(file,1)+trial_id(end)-1]; %relative to all other files
 
-excluded_trials = sort(union(find(isnan(frame_start_trial)),find(isnan(frame_end_ITI)))); %no frames from start trial to end ITI within a trial
+%use frame times to determine which trials should be included
+frame_start_trial = find(file_estimated_trial_info(file).start_trials_digidata_time - alignment_info(file).frame_times(1)>0);
+frame_end_ITI = find(file_estimated_trial_info(file).end_iti_digidata_time - alignment_info(file).frame_times(end)<0);
+
+all_trials = min(frame_start_trial):1:max(frame_end_ITI);
+excluded_trials = setdiff(1:length(trial_id),all_trials);% sort(union(find(isnan(frame_start_trial)),find(isnan(frame_end_ITI)))); %no frames from start trial to end ITI within a trial
 included_trials = setdiff(all_trials,excluded_trials);
 
-if included_trials(1)
-%% 2) aling data. Start by looking at first trial then shift the real iterations around until they make sense
-%     %start_trial_number = 64; end_trial_number = 86;
-% 
-%     %start_trial_its is the iti #
-%     %possible iterations IDs within file
-%     possible_iterations = trial_its.start_trial_its(start_trial_number): trial_its.end_iti_its(end_trial_number);
-%     
-%     % first say that the first iteration time in the first full trial is in the
-%     % position of the first iteration in the trua dataset (virmen data)
-%     possible_digidata_time_start = start_trials_digidata_time(start_trial_number); 
-%     %it_time_gaps
-%     %use time difference and assume first time difference to be exactly zero
-%     it_times_this_file = [data.data(1,possible_iterations)-data.data(1,possible_iterations(1))].* 86400;% difference with first iteration for each iteration in seconds!
-%     it_times_this_file = it_times_this_file*sync_sampling_rate;
-%     
-%     %start by assuming that the estimated digidata time alings perfectly with
-%     %true data- here is where I figure out how to shift over time
-%     possible_it_times = it_times_this_file + possible_digidata_time_start;
+start_trial(1,1) = trial_id(2,find(trial_id(1,:) == included_trials(1)))+1; %+1 bc it is based on the previous ITI indicating there was at least one trial before
+start_trial(1,2) = trial_id(1,find(trial_id(1,:) == included_trials(1)))+1; %keep original number for plotting
+
+if ~isempty(trial_id(2,find(trial_id(1,:) == included_trials(end)))) %empty when the number is bigger than max
+    end_trial(1,1) = trial_id(2,find(trial_id(1,:) == included_trials(end)));
+    end_trial(1,2) = trial_id(1,find(trial_id(1,:) == included_trials(end)));
+else
+    end_trial(1,1) = trial_id(2,end);
+    end_trial(1,2) = trial_id(1,end);
+end
+file_trial_ids(file,:) = [start_trial(1,1),end_trial(1,1)];
+
+%put trials into context of all other trials
+for t = all_trials
+    if ismember(t,trial_id(1,:))
+        file_estimated_trial_info(file).estimated_digidata{t,3}=trial_id(2,find(trial_id(1,:) ==t));%file_estimated_trial_info(file).estimated_digidata(t).trial_id=trial_id(2,find(trial_id(1,:) ==t));
+    else
+        file_estimated_trial_info(file).estimated_digidata{t,3} = nan;
+    end
+end
+
+%load example file to plot it
+ex_data = abfload([sync_base_path alignment_info(file).sync_id]);
+figure(55);clf;
+title(strcat('Check start and end trials in file # ', num2str(file)));
+hold on;aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'color',[0.7 0.7 0.7]);  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');
+a = plot(file_estimated_trial_info(file).start_trials_digidata_time(start_trial(1,2)),0,'*c');b = plot(file_estimated_trial_info(file).end_iti_digidata_time(end_trial(1,2)),0,'*g');movegui(gcf,'center');
+%plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-r');
+legend([aa bb cc dd  a(1) b(1) ],'Imaging frames','Virmen its','Speaker 1','Speaker 2', 'first full trial', 'last full trial')
+if length(task_info.channel_number)>4
+    plot(rescale(ex_data(:,task_info.channel_number(5)),-1,0),'-r')
+end
+hold off;
+
+pause
+
+
 end
 %figure(); hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(possible_it_times,0,'*c');hold off; movegui(gcf,'center');
 

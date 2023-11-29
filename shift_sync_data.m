@@ -72,27 +72,44 @@ if ~isempty(digidata_its(file).pos_loc)
             new_shift = shift;
         end
 
-        possible_it_times = iterations_in_time+shift-iterations_in_time(pos_peak_id); %assign iterations times with added shift
+        possible_it_times = iterations_in_time+new_shift-iterations_in_time(pos_peak_id); %assign iterations times with added shift
         %iteration ids of iterations withing imaging limits
         possible_iterations = trial_its.start_trial_its(start_trial_number):trial_its.end_iti_its(end_trial_number); %limit iterations to ones within imaging frames// this is iterations ids
         possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
-    
+    end
 else
     % first say that the first iteration time in the first full trial is in the
     % position of the first iteration in the trua dataset (virmen data)
-    possible_digidata_time_start = start_trials_digidata_time(2);%(start_trial_number); 
-    %it_time_gaps
-    %use time difference and assume first time difference to be exactly zero
-    it_times_this_file = [data.data(1,possible_iterations)-data.data(1,possible_iterations(1))].*86400;% difference with first iteration for each iteration in seconds!
-    it_times_this_file = it_times_this_file*sync_sampling_rate;
+    shift = file_estimated_trial_info(file).start_trials_digidata_time(1);%(start_trial_number); 
     
+    possible_it_times = iterations_in_time+shift-iterations_in_time(trial_its.start_trial_its(start_trial_number));
     %start by assuming that the estimated digidata time alings perfectly with
     %true data- here is where I figure out how to shift over time
-    possible_it_times = it_times_this_file + possible_digidata_time_start;
+    possible_iterations = trial_its.start_trial_its(start_trial_number):trial_its.end_iti_its(end_trial_number); %limit iterations to ones within imaging frames// this is iterations ids
+    possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
+    
+    %test distance of unfinished sounds and last iteration of trial to
+    %see if they are close together otherwise add a shift of 1
+    %iteration
+    test_iterations = trial_its.end_trial_its(start_trial_number:end_trial_number);
+    sound_trials = 1+file_trial_ids(file,3):length(test_iterations)+file_trial_ids(file,3);
+    difference_it_sound = [[sound_condition_array(file).VR_sounds{sound_trials,3}] - possible_it_locs(test_iterations-possible_iterations(1)+1)];
+    small_shift = round(mean(difference_it_sound(find(difference_it_sound < mean_freq*5 & difference_it_sound > 0)))/mean_freq)*mean_freq-3; %find closest ones and determine if there needs to be another small shift
+    small_shift_neg = round(mean(difference_it_sound(find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0)))/mean_freq)*mean_freq+3; %find closest ones and determine if there needs to be another small shift
+
+    if ~isnan(small_shift) && isnan(small_shift_neg)
+        new_shift = shift+small_shift;
+    elseif ~isnan(small_shift_neg) && isnan(small_shift)
+        new_shift = shift+small_shift_neg;
+    else
+        new_shift = shift;
+    end
+
+    possible_it_times = iterations_in_time+new_shift-iterations_in_time(trial_its.start_trial_its(start_trial_number));
+    possible_iterations = trial_its.start_trial_its(start_trial_number):trial_its.end_iti_its(end_trial_number); %limit iterations to ones within imaging frames// this is iterations ids
+    possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
+
 end
-%start_trial_its is the iti #
-%possible iterations within file
-possible_iterations = start_trial_its(start_trial_number): end_iti_its(end_trial_number);
 
 ex_data = abfload(strcat(digidata_its(file).directory));
 figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(possible_it_locs,0,'*c');hold off; movegui(gcf,'center');

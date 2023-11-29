@@ -43,8 +43,8 @@ difference = digidata_its(file).locs(big_gaps(g)) - sound_condition_array(file).
 [a,~]=find(difference>0,1,'last'); %finds closest gap
 %temp2 = [temp2,difference(a)]; % actual difference
 % seems like if it's correct the difference is between 3.1s and 3.2s
-range_correct = [round(task_info.correct*digidata_its(file).sync_sampling_rate-task_info.correct*.001*digidata_its(file).sync_sampling_rate), round(task_info.correct*digidata_its(file).sync_sampling_rate+task_info.correct*.1*digidata_its(file).sync_sampling_rate)];
-range_incorrect = [round(task_info.incorrect*digidata_its(file).sync_sampling_rate-task_info.incorrect*.001*digidata_its(file).sync_sampling_rate), round(task_info.incorrect*digidata_its(file).sync_sampling_rate+task_info.incorrect*.1*digidata_its(file).sync_sampling_rate)];
+range_correct = [round(task_info.correct*digidata_its(file).sync_sampling_rate-task_info.correct*.01*digidata_its(file).sync_sampling_rate), round(task_info.correct*digidata_its(file).sync_sampling_rate+task_info.correct*.1*digidata_its(file).sync_sampling_rate)];
+range_incorrect = [round(task_info.incorrect*digidata_its(file).sync_sampling_rate-task_info.incorrect*.01*digidata_its(file).sync_sampling_rate), round(task_info.incorrect*digidata_its(file).sync_sampling_rate+task_info.incorrect*.1*digidata_its(file).sync_sampling_rate)];
 
 % if it's incorrect the differencec is between 5.2s and maybe 5.3s?
 if  any(sound_condition_array(file).ITI_sounds(a,1)==1) && any(difference(a) >= range_correct(1)) && any(difference(a) < range_correct(2))
@@ -87,7 +87,7 @@ end
 
 %get indices without gaps to eliminate
 end_trials_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps>.8*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);
-end_iti_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);%digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate));
+end_iti_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .71*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);%digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate));
 
 unpaired = {};
 unpaired.iti = setdiff(end_iti_digidata_time,probable_end_iti_gaps(:,1));
@@ -99,16 +99,20 @@ range_correct_distance = [round((task_info.correct*digidata_its(file).sync_sampl
 range_incorrect_distance = [round((task_info.incorrect*digidata_its(file).sync_sampling_rate+1*digidata_its(file).sync_sampling_rate)-(task_info.incorrect*digidata_its(file).sync_sampling_rate+1*digidata_its(file).sync_sampling_rate)*.042),round((task_info.incorrect*digidata_its(file).sync_sampling_rate+1*digidata_its(file).sync_sampling_rate)+(task_info.incorrect*digidata_its(file).sync_sampling_rate+1*digidata_its(file).sync_sampling_rate)*.001)];
 % adjust in case iti happens before trial and was not detected during
 % sounds
+iti_added = 0;
 difference = unpaired.iti - probable_end_trial_gaps(1);
 if any(difference>range_incorrect_distance(1) & difference < range_incorrect_distance(2))  %if ITI comes before end trial
     unpair_id = find(difference>range_incorrect_distance(1) & difference < range_incorrect_distance(2));
     probable_end_iti_gaps = [probable_end_iti_gaps;[unpaired.iti(unpair_id),0]];
+    probable_end_iti_gaps = sortrows(probable_end_iti_gaps,1);
+    iti_added = 1;
 elseif any(difference>range_correct_distance(1) & difference < range_correct_distance(2))
     unpair_id = find(difference>range_correct_distance(1) & difference < range_correct_distance(2));
     probable_end_iti_gaps = [probable_end_iti_gaps;[unpaired.iti(unpair_id),1]];
+    probable_end_iti_gaps = sortrows(probable_end_iti_gaps,1);
+    iti_added = 1;
 end
 
-probable_end_iti_gaps = sortrows(probable_end_iti_gaps,1);
 % pair up the probable end trial and end iti gaps
 % pair up so end trial goes first and then end iti
 
@@ -171,7 +175,7 @@ file_digidata_trial_info(file).end_iti_digidata_time = end_iti_digidata_time;
 
 % build outcome array based on sounds and ITI sounds!
 possible_outcome = {};
-trial_id = []; weird_trials = [];
+trial_id = []; weird_trials = []; count_t = 0;
 for t = 1:length(sound_condition_array(file).VR_sounds)
      %test for weird trials where sound plays during ITI (virmen bug)
     if find(sound_condition_array(file).VR_sounds{t,2} > file_digidata_trial_info(file).start_iti_digidata_time & sound_condition_array(file).VR_sounds{t,2} <file_digidata_trial_info(file).end_iti_digidata_time & (file_digidata_trial_info(file).end_iti_digidata_time - file_digidata_trial_info(file).start_iti_digidata_time)<range_incorrect_distance(1))
@@ -183,13 +187,28 @@ for t = 1:length(sound_condition_array(file).VR_sounds)
     possible_outcome{t,1} = [sound_condition_array(file).ITI_sounds(t,1)];%(find(sound_condition_array(file).ITI_sounds(:,4) == t),1)]; % correct vs incorrect (have to make sure the trials match! fourth column)
     possible_outcome{t,2} = [sound_condition_array(file).VR_sounds{t,5}]; % sound condition
     %determine trial number relative to sound trials!
-    [~,small_difference] = min(abs(sound_condition_array(file).VR_sounds{t,3} - end_trials_digidata_time));
-    trial_id = [trial_id,small_difference];
+%     [~,small_difference] = min(abs(sound_condition_array(file).VR_sounds{t,3} - end_trials_digidata_time));
+%     [~,small_difference2] = min(abs(sound_condition_array(file).ITI_sounds(t,3) - end_trials_digidata_time)); %use ITI instead in case I dont have a sound to compare to
+        if t == length(sound_condition_array(file).VR_sounds) && sound_condition_array(file).VR_sounds{t,3} - end_trials_digidata_time(end) > task_info.min
+            trial_id = [trial_id,[]];
+        else
+        count_t = count_t+1;
+        trial_id = [trial_id,count_t];%count_t];
+        end
 
 end
 file_digidata_trial_info(file).estimated_digidata = possible_outcome;
 file_digidata_trial_info(file).trial_id = trial_id;
+file_digidata_trial_info(file).iti_added = iti_added;
+%test to make sure indices make sense
+[~,small_difference] = min(abs(sound_condition_array(file).VR_sounds{1,3} - end_trials_digidata_time));
+[~,small_difference2] = min(abs(sound_condition_array(file).VR_sounds{1,3} - end_iti_digidata_time));
 
+if small_difference == 1 && small_difference2 == 1
+else
+    fprintf('index might be wrong')
+    keyboard
+end
 
 ex_data = abfload(strcat(digidata_its(file).directory));
 figure(55);clf;

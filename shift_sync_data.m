@@ -1,4 +1,4 @@
-function virmen_it = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info)
+function [virmen_it,trial_its] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info)
 [trial_its,trial_its_time] = virmen_it_rough_estimation(data); 
 
 for file = 1:length(digidata_its)
@@ -13,7 +13,7 @@ end_trial_number = file_trial_ids(file,2);
 
 %get the iterations that are within the imaging frames
 first_file_it = digidata_its(file).locs(find(digidata_its(file).locs == file_estimated_trial_info(file).start_trials_digidata_time(file_trial_ids(file,3)))); %first starting it within imaging frames
-last_file_it = digidata_its(file).locs(find(digidata_its(file).locs == file_estimated_trial_info(file).start_trials_digidata_time(file_trial_ids(file,4)))); %first starting it within imaging frames
+last_file_it = digidata_its(file).locs(find(digidata_its(file).locs == file_estimated_trial_info(file).start_trials_digidata_time(file_trial_ids(file,4)-file_estimated_trial_info(file).iti_added))); %first starting it within imaging frames
 %possible_iterations = digidata_its(file).locs(first_file_it): digidata_its(file).locs(last_file_it);
 
 %initialize variables
@@ -120,6 +120,33 @@ else
     possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
 
 end
+%final test- see if there are about 7 iterations from tiny gap before sound
+%onset
+sound_onsets_speakers = [sound_condition_array(file).VR_sounds{:,2}]; 
+sound_onsets_speakers = sound_onsets_speakers(~isnan(sound_onsets_speakers));
+sound_onsets_iterations = trial_its.sound_trigger_its(find(trial_its.sound_trigger_its > trial_its.start_trial_its(start_trial_number) & trial_its.sound_trigger_its <trial_its.end_iti_its(end_trial_number)))+6; %sound happens within 7 iterations
+possible_sound_onsets = possible_it_times(sound_onsets_iterations);
+
+all_differences = [];
+for s = 1:length(possible_sound_onsets)
+    difference_sounds = min(abs(possible_sound_onsets(s) - sound_onsets_speakers));
+    all_differences = [all_differences,difference_sounds]
+%     if difference_sounds < 0.012 * digidata_its(file).sync_sampling_rate %if they are within 12ms of each other
+%         fprintf('Sound distances make sense!\n');
+%     else
+%         fprintf('Sound distances do not make sense!\n');
+%     end
+end
+figure(998);clf; 
+hold on
+title(strcat('Sound onset verification less than 100ms apart -file # ', num2str(file)));
+histogram(all_differences(find(all_differences< 0.1* digidata_its(file).sync_sampling_rate)),'BinWidth',2);
+xline(mean_freq,'-r')
+xlabel('Distance between iteration at onset and sound onset in ms')
+ylabel('Number of sound onsets')
+hold off
+
+
 
 ex_data = abfload(strcat(digidata_its(file).directory));
 figure(999);clf; 
@@ -127,14 +154,15 @@ title(strcat('Shifted data file # ', num2str(file)));
 hold on; aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'-k');  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');a = plot(possible_it_locs,0,'*c');
 legend([aa bb cc dd  a(1)],'Imaging frames','Virmen its','Speaker 1','Speaker 2', 'Estimated iteration times')
 hold off
-
+pause
 %hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(possible_it_locs,0,'*c');hold off; movegui(gcf,'center');
 
 virmen_it(file).locs = possible_it_locs;
-virmen_it(file).ids = possible_it_locs;
-virmen_it(file).trial_its = trial_its;
+virmen_it(file).ids = possible_iterations;
+virmen_it(file).shift = new_shift;
 
 end
+
 % figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(rescale(ex_data(:,5),-1,0));plot(possible_it_locs(test_iterations-possible_iterations(1)+1),0,'*c');hold off; movegui(gcf,'center');
 % %figure(); hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(possible_it_times,0,'*c');hold off; movegui(gcf,'center');
 % figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(rescale(ex_data(:,5),-1,0));plot(possible_it_locs(test_iterations-possible_iterations(1)+1),0,'*c');hold off; movegui(gcf,'center');

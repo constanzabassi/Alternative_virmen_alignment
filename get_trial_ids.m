@@ -2,8 +2,7 @@ function [file_trial_ids,file_estimated_trial_info_updated] = get_trial_ids(file
 
 for file = 1:size(file_matching_trials,1)
 %% 1) find the first trial that would have imaging data and start with this trial if it is a full trial
-frame_start_trial = [file_estimated_trial_info(file).frame_start_trial];
-frame_end_ITI = [file_estimated_trial_info(file).frame_end_iti];
+
 trial_id = file_estimated_trial_info(file).trial_id; %within each file
 trial_id(2,:) = [file_matching_trials(file,1):file_matching_trials(file,1)+trial_id(end)-1]; %relative to all other files
 

@@ -1,4 +1,4 @@
-function shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array)
+function virmen_it = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info)
 [trial_its,trial_its_time] = virmen_it_rough_estimation(data); 
 
 for file = 1:length(digidata_its)
@@ -40,11 +40,16 @@ if ~isempty(digidata_its(file).pos_loc)
         sound_trials = 1+file_trial_ids(file,3):length(test_iterations)+file_trial_ids(file,3);
         difference_it_sound = [[sound_condition_array(file).VR_sounds{sound_trials,3}] - possible_it_locs(test_iterations-possible_iterations(1)+1)];
         small_shift = round(mean(difference_it_sound(find(difference_it_sound < mean_freq*3 & difference_it_sound > 0)))/mean_freq)*mean_freq-3; %find closest ones and determine if there needs to be another small shift
-        if ~isnan(small_shift)
+        small_shift_neg = round(mean(difference_it_sound(find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0)))/mean_freq)*mean_freq+3; %find closest ones and determine if there needs to be another small shift
+
+        if ~isnan(small_shift) && isnan(small_shift_neg)
             new_shift = shift+small_shift;
+        elseif ~isnan(small_shift_neg) && isnan(small_shift)
+            new_shift = shift+small_shift_neg;
         else
             new_shift = shift;
         end
+
 
         possible_it_times = iterations_in_time+new_shift-iterations_in_time(1); %assign iterations times with added shift
         %iteration ids of iterations withing imaging limits
@@ -66,11 +71,16 @@ if ~isempty(digidata_its(file).pos_loc)
         sound_trials = 1+file_trial_ids(file,3):length(test_iterations)+file_trial_ids(file,3);
         difference_it_sound = [[sound_condition_array(file).VR_sounds{sound_trials,3}] - possible_it_locs(test_iterations-possible_iterations(1)+1)];
         small_shift = round(mean(difference_it_sound(find(difference_it_sound < mean_freq*3 & difference_it_sound > 0)))/mean_freq)*mean_freq-3; %find closest ones and determine if there needs to be another small shift
-        if ~isnan(small_shift)
+        small_shift_neg = round(mean(difference_it_sound(find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0)))/mean_freq)*mean_freq+3; %find closest ones and determine if there needs to be another small shift
+
+        if ~isnan(small_shift) && isnan(small_shift_neg)
             new_shift = shift+small_shift;
+        elseif ~isnan(small_shift_neg) && isnan(small_shift)
+            new_shift = shift+small_shift_neg;
         else
             new_shift = shift;
         end
+
 
         possible_it_times = iterations_in_time+new_shift-iterations_in_time(pos_peak_id); %assign iterations times with added shift
         %iteration ids of iterations withing imaging limits
@@ -112,24 +122,20 @@ else
 end
 
 ex_data = abfload(strcat(digidata_its(file).directory));
-figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(possible_it_locs,0,'*c');hold off; movegui(gcf,'center');
+figure(999);clf; 
+title(strcat('Shifted data file # ', num2str(file)));
+hold on; aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'-k');  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');a = plot(possible_it_locs,0,'*c');
+legend([aa bb cc dd  a(1)],'Imaging frames','Virmen its','Speaker 1','Speaker 2', 'Estimated iteration times')
+hold off
 
+%hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(possible_it_locs,0,'*c');hold off; movegui(gcf,'center');
 
-
-figure(55);clf;
-title(strcat('Detected trial events file # ', num2str(file)));
-hold on;aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'color',[0.7 0.7 0.7]);  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');
-a = plot(end_trials_digidata_time,0,'*c');b = plot(start_trials_digidata_time,0,'*g');c= plot(end_iti_digidata_time,0,'*y'); movegui(gcf,'center');
-%plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-r');
-legend([aa bb cc dd  a(1) b(1) c(1)],'Imaging frames','Virmen its','Speaker 1','Speaker 2', 'end trial', 'start trial', 'end iti')
-if length(task_info.channel_number)>4
-    plot(rescale(ex_data(:,task_info.channel_number(5)),-1,0),'-r')
-end
-hold off;
-
+virmen_it(file).locs = possible_it_locs;
+virmen_it(file).ids = possible_it_locs;
+virmen_it(file).trial_its = trial_its;
 
 end
-figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(rescale(ex_data(:,5),-1,0));plot(possible_it_locs(test_iterations-possible_iterations(1)+1),0,'*c');hold off; movegui(gcf,'center');
-%figure(); hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(possible_it_times,0,'*c');hold off; movegui(gcf,'center');
-figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(rescale(ex_data(:,5),-1,0));plot(possible_it_locs(test_iterations-possible_iterations(1)+1),0,'*c');hold off; movegui(gcf,'center');
+% figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(rescale(ex_data(:,5),-1,0));plot(possible_it_locs(test_iterations-possible_iterations(1)+1),0,'*c');hold off; movegui(gcf,'center');
+% %figure(); hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(possible_it_times,0,'*c');hold off; movegui(gcf,'center');
+% figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(rescale(ex_data(:,5),-1,0));plot(possible_it_locs(test_iterations-possible_iterations(1)+1),0,'*c');hold off; movegui(gcf,'center');
 end

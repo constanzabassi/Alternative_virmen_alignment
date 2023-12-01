@@ -114,7 +114,7 @@ corr_peakss = pos_peaks(combos(cor_diff,2));
 incorr_peakss = pos_peaks(combos(in_diff,2));
 corr_to_eliminate = [];
 for ii = 1:length(incorr_peakss)
-    corr_to_eliminate=[corr_to_eliminate,find(abs(corr_peakss - incorr_peakss(ii))<.2*sync_sampling_rate)];
+    corr_to_eliminate=[corr_to_eliminate,find(abs(corr_peakss - incorr_peakss(ii))<.2*sync_sampling_rate)]; %if peaks are within 200ms of each other probably inside the same ITI window
 end
 corr_to_eliminate = unique(corr_to_eliminate);
 cor_diff(corr_to_eliminate) = [];
@@ -129,7 +129,7 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
                     i = good_diff(ii);
                     difference = all_differences(i);
                     % check if difference is equal to target differences
-                    if min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) < length(pure_tone_signal) && min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) - condition_onset_array_all.VR_sounds(t,3)>time_after(1)
+                    if min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) < length(pure_tone_signal) && min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) - condition_onset_array_all.VR_sounds{t,3}>time_after(1)
                         trial_options = [trial_options;sort([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))])];
                         if ismember(i,cor_diff) && trial_options(1,1) == pos_peaks(combos(i,1)) && trial_options(1,2) == pos_peaks(combos(i,2))
                             pure_tones_trial(t,:) = [1,trial_options(1,:),t];
@@ -169,7 +169,7 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
                     %[pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]
                     difference = all_differences(i);
                     % check if difference is equal to target differences
-                    if min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) < condition_onset_array_all.VR_sounds(t+1,3) && min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) - condition_onset_array_all.VR_sounds(t,3)>time_after(1)
+                    if min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) < condition_onset_array_all.VR_sounds{t+1,3} && min([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))]) - condition_onset_array_all.VR_sounds{t,3}>time_after(1)
                         trial_options = [trial_options;sort([pos_peaks(combos(i,1)), pos_peaks(combos(i,2))])];
                         
                         if ismember(i,cor_diff) && trial_options(1,1) == pos_peaks(combos(i,1)) && trial_options(1,2) == pos_peaks(combos(i,2))
@@ -208,19 +208,29 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
         if t == size(condition_onset_array_all.VR_sounds,1)
             pure_tones_trial(t,:) = [nan,nan,nan,t];
         else
-            dist = find(abs(diff(pure_tone_signal(1,condition_onset_array_all.VR_sounds(t,3)+1:condition_onset_array_all.VR_sounds(t+1,3))))>0);
+            dist = find(abs(diff(pure_tone_signal(1,condition_onset_array_all.VR_sounds{t,3}+1:condition_onset_array_all.VR_sounds{t+1,3})))>0);
             distance = diff(dist);
             a = find(distance>target_differences(1) & distance < target_differences(end));
+            if ~isempty(a)
+            a = distance(a);
+            end
             a2 = find(distance>target_differences_incorrect(1) & distance < target_differences_incorrect(end));
+            if ~isempty(a2)
+            a2 = distance(a2);
+            end
             all_diff = [a;a2];
             if ~isempty(all_diff)
                 for tt = 1:length(all_diff)
-                    pure_tones_trial(t,:) = [1,dist(all_diff(1))+condition_onset_array_all.VR_sounds(t,3)+1, dist(all_diff(1)+1)+condition_onset_array_all.VR_sounds(t,3)+1,t];
-                    if length(all_diff)>1 && dist(all_diff (tt))+condition_onset_array_all.VR_sounds(t,3)+1 -  dist(all_diff (tt-1)+1)+condition_onset_array_all.VR_sounds(t,3)+1> min_distance_between_pure_tones*sync_sampling_rate %if there are multiple peaks and they are at least 1 sec apart
+                    if ismember(all_diff (tt),a)
+                        pure_tones_trial(t,:) = [1,dist(find(distance == all_diff(1)))+condition_onset_array_all.VR_sounds{t,3}+1, dist(find(distance == all_diff(1))+1)+condition_onset_array_all.VR_sounds{t,3}+1,t];
+                    else
+                        pure_tones_trial(t,:) = [0,dist(find(distance == all_diff(1)))+condition_onset_array_all.VR_sounds{t,3}+1, dist(find(distance == all_diff(1))+1)+condition_onset_array_all.VR_sounds{t,3}+1,t];
+                    end
+                    if length(all_diff)>1 && dist(find(distance == all_diff(tt)))+condition_onset_array_all.VR_sounds{t,3}+1 -  dist(find(distance == all_diff(tt-1))+1)+condition_onset_array_all.VR_sounds{t,3}+1> min_distance_between_pure_tones*sync_sampling_rate %if there are multiple peaks and they are at least 1 sec apart
                        if ismember(all_diff (tt),a)
-                            pure_tones_trial2(t,:) = [1,dist(a(tt))+condition_onset_array_all.VR_sounds(t,3)+1, dist(a(tt)+1)+condition_onset_array_all.VR_sounds(t,3)+1,t];
+                            pure_tones_trial2(t,:) = [1,dist(find(distance == all_diff(tt)))+condition_onset_array_all.VR_sounds{t,3}+1, dist(find(distance == all_diff(tt+1)))+condition_onset_array_all.VR_sounds{t,3}+1,t];
                         else
-                            pure_tones_trial2(t,:) = [0,dist(a(tt))+condition_onset_array_all.VR_sounds(t,3)+1, dist(a(tt)+1)+condition_onset_array_all.VR_sounds(t,3)+1,t];
+                            pure_tones_trial2(t,:) = [0,dist(find(distance == all_diff(tt)))+condition_onset_array_all.VR_sounds{t,3}+1, dist(find(distance == all_diff(tt+1)))+condition_onset_array_all.VR_sounds{t,3}+1,t];
                         end
                         
                     end
@@ -236,9 +246,11 @@ end
 
 %organize data
 [combined_pure_tones,order] = sortrows([pure_tones_trial;pure_tones_trial2],2);
-condition_onset_array_all.ITI_sounds = combined_pure_tones;
-
-combined_list = [condition_onset_array_all.VR_sounds;nan(size(pure_tones_trial2))];
+[combined_pure_tones_ordered,~] = sortrows([pure_tones_trial;pure_tones_trial2],4);
+condition_onset_array_all.ITI_sounds = combined_pure_tones_ordered;
+nan_array = cell(size(pure_tones_trial2,1),size(pure_tones_trial2,2)+1);
+nan_array(1:size(pure_tones_trial2,1),1:size(pure_tones_trial2,2)+1) = {nan};
+combined_list = [condition_onset_array_all.VR_sounds;nan_array];%nan(size(pure_tones_trial2))
 
 if ~isempty(pure_tones_trial2)
     condition_onset_array_all.VR_sounds = combined_list(order,:);
@@ -297,7 +309,7 @@ plot((pure_tone_signal(1,:)));
 plot(combined_pure_tones(:,2),0,'*c')
 if length(find(isnan(combined_pure_tones(:,1))))>0  
     
-    plot(condition_onset_array_all.VR_sounds([find(isnan(combined_pure_tones(:,1)))],3),0,'*m');
+    a = plot([condition_onset_array_all.VR_sounds{order(find(isnan(combined_pure_tones(:,1)))),3}],0,'*m');
 end
 hold off
 legend('Pure Tones Diff','Pure Tones regular','Start Pure Tone','Last sound near NaN')
@@ -307,8 +319,8 @@ final_diff = combined_pure_tones(:,3) - combined_pure_tones(:,2);
 if all(combined_pure_tones(find(combined_pure_tones(:,3) - combined_pure_tones(:,2)>target_differences_incorrect(1)-1),1) == 0) && all(combined_pure_tones(find(combined_pure_tones(:,3) - combined_pure_tones(:,2)<target_differences_incorrect(1)-1),1) == 1)
     fprintf('Values verified to be correct\n')
 else
-    fprintf("Values don't match the expected correct/incorrect lengths\n")
-    pause
+    fprintf("----------------Values don't match the expected correct/incorrect lengths----------------\n")
+    keyboard
 end
 
 

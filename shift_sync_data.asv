@@ -25,9 +25,9 @@ last_iteration_in_file = [];
 % number iterations accordingly
 if ~isempty(digidata_its(file).pos_loc)
     pos_peak_id = digidata_its(file).pos_pks(1)*10e4;
-    pos_peak_pos = digidata_its(file).pos_loc(1); %use first one for now
+    pos_peak_pos = digidata_its(file).locs(find(digidata_its(file).locs == digidata_its(file).pos_loc(1))+1);%digidata_its(file).pos_loc(1); %use first one for now
     if pos_peak_id(1) == 1000000 %very first file has large positive peak
-        shift = pos_peak_pos; 
+        shift = digidata_its(file).pos_loc(1);%pos_peak_pos; 
         possible_it_times = iterations_in_time+shift-iterations_in_time(1); %assign iterations times with added shift
         %iteration ids of iterations withing imaging limits
         possible_iterations = trial_its.start_trial_its(start_trial_number):trial_its.end_iti_its(end_trial_number); %limit iterations to ones within imaging frames// this is iterations ids

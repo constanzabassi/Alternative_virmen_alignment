@@ -1,4 +1,4 @@
-function [file_digidata_trial_info,file_matching_trials] = match_trialsperfile(digidata_its, good_dataset, trial_info,sound_condition_array,task_info)
+function [file_digidata_trial_info,file_matching_trials] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info)
 %initialize variable to save trials
 file_matching_trials = [];
 
@@ -16,11 +16,11 @@ big_gaps = find(digidata_its(file).it_gaps > .25*digidata_its(file).sync_samplin
 
 % for good datasets vs bad I am missing about half of the iterations so
 % these difference between gaps has to be multiplied by 2 for good ones!
-if good_dataset == 1
-    good_dataset_conversion = 2;
-else
-    good_dataset_conversion = 1;
-end
+% if good_dataset == 1
+%     good_dataset_conversion = 2;
+% else
+%     good_dataset_conversion = 1;
+% end
 
 % get rid of gaps too close together
 % Define the minimum threshold in milliseconds

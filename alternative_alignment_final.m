@@ -2,18 +2,19 @@
 mousename = 'HA11-1R';%;
 mouse = mousename;
 date = '2023-04-07'; %;
-server = 'V:';
+server = '/Volumes/Runyan5';
 data_base = 'CBHA11-1R_230407';%;
 sync_base_path = [ server '/Connie/RawData/' mousename '/wavesurfer/' date '/'];
 virmen_base = [server '/Connie/RawData/' mousename '/virmen/' data_base ];
-imaging_base_path=[server '\Connie\RawData\' mousename '\' date '\'];
+imaging_base_path=[server '/Connie\RawData/' mousename '/' date '/'];
 is_stim_dataset = 1; 
 % give data inputs!
 galvo_channel = 7;
 good_dataset = 0;
-addpath(genpath('C:\Code\Github\Alternative_virmen_alignment'));
-cd('C:\Code\Github\Alternative_virmen_alignment');
-addpath(genpath('C:\Code\Align_signals_imaging'));
+code_folder = uigetdir; 
+addpath(genpath(code_folder));
+% cd('C:\Code\Github\Alternative_virmen_alignment');
+% addpath(genpath('C:\Code\Align_signals_imaging'));
 
 %% load virmen data
 
@@ -25,8 +26,8 @@ dataCell = load(strcat(virmen_base, '_Cell.mat'));
 % dataCell = load(strcat(virmen_base, '_Cell_1.mat'));
 
 %% get frame times of all files in this folder
-mkdir(strcat(server,'\Connie\ProcessedData\',num2str(mouse),'\',num2str(date)))
-cd(strcat(server,'\Connie\ProcessedData\',num2str(mouse),'\',num2str(date)));
+mkdir(strcat(server,'/Connie/ProcessedData/',num2str(mouse),'/',num2str(date)))
+cd(strcat(server,'/Connie/ProcessedData/',num2str(mouse),'/',num2str(date)));
 if isfile("alignment_info.mat")
     load("alignment_info.mat");
 else

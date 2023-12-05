@@ -48,6 +48,10 @@ sound_info.sound_duration = [0.99*sound_info.sync_sampling_rate,1.1*sound_info.s
 sound_info.correct = .250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
+%load conditions per speaker in runyan 5 server
+%load('U:/Connie/condition_per_speaker');
+load('/Volumes/Runyan5/Connie/condition_per_speaker.mat');
+sound_info.condition_per_speaker = conditions_per_speaker;
 
 
 [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(server,mousename,date,alignment_info,'VR',sound_info);

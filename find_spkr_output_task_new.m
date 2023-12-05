@@ -126,11 +126,11 @@ for file = 1:num_files
 
     %classify sounds
 [sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (reversedSoundVector,all_trial_sounds,sound_info.mult_spkr);
-load('U:\Connie\condition_per_speaker');
+%load('U:/Connie/condition_per_speaker');
 
 %convert to true condition values if there are multiple speakers
 if sound_info.mult_spkr == 1
-    [updated_condition_array] = convert_sound_conditions(condition_array,conditions_per_speaker,sound_info.speaker_ids);
+    [updated_condition_array] = convert_sound_conditions(condition_array,sound_info.conditions_per_speaker,sound_info.speaker_ids);
     for t = 1:length(sound_struc);sound_struc(t).true_condition = updated_condition_array{1,t};end
 else %true condition is equal to the condition array
     for t = 1:length(sound_struc)

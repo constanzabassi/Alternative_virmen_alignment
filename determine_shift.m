@@ -57,12 +57,16 @@ for file = 1:length(digidata_its)
     end
     
     %2) see if sound is around iteration number 7 from small gap
-    sound_onsets_speakers = sound_condition_array(file).file(:,2);
-    sound_onsets_iterations = trial_its.sound_trigger_its(find(trial_its.sound_trigger_its > possible_iterations(1) & trial_its.sound_trigger_its < possible_iterations(end)))+7; 
-    possible_sound_onsets = possible_it_times(sound_onsets_iterations-possible_iterations(1));
+    sound_onsets_speakers = [sound_condition_array(file).VR_sounds{:,2}]; %iterations_in_time(trial_its.start_trial_its(start_trial_number));
+%     sound_onsets_iterations = trial_its.sound_trigger_its(find(trial_its.sound_trigger_its > possible_iterations(1) & trial_its.sound_trigger_its < possible_iterations(end)))+7; 
+%     possible_sound_onsets = possible_it_times(sound_onsets_iterations-possible_iterations(1));
+
+    sound_onsets_iterations = trial_its.sound_trigger_its(find(trial_its.sound_trigger_its > trial_its.start_trial_its(start_trial_number) & trial_its.sound_trigger_its <trial_its.end_iti_its(end_trial_number)))+6; %sound happens within 7 iterations
+    possible_sound_onsets = possible_it_times(sound_onsets_iterations);
+
     for s = 1:length(possible_sound_onsets)
         difference_sounds = min(abs(possible_sound_onsets(s) - sound_onsets_speakers));
-        if difference_sounds < 0.0070 * digidata_its(file).sync_sampling_rate
+        if difference_sounds < 0.012 * digidata_its(file).sync_sampling_rate
             fprintf('Sound distances make sense!\n');
         else
             fprintf('Sound distances do not make sense!\n');

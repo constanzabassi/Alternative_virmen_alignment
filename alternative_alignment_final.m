@@ -2,7 +2,7 @@
 mousename = 'HA11-1R';%;
 mouse = mousename;
 date = '2023-04-07'; %;
-server = 'Volumes';
+server = '/Volumes/Runyan5';
 data_base = 'CBHA11-1R_230407';%;
 sync_base_path = [ server '/Connie/RawData/' mousename '/wavesurfer/' date '/'];
 virmen_base = [server '/Connie/RawData/' mousename '/virmen/' data_base ];
@@ -11,7 +11,8 @@ is_stim_dataset = 1;
 % give data inputs!
 galvo_channel = 7;
 good_dataset = 0;
-% addpath(genpath('C:\Code\Github\Alternative_virmen_alignment'));
+code_folder = uigetdir; 
+addpath(genpath(code_folder));
 % cd('C:\Code\Github\Alternative_virmen_alignment');
 % addpath(genpath('C:\Code\Align_signals_imaging'));
 

@@ -8,7 +8,7 @@ iterations_in_time = iterations_in_time.*digidata_its(file).sync_sampling_rate;
 it_ids = 1:length(data.data(1,:));
 mean_freq = round(mean(diff(iterations_in_time))); 
 
-start_trial_number = file_trial_ids(file,1); 
+start_trial_number = file_trial_ids(file,1)-file_trial_ids(file,3)+1; 
 end_trial_number = file_trial_ids(file,2);
 
 %get the iterations that are within the imaging frames
@@ -145,7 +145,6 @@ xline(mean_freq,'-r')
 xlabel('Distance between iteration at onset and sound onset in ms')
 ylabel('Number of sound onsets')
 hold off
-
 
 
 ex_data = abfload(strcat(digidata_its(file).directory));

@@ -2,7 +2,7 @@
 function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_new(server,mouse,date,alignment_info,string,sound_info) 
 %find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr,smoothing_factor) 
 %pc=1 if windows, any other number if mac
-cd(strcat(server,'\Connie\RawData\',num2str(mouse),'\wavesurfer\',num2str(date)));
+cd(strcat(server,'/Connie/RawData/',num2str(mouse),'/wavesurfer/',num2str(date)));
 sync_dir = dir(strcat('*',string,'*.abf'));
 num_files = length(sync_dir);
 file_ind = 0;

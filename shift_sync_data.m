@@ -11,11 +11,6 @@ mean_freq = round(mean(diff(iterations_in_time)));
 start_trial_number = file_trial_ids(file,1)-file_trial_ids(file,3)+1; 
 end_trial_number = file_trial_ids(file,2);
 
-%get the iterations that are within the imaging frames
-first_file_it = digidata_its(file).locs(find(digidata_its(file).locs == file_estimated_trial_info(file).start_trials_digidata_time(file_trial_ids(file,3)))); %first starting it within imaging frames
-last_file_it = digidata_its(file).locs(find(digidata_its(file).locs == file_estimated_trial_info(file).start_trials_digidata_time(file_trial_ids(file,4)-file_estimated_trial_info(file).iti_added))); %first starting it within imaging frames
-%possible_iterations = digidata_its(file).locs(first_file_it): digidata_its(file).locs(last_file_it);
-
 %initialize variables
 possible_it_times = [];
 possible_iterations = [];
@@ -39,8 +34,8 @@ if ~isempty(digidata_its(file).pos_loc)
         test_iterations = trial_its.end_trial_its(start_trial_number:end_trial_number);
         sound_trials = 1+file_trial_ids(file,3):length(test_iterations)+file_trial_ids(file,3);
         difference_it_sound = [[sound_condition_array(file).VR_sounds{sound_trials,3}] - possible_it_locs(test_iterations-possible_iterations(1)+1)];
-        small_shift = round(mean(difference_it_sound(find(difference_it_sound < mean_freq*3 & difference_it_sound > 0)))/mean_freq)*mean_freq; %find closest ones and determine if there needs to be another small shift
-        small_shift_neg = round(mean(difference_it_sound(find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0)))/mean_freq)*mean_freq; %find closest ones and determine if there needs to be another small shift
+        small_shift = (round(mean(difference_it_sound(find(difference_it_sound < mean_freq*3 & difference_it_sound > 0)))/mean_freq)*mean_freq)-0.003*digidata_its(file).sync_sampling_rate; %find closest ones and determine if there needs to be another small shift
+        small_shift_neg = (round(mean(difference_it_sound(find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0)))/mean_freq)*mean_freq)-0.003*digidata_its(file).sync_sampling_rate; %find closest ones and determine if there needs to be another small shift
 
         if ~isnan(small_shift) && isnan(small_shift_neg)
             new_shift = shift+small_shift;
@@ -70,8 +65,9 @@ if ~isempty(digidata_its(file).pos_loc)
         test_iterations = trial_its.end_trial_its(start_trial_number:end_trial_number);
         sound_trials = 1+file_trial_ids(file,3):length(test_iterations)+file_trial_ids(file,3);
         difference_it_sound = [[sound_condition_array(file).VR_sounds{sound_trials,3}] - possible_it_locs(test_iterations-possible_iterations(1)+1)];
-        small_shift = round(mean(difference_it_sound(find(difference_it_sound < mean_freq*3 & difference_it_sound > 0)))/mean_freq)*mean_freq; %find closest ones and determine if there needs to be another small shift
-        small_shift_neg = round(mean(difference_it_sound(find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0)))/mean_freq)*mean_freq; %find closest ones and determine if there needs to be another small shift
+        % sound always ends ~3ms after last iteration in the trial
+        small_shift = (round(mean(difference_it_sound(find(difference_it_sound < mean_freq*3 & difference_it_sound > 0)))/mean_freq)*mean_freq)-0.003*digidata_its(file).sync_sampling_rate; %find closest ones and determine if there needs to be another small shift
+        small_shift_neg = (round(mean(difference_it_sound(find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0)))/mean_freq)*mean_freq)-0.003*digidata_its(file).sync_sampling_rate; %find closest ones and determine if there needs to be another small shift
 
         if ~isnan(small_shift) && isnan(small_shift_neg)
             new_shift = shift+small_shift;
@@ -104,9 +100,9 @@ else
     test_iterations = trial_its.end_trial_its(start_trial_number:end_trial_number);
     sound_trials = 1+file_trial_ids(file,3):length(test_iterations)+file_trial_ids(file,3);
     difference_it_sound = [[sound_condition_array(file).VR_sounds{sound_trials,3}] - possible_it_locs(test_iterations-possible_iterations(1)+1)];
-    small_shift = round(mean(difference_it_sound(find(difference_it_sound < mean_freq*5 & difference_it_sound > 0)))/mean_freq)*mean_freq-3; %find closest ones and determine if there needs to be another small shift
-    small_shift_neg = round(mean(difference_it_sound(find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0)))/mean_freq)*mean_freq+3; %find closest ones and determine if there needs to be another small shift
-
+    small_shift = (round(mean(difference_it_sound(find(difference_it_sound < mean_freq*3 & difference_it_sound > 0)))/mean_freq)*mean_freq)-0.003*digidata_its(file).sync_sampling_rate; %find closest ones and determine if there needs to be another small shift
+    small_shift_neg = (round(mean(difference_it_sound(find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0)))/mean_freq)*mean_freq)-0.003*digidata_its(file).sync_sampling_rate; %find closest ones and determine if there needs to be another small shift
+    
     if ~isnan(small_shift) && isnan(small_shift_neg)
         new_shift = shift+small_shift;
     elseif ~isnan(small_shift_neg) && isnan(small_shift)
@@ -130,7 +126,7 @@ possible_sound_onsets = possible_it_times(sound_onsets_iterations);
 all_differences = [];
 for s = 1:length(possible_sound_onsets)
     difference_sounds = min(abs(possible_sound_onsets(s) - sound_onsets_speakers));
-    all_differences = [all_differences,difference_sounds]
+    all_differences = [all_differences,difference_sounds];
 %     if difference_sounds < 0.012 * digidata_its(file).sync_sampling_rate %if they are within 12ms of each other
 %         fprintf('Sound distances make sense!\n');
 %     else
@@ -160,6 +156,8 @@ virmen_it(file).locs = possible_it_locs;
 virmen_it(file).ids = possible_iterations;
 virmen_it(file).shift = new_shift;
 virmen_it(file).difference = all_differences;
+virmen_it(file).start_trial_number = start_trial_number;
+virmen_it(file).end_trial_number = end_trial_number;
 end
 
 % figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(rescale(ex_data(:,5),-1,0));plot(possible_it_locs(test_iterations-possible_iterations(1)+1),0,'*c');hold off; movegui(gcf,'center');

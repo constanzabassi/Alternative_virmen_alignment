@@ -44,7 +44,7 @@ sound_info.detection_threshold = 0.4;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets
 sound_info.sync_sampling_rate = alignment_info(1).sync_sampling_rate;
 sound_info.distance_between_sounds = 2*sound_info.sync_sampling_rate ;%min distance between sounds in digidata units in task is ~4 seconds between reward sound and start of trial- (passive at 10k was about 45000)
 sound_info.distance_within_sounds = 0.2*sound_info.sync_sampling_rate; %for task should be 200
-sound_info.sound_duration = [0.99*sound_info.sync_sampling_rate,1.1*sound_info.sync_sampling_rate];
+sound_info.sound_duration = 1*sound_info.sync_sampling_rate;%[0.99*sound_info.sync_sampling_rate,1.1*sound_info.sync_sampling_rate];
 sound_info.correct = .250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
@@ -90,14 +90,13 @@ task_info.channel_number = [galvo_channel,virmen_channel,sound_info.spkr_channel
 [file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,sync_base_path,task_info);
 %% shift iterations in time until they match positive peaks or first trial iteration
 [virmen_it,trial_its] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info);
-
-
+ % binarize trial sounds and determine sounds for trials without speaker
+ % (assumes all sounds are the same distance apart)
+ sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st);
 %[possible_alignment] = determine_shift(file_trial_ids,sound_condition_array, trial_its, file_digidata_trial_info,digidata_its,data);
 %figure(); hold on;plot(ex_data(:,6));plot(ex_data(:,7)); plot(rescale(ex_data(:,4),-1,0));plot(possible_alignment(1).it_times,-.5,'*c');plot(possible_alignmen(1).sound_onsets,-.5,'*r');hold off; movegui(gcf,'center');
-%% try to estimate iterations based on positive peaks if they exist
-% [positive_peaks,positive_locs] = findpeaks(ex_data(:,virmen_channel),'MINPEAKHEIGHT',0.09,'MinPeakDistance',5);
-% positive_peaks = round(positive_peaks,1)*1e5;
-% data.data(1,positive_peaks(1))
+%%  align virmen data
+imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell);
 
 %% TIME CALCULATIONS
 % clear trial_time trial_ex

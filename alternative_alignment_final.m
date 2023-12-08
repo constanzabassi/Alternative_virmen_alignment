@@ -91,7 +91,7 @@ task_info.channel_number = [galvo_channel,virmen_channel,sound_info.spkr_channel
 %% shift iterations in time until they match positive peaks or first trial iteration
 [virmen_it,trial_its] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info);
 
-
+imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell)
 %[possible_alignment] = determine_shift(file_trial_ids,sound_condition_array, trial_its, file_digidata_trial_info,digidata_its,data);
 %figure(); hold on;plot(ex_data(:,6));plot(ex_data(:,7)); plot(rescale(ex_data(:,4),-1,0));plot(possible_alignment(1).it_times,-.5,'*c');plot(possible_alignmen(1).sound_onsets,-.5,'*r');hold off; movegui(gcf,'center');
 %% try to estimate iterations based on positive peaks if they exist

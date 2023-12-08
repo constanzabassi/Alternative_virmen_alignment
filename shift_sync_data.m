@@ -163,6 +163,9 @@ virmen_it(file).difference = all_differences;
 virmen_it(file).start_trial_number = start_trial_number;
 virmen_it(file).end_trial_number = end_trial_number;
 
+virmen_it(file).file_trial_id_start = file_trial_ids(file,3);
+virmen_it(file).file_trial_id_end = file_trial_ids(file,4);
+
 end
 
 % figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(rescale(ex_data(:,5),-1,0));plot(possible_it_locs(test_iterations-possible_iterations(1)+1),0,'*c');hold off; movegui(gcf,'center');

@@ -160,6 +160,7 @@ virmen_it(file).it_times = possible_it_locs;
 virmen_it(file).actual_it_values = possible_iterations; %ids
 virmen_it(file).shift = new_shift;
 virmen_it(file).difference = all_differences;
+virmen_it(file).directory = digidata_its(file).directory;
 virmen_it(file).start_trial_number = start_trial_number;
 virmen_it(file).end_trial_number = end_trial_number;
 

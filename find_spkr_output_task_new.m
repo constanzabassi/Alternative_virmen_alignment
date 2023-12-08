@@ -107,16 +107,17 @@ for file = 1:num_files
         
     difference = [true_sound_pairs(:,2) - true_sound_pairs(:,1)]; 
     all_trial_sounds = [];
-    all_trial_sounds = true_sound_pairs(find(difference >sound_info.sound_duration(1) & difference < sound_info.sound_duration(2)),:); %sounds that are outside limits of sound duration
+    range_sound_duration = [sound_info.sound_duration-(sound_info.sound_duration*0.01),sound_info.sound_duration+(sound_info.sound_duration*0.1];
+    all_trial_sounds = true_sound_pairs(find(difference >range_sound_duration(1) & difference < range_sound_duration(2)),:); %sounds that are outside limits of sound duration
     % adding code to also include sounds that are cut off early
     count = 0; unfinished_sounds = [];unfinished_sounds_toadd =[];
     
-    unfinished_sounds = setdiff(1:length(difference),find(difference >sound_info.sound_duration(1) & difference < sound_info.sound_duration(2)));
+    unfinished_sounds = setdiff(1:length(difference),find(difference >range_sound_duration(1) & difference < range_sound_duration(2)));
     if ~isempty(unfinished_sounds)
         for es = 1:length(unfinished_sounds)
             extra_sound = unfinished_sounds(es);
             if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < (sound_info.distance_within_sounds*.1+sound_info.distance_within_sounds) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > (sound_info.distance_within_sounds-(sound_info.distance_within_sounds*.1)) ...
-                    && (difference(extra_sound-1) >sound_info.sound_duration(1) & difference(extra_sound-1) < sound_info.sound_duration(2))==1
+                    && (difference(extra_sound-1) >range_sound_duration(1) & difference(extra_sound-1) < range_sound_duration(2))==1
                 count = count+1;
                     unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,:)];
             end

@@ -43,6 +43,20 @@ for file = 1:length(virmen_it)
     end
     sounds_per_file(file).binary_sounds = binary_sounds;
 
+    %visualize the binary sounds
+    ex_data = abfload(strcat(virmen_it(file).directory));
+figure(55);clf;
+title(strcat('Binary sounds in file # ', num2str(file)));
+hold on;cc = plot(rescale(ex_data(:,sound_info.spkr_channel_number(1)),0,1),'-b');dd = plot(rescale(ex_data(:,sound_info.spkr_channel_number(2)),0,1),'-m');
+a = plot(binary_sounds,'-k');
+%plot(rescale(ex_data(:,sound_info.spkr_channel_number(3)),-1,0),'-r');
+legend([ cc dd  a(1) ],'Speaker 1','Speaker 2', 'binary sounds')
+if length(sound_info.spkr_channel_number)>2
+    plot(rescale(ex_data(:,sound_info.spkr_channel_number(3)),0,1),'-r')
+end
+hold off;
+
+pause
 end
 figure();
 plot(overall_diff);

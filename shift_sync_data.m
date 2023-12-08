@@ -156,12 +156,13 @@ hold off
 pause
 %hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(possible_it_locs,0,'*c');hold off; movegui(gcf,'center');
 
-virmen_it(file).locs = possible_it_locs;
-virmen_it(file).ids = possible_iterations;
+virmen_it(file).it_times = possible_it_locs;
+virmen_it(file).actual_it_values = possible_iterations; %ids
 virmen_it(file).shift = new_shift;
 virmen_it(file).difference = all_differences;
 virmen_it(file).start_trial_number = start_trial_number;
 virmen_it(file).end_trial_number = end_trial_number;
+
 end
 
 % figure(999);clf; hold on;plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(rescale(ex_data(:,8),-1,0));plot(rescale(ex_data(:,5),-1,0));plot(possible_it_locs(test_iterations-possible_iterations(1)+1),0,'*c');hold off; movegui(gcf,'center');

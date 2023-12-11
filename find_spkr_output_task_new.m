@@ -189,7 +189,11 @@ for i = 1:numSounds
     condition_group_array{groupNum, 3}  = offsetTime;
     condition_group_array{groupNum, 4}  = groupNum;
     condition_group_array{groupNum, 5}  = updated_condition_array{1,i}; %actual condition
-    
+    if ismember(offsetTime,unfinished_sounds_toadd)
+        condition_group_array{groupNum, 6} = 1
+    else
+        condition_group_array{groupNum, 6} = 0;
+    end
     onsettimes=[];
 end
 

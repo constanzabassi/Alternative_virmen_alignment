@@ -23,7 +23,7 @@ if ~isempty(digidata_its(file).pos_loc)
     pos_peak_id = digidata_its(file).pos_pks(1)*10e4;
     pos_peak_id = round(pos_peak_id);
     
-    if pos_peak_id(1) == 1000000 %very first file has large positive peak
+    if pos_peak_id(1) == 1000000 %very first file has large positive peak (not actually an iteration of virmen have to add 1!)
         pos_peak_pos = digidata_its(file).locs(find(digidata_its(file).locs == digidata_its(file).pos_loc(1))+1);%digidata_its(file).pos_loc(1); %use first one for now
         shift =digidata_its(file).pos_loc(1);%  pos_peak_pos;%
         possible_it_times = iterations_in_time+shift-iterations_in_time(1); %assign iterations times with added shift
@@ -159,7 +159,11 @@ title(strcat('Shifted data file # ', num2str(file)));
 hold on; aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'-k');  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');a = plot(possible_it_locs,0,'*c');
 legend([aa bb cc dd  a(1)],'Imaging frames','Virmen its','Speaker 1','Speaker 2', 'Estimated iteration times')
 if ~isempty(pos_peak_id)
-    plot(possible_it_locs(pos_peak_id-possible_iterations(1)),0,'*r');
+    if pos_peak_id(1) == 1000000
+        plot(possible_it_locs(pos_peak_id),0,'*r');
+    else
+        plot(possible_it_locs(pos_peak_id-possible_iterations(1)),0,'*r');
+    end
 end
 hold off
 pause

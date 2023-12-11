@@ -107,7 +107,7 @@ for file = 1:num_files
         
     difference = [true_sound_pairs(:,2) - true_sound_pairs(:,1)]; 
     all_trial_sounds = [];
-    range_sound_duration = [sound_info.sound_duration-(sound_info.sound_duration*0.01),sound_info.sound_duration+(sound_info.sound_duration*0.1];
+    range_sound_duration = [sound_info.sound_duration-(sound_info.sound_duration*0.01),sound_info.sound_duration+(sound_info.sound_duration*0.1)];
     all_trial_sounds = true_sound_pairs(find(difference >range_sound_duration(1) & difference < range_sound_duration(2)),:); %sounds that are outside limits of sound duration
     % adding code to also include sounds that are cut off early
     count = 0; unfinished_sounds = [];unfinished_sounds_toadd =[];
@@ -131,7 +131,7 @@ for file = 1:num_files
 
 %convert to true condition values if there are multiple speakers
 if sound_info.mult_spkr == 1
-    [updated_condition_array] = convert_sound_conditions(condition_array,sound_info.conditions_per_speaker,sound_info.speaker_ids);
+    [updated_condition_array] = convert_sound_conditions(condition_array,sound_info.condition_per_speaker,sound_info.speaker_ids);
     for t = 1:length(sound_struc);sound_struc(t).true_condition = updated_condition_array{1,t};end
 else %true condition is equal to the condition array
     for t = 1:length(sound_struc)

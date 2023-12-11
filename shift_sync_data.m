@@ -143,6 +143,13 @@ for s = 1:length(possible_sound_onsets)
 %         fprintf('Sound distances do not make sense!\n');
 %     end
 end
+
+%save average distance from trigger iteration right after the gap (trigger
+%+1)
+sound_onsets_iterations2 = trial_its.sound_trigger_its(find(trial_its.sound_trigger_its > trial_its.start_trial_its(start_trial_number) & trial_its.sound_trigger_its <trial_its.end_iti_its(end_trial_number)))+0; %sound happens within 7 iterations
+possible_sound_onsets2 = possible_it_times(sound_onsets_iterations2);
+mean_sound_distance = mean(sound_onsets_speakers(all_sound_trials) - possible_sound_onsets2);
+
 figure(998);clf; 
 hold on
 title(strcat('Sound onset verification less than 100ms apart -file # ', num2str(file)));
@@ -179,6 +186,9 @@ virmen_it(file).end_trial_number = end_trial_number;
 
 virmen_it(file).file_trial_id_start = file_trial_ids(file,3);
 virmen_it(file).file_trial_id_end = file_trial_ids(file,4);
+
+virmen_it(file).mean_sound_distance = mean_sound_distance;
+
 
 end
 

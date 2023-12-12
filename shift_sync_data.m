@@ -8,7 +8,7 @@ iterations_in_time = iterations_in_time.*digidata_its(file).sync_sampling_rate;
 it_ids = 1:length(data.data(1,:));
 mean_freq = round(mode(diff(iterations_in_time))); 
 
-start_trial_number = file_trial_ids(file,1)-file_trial_ids(file,3)+1; 
+start_trial_number = file_trial_ids(file,1);%-file_trial_ids(file,3)+1; 
 end_trial_number = file_trial_ids(file,2);
 
 %initialize variables
@@ -36,7 +36,7 @@ if ~isempty(digidata_its(file).pos_loc)
         %iteration
         test_iterations = trial_its.end_trial_its(start_trial_number:end_trial_number);
         all_sound_trials = 1+file_trial_ids(file,3):length(test_iterations)+file_trial_ids(file,3);
-        excluded_trials = find([sound_condition_array(file).VR_sounds{:,6}]==0); %only include unifinished sounds in analysis
+        excluded_trials = find([sound_condition_array(file).VR_sounds{:,6}]~=1); %only include unifinished sounds in analysis
         [sound_trials,ind] = setdiff(all_sound_trials,excluded_trials);
         difference_it_sound = [([sound_condition_array(file).VR_sounds{sound_trials,3}]-0.005*digidata_its(file).sync_sampling_rate) - possible_it_locs(test_iterations(ind)-possible_iterations(1)+1)];
         small_shift = round(mean(difference_it_sound(find(difference_it_sound < mean_freq*3 & difference_it_sound > 0)))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
@@ -70,7 +70,7 @@ if ~isempty(digidata_its(file).pos_loc)
         %iteration
         test_iterations = trial_its.end_trial_its(start_trial_number:end_trial_number);
         all_sound_trials = 1+file_trial_ids(file,3):length(test_iterations)+file_trial_ids(file,3);
-        excluded_trials = find([sound_condition_array(file).VR_sounds{:,6}]==0); %only include unifinished sounds in analysis
+        excluded_trials = find([sound_condition_array(file).VR_sounds{:,6}]~=1); %only include unifinished sounds in analysis
         [sound_trials,ind] = setdiff(all_sound_trials,excluded_trials);
         difference_it_sound = [([sound_condition_array(file).VR_sounds{sound_trials,3}]-0.005*digidata_its(file).sync_sampling_rate) - possible_it_locs(test_iterations(ind)-possible_iterations(1)+1)];
         % sound always ends ~3ms after last iteration in the trial
@@ -107,7 +107,7 @@ else
     %iteration
     test_iterations = trial_its.end_trial_its(start_trial_number:end_trial_number);
     all_sound_trials = 1+file_trial_ids(file,3):length(test_iterations)+file_trial_ids(file,3);
-    excluded_trials = find([sound_condition_array(file).VR_sounds{:,6}]==0); %only include unifinished sounds in analysis
+    excluded_trials = find([sound_condition_array(file).VR_sounds{:,6}]~=1); %only include unifinished sounds in analysis
     [sound_trials,ind] = setdiff(all_sound_trials,excluded_trials);
     difference_it_sound = [([sound_condition_array(file).VR_sounds{sound_trials,3}]-0.005*digidata_its(file).sync_sampling_rate) - possible_it_locs(test_iterations(ind)-possible_iterations(1)+1)];
     small_shift = round(mean(difference_it_sound(find(difference_it_sound < mean_freq*3 & difference_it_sound > 0)))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift

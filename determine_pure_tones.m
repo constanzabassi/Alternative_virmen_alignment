@@ -248,8 +248,9 @@ end
 [combined_pure_tones,order] = sortrows([pure_tones_trial;pure_tones_trial2],2);
 [combined_pure_tones_ordered,~] = sortrows([pure_tones_trial;pure_tones_trial2],4);
 condition_onset_array_all.ITI_sounds = combined_pure_tones_ordered;
+%adding this so arrays are the same size!
 nan_array = cell(size(pure_tones_trial2,1),size(pure_tones_trial2,2)+1);
-nan_array(1:size(pure_tones_trial2,1),1:size(pure_tones_trial2,2)+1) = {nan};
+nan_array(1:size(pure_tones_trial2,1),1:size(pure_tones_trial2,2)+2) = {nan};
 combined_list = [condition_onset_array_all.VR_sounds;nan_array];%nan(size(pure_tones_trial2))
 
 if ~isempty(pure_tones_trial2)

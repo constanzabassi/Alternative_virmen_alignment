@@ -304,7 +304,7 @@ end
 for t = 1:length(sound_outputs_trials(file).VR_sounds)
     if isnan(sound_outputs_trials(file).VR_sounds{t,1}) && sound_info.mult_spkr == 1
          id = setdiff(1:4,sound_info.speaker_ids);
-        sound_outputs_trials(file).VR_sounds{t,5} = setdiff(find(conditions_per_speaker(:,id)),[find(conditions_per_speaker(:,sound_info.speaker_ids(1)));find(conditions_per_speaker(:,sound_info.speaker_ids(2)));find(conditions_per_speaker(:,sound_info.speaker_ids(3)))]);
+        sound_outputs_trials(file).VR_sounds{t,5} = setdiff(find(sound_info.condition_per_speaker(:,id)),[find(sound_info.condition_per_speaker(:,sound_info.speaker_ids(1)));find(sound_info.condition_per_speaker(:,sound_info.speaker_ids(2)));find(sound_info.condition_per_speaker(:,sound_info.speaker_ids(3)))]);
     end
 end
 

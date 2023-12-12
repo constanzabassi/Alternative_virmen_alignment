@@ -129,6 +129,7 @@ end
 %final test- see if there are about 7 iterations from tiny gap before sound
 %onset
 sound_onsets_speakers = [sound_condition_array(file).VR_sounds{:,2}]; 
+nan_ind = find(isnan(sound_onsets_speakers));
 sound_onsets_speakers = sound_onsets_speakers(~isnan(sound_onsets_speakers));
 sound_onsets_iterations = trial_its.sound_trigger_its(find(trial_its.sound_trigger_its > trial_its.start_trial_its(start_trial_number) & trial_its.sound_trigger_its <trial_its.end_iti_its(end_trial_number)))+6; %sound happens within 7 iterations
 possible_sound_onsets = possible_it_times(sound_onsets_iterations);
@@ -148,7 +149,14 @@ end
 %+1)
 sound_onsets_iterations2 = trial_its.sound_trigger_its(find(trial_its.sound_trigger_its > trial_its.start_trial_its(start_trial_number) & trial_its.sound_trigger_its <trial_its.end_iti_its(end_trial_number)))+0; %sound happens within 7 iterations
 possible_sound_onsets2 = possible_it_times(sound_onsets_iterations2);
-mean_sound_distance = mean(sound_onsets_speakers(all_sound_trials) - possible_sound_onsets2);
+% mean_sound_distance = mean(sound_onsets_speakers(all_sound_trials)-possible_sound_onsets2);% works only if there are no NANs sounds           
+mean_sound_distance = [];
+for s = 1:length(possible_sound_onsets2)
+    difference_sounds_it = min(abs(possible_sound_onsets2(s) - sound_onsets_speakers));
+    mean_sound_distance = [mean_sound_distance,difference_sounds_it]; %gives large values for trials without sounds
+end
+mean_sound_distance = mean_sound_distance(find(mean_sound_distance <.2*digidata_its(file).sync_sampling_rate));
+mean_sound_distance = mean(mean_sound_distance);
 
 figure(998);clf; 
 hold on
@@ -167,7 +175,7 @@ hold on; aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,t
 legend([aa bb cc dd  a(1)],'Imaging frames','Virmen its','Speaker 1','Speaker 2', 'Estimated iteration times')
 if ~isempty(pos_peak_id)
     if pos_peak_id(1) == 1000000
-        plot(possible_it_locs(pos_peak_id),0,'*r');
+        plot(possible_it_locs(1),0,'*r');
     else
         plot(possible_it_locs(pos_peak_id-possible_iterations(1)),0,'*r');
     end

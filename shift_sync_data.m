@@ -150,6 +150,7 @@ for s = 1:length(possible_sound_onsets)
 %         fprintf('Sound distances do not make sense!\n');
 %     end
 end
+all_differences = all_differences *1000/digidata_its(file).sync_sampling_rate; %convert to ms for plotting
 
 %save average distance from trigger iteration right after the gap (trigger
 %+1)
@@ -168,7 +169,7 @@ figure(998);clf;
 hold on
 title(strcat('Sound onset verification less than 100ms apart -file # ', num2str(file)));
 histogram(all_differences(find(all_differences< 0.1* digidata_its(file).sync_sampling_rate)),'BinWidth',2); %
-xline(mean_freq,'-r')
+xline((mean_freq*1000/digidata_its(file).sync_sampling_rate),'-r')
 xlabel('Distance between iteration at onset and sound onset in ms')
 ylabel('Number of sound onsets')
 hold off

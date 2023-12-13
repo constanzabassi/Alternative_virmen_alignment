@@ -150,6 +150,7 @@ for s = 1:length(possible_sound_onsets)
 %         fprintf('Sound distances do not make sense!\n');
 %     end
 end
+all_differences = all_differences *1000/
 
 %save average distance from trigger iteration right after the gap (trigger
 %+1)

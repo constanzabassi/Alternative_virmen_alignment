@@ -17,7 +17,7 @@ for file = 1:length(virmen_it)
     [a,b] =find(sound_trigger_time(1) - [sound_condition_array(file).VR_sounds{:,3}]<0,1,'first');
     first_sound_trial = b-1;
     end_trial_time = virmen_it(file).it_times(trial_its.end_trial_its(within_trials_all-2+first_sound_trial)-virmen_it(file).actual_it_values(1)+1);
-
+    first_onset = [];
     for s = 1:length(sound_trigger_time)
         if isnan(sound_condition_array(file).VR_sounds{s+first_sound_trial,3}) || ~isnan(sound_condition_array(file).VR_sounds{s+1,3})
             onset = [];
@@ -30,6 +30,7 @@ for file = 1:length(virmen_it)
             if size(sound_onsets{s,:},2)>size(sound_offsets{s,:},2)% if last sound is unifinsehd
                 sound_offsets{s,:} = [sound_offsets{s,:},round(end_trial_time(s))];
             end
+            first_onset = [first_onset,sound_onsets{s,1}(1,1)];
         end
     end
     file
@@ -82,6 +83,15 @@ end
 
 sounds_per_file(file).binary_sounds = binary_sounds;
 
+dist = [];
+for s = 1:length(first_onset)
+    temp = min(abs([sound_condition_array(file).VR_sounds{:,2}] - first_onset(s)));
+    dist = [dist,temp];
 end
+sounds_per_file(file).distance_to_true = dist*1000/sound_info.sync_sampling_rate; %convert to ms
+
+end
+ mean_al = [];var_al =[];for i = 1:length(virmen_it); mean_al = [mean_al,mean(sounds_per_file(i).distance_to_true)];var_al = [var_al,var(sounds_per_file(i).distance_to_true)];end
+ figure(556);clf; scatter(mean_al,var_al);xlabel('mean distance from true sound in ms'); ylabel('variance in  ms');
 
 

@@ -196,13 +196,12 @@ virmen_it(file).actual_it_values = possible_iterations; %ids
 virmen_it(file).shift = new_shift;
 virmen_it(file).difference = all_differences;
 virmen_it(file).directory = digidata_its(file).directory;
-virmen_it(file).start_trial_number = start_trial_number;
-virmen_it(file).end_trial_number = end_trial_number;
-
-virmen_it(file).file_trial_id_start = file_trial_ids(file,3);
-virmen_it(file).file_trial_id_end = file_trial_ids(file,4);
-
 virmen_it(file).mean_sound_distance = mean_sound_distance;
+
+sound_onsets_iterations = trial_its.sound_trigger_its(find(trial_its.sound_trigger_its > trial_its.start_trial_its(start_trial_number) & trial_its.sound_trigger_its <trial_its.end_iti_its(end_trial_number))); 
+virmen_it(file).sound_trigger = sound_onsets_iterations;
+virmen_it(file).sound_trigger_time = possible_it_times(sound_onsets_iterations);
+
 
 
 end

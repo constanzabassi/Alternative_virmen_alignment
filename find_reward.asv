@@ -1,13 +1,36 @@
-function rewards_per_file = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its)
+function [rewards_per_file,reward_loc_end_trial] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its,digidata_its,trial_info)
 % for each trial find distance between end trial and start ITI in ms
+rewards_per_file ={};
 for file = 1:length(virmen_it) 
     %initialize variable to save
     it_distance = [];
-    %loop across trials inside file
-    for trial = file_trial_ids(file,1):file_trial_ids(file,2)
-        start_it = virmen_it(file).actual_it_values(1);
-        temp = virmen_it(file).it_times(trial_its.end_trial_its-start_it+1(trial))-virmen_it(file).it_times(trial_its.end_trial_its(trial));
-        it_distance = [it_distance,temp];
+    within_all_trials = file_trial_ids(file,1):file_trial_ids(file,2);
+    count = 0;
+    %loop across trials inside file and find distance between end of trial
+    %and start of ITI
+    for trial = within_all_trials
+        if trial_info(trial).correct == 1 %if mouse was rewarded
+            count = count+1;
+            start_it = virmen_it(file).actual_it_values(1);
+            end_it = trial_its.end_trial_its-start_it+1;
+            start_iti_it = trial_its.start_iti_its-start_it+1;
+            temp = virmen_it(file).it_times(start_iti_it (trial)) - virmen_it(file).it_times(end_it(trial));
+            temp = temp*1000/digidata_its(file).sync_sampling_rate; %convert to ms
+            it_distance = [it_distance,temp];
+            
+            %use distance information to determine probable reward location
+            %1) compare to distance from end of trial 
+            reward_loc_end_trial(trial,1) = predict(mdl_end_trial_sol,it_distance(count)); %distance from end of trial iteration
+            reward_loc_end_trial(trial,2) = virmen_it(file).it_times(end_it(trial)) + reward_loc_end_trial(trial,1)/1000*digidata_its(file).sync_sampling_rate; %distance in digidata time
+            %2) compare to distance from pure tone 
+            sound_trial = find([sound_condition_array(file).ITI_sounds(:,2)]>virmen_it(file).it_times(end_it(trial))& [sound_condition_array(file).ITI_sounds(:,2)]<virmen_it(file).it_times(start_iti_it (trial)));
+            reward_loc_pure(trial,1) = predict(mdl_pure_sol,it_distance(count)); %distance from end of trial iteration
+            reward_loc_pure(trial,2) = sound_condition_array(file).ITI_sounds(trial,2) - reward_loc_end_trial(trial,1)/1000*digidata_its(file).sync_sampling_rate; %distance in digidata time
+
+        end
     end
-    rewards_per_file(file).it_distance
+    %use distance information to determine probable reward location
+    %1) compare to distance from end of trial
+
+    rewards_per_file(file).it_distance = it_distance;
 end

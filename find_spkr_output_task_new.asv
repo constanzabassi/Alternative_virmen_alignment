@@ -2,7 +2,7 @@
 function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_new(server,mouse,date,alignment_info,string,sound_info) 
 %find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr,smoothing_factor) 
 %pc=1 if windows, any other number if mac
-cd(strcat(server,'\Connie\RawData\',num2str(mouse),'\wavesurfer\',num2str(date)));
+cd(strcat(server,'/Connie/RawData/',num2str(mouse),'/wavesurfer/',num2str(date)));
 sync_dir = dir(strcat('*',string,'*.abf'));
 num_files = length(sync_dir);
 file_ind = 0;
@@ -107,16 +107,17 @@ for file = 1:num_files
         
     difference = [true_sound_pairs(:,2) - true_sound_pairs(:,1)]; 
     all_trial_sounds = [];
-    all_trial_sounds = true_sound_pairs(find(difference >sound_info.sound_duration(1) & difference < sound_info.sound_duration(2)),:); %sounds that are outside limits of sound duration
+    range_sound_duration = [sound_info.sound_duration-(sound_info.sound_duration*0.01),sound_info.sound_duration+(sound_info.sound_duration*0.1)];
+    all_trial_sounds = true_sound_pairs(find(difference >range_sound_duration(1) & difference < range_sound_duration(2)),:); %sounds that are outside limits of sound duration
     % adding code to also include sounds that are cut off early
     count = 0; unfinished_sounds = [];unfinished_sounds_toadd =[];
     
-    unfinished_sounds = setdiff(1:length(difference),find(difference >sound_info.sound_duration(1) & difference < sound_info.sound_duration(2)));
+    unfinished_sounds = setdiff(1:length(difference),find(difference >range_sound_duration(1) & difference < range_sound_duration(2)));
     if ~isempty(unfinished_sounds)
         for es = 1:length(unfinished_sounds)
             extra_sound = unfinished_sounds(es);
             if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < (sound_info.distance_within_sounds*.1+sound_info.distance_within_sounds) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > (sound_info.distance_within_sounds-(sound_info.distance_within_sounds*.1)) ...
-                    && (difference(extra_sound-1) >sound_info.sound_duration(1) & difference(extra_sound-1) < sound_info.sound_duration(2))==1
+                    && (difference(extra_sound-1) >range_sound_duration(1) & difference(extra_sound-1) < range_sound_duration(2))==1
                 count = count+1;
                     unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,:)];
             end
@@ -126,10 +127,18 @@ for file = 1:num_files
 
     %classify sounds
 [sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (reversedSoundVector,all_trial_sounds,sound_info.mult_spkr);
-load('U:\Connie\condition_per_speaker');
+%load('U:/Connie/condition_per_speaker');
 
-[updated_condition_array] = convert_sound_conditions(condition_array,conditions_per_speaker,sound_info.speaker_ids);
-for t = 1:length(sound_struc);sound_struc(t).true_condition = updated_condition_array{1,t};end
+%convert to true condition values if there are multiple speakers
+if sound_info.mult_spkr == 1
+    [updated_condition_array] = convert_sound_conditions(condition_array,sound_info.condition_per_speaker,sound_info.speaker_ids);
+    for t = 1:length(sound_struc);sound_struc(t).true_condition = updated_condition_array{1,t};end
+else %true condition is equal to the condition array
+    for t = 1:length(sound_struc)
+        sound_struc(t).true_condition = sound_struc(t).condition;
+        updated_condition_array{1,t} = sound_struc(t).condition;
+    end
+end
 
 numSounds = length(onset_array);
 numConditions = length(unique(condition_array));
@@ -180,7 +189,11 @@ for i = 1:numSounds
     condition_group_array{groupNum, 3}  = offsetTime;
     condition_group_array{groupNum, 4}  = groupNum;
     condition_group_array{groupNum, 5}  = updated_condition_array{1,i}; %actual condition
-    
+    if ismember(offsetTime,unfinished_sounds_toadd)
+        condition_group_array{groupNum, 6} = 1
+    else
+        condition_group_array{groupNum, 6} = 0;
+    end
     onsettimes=[];
 end
 
@@ -256,11 +269,11 @@ sound_outputs_trials(file).ITI_sounds = sound_outputs_trials_file.ITI_sounds;
     
     
 %MAKE FIGURE OF ITI SOUNDS!
-    figure(111);clf
-    trials = {};
-    trials{1} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 1);
-    trials{2} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 0);
-    colorss = [0 0.8 0.4;.9 0 0];
+figure(111);clf
+trials = {};
+trials{1} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 1);
+trials{2} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 0);
+colorss = [0 0.8 0.4;.9 0 0];
 hold on
 % Plot the trials for each condition
 for c = 1:2 %correct or incorrect
@@ -289,8 +302,9 @@ end
 
 %if it has nans for condition
 for t = 1:length(sound_outputs_trials(file).VR_sounds)
-    if isnan(sound_outputs_trials(file).VR_sounds{t,1}) && mult_spkr == 1
-        sound_outputs_trials(file).VR_sounds{t,5} =
+    if isnan(sound_outputs_trials(file).VR_sounds{t,1}) && sound_info.mult_spkr == 1
+         id = setdiff(1:4,sound_info.speaker_ids);
+        sound_outputs_trials(file).VR_sounds{t,5} = setdiff(find(sound_info.condition_per_speaker(:,id)),[find(sound_info.condition_per_speaker(:,sound_info.speaker_ids(1)));find(sound_info.condition_per_speaker(:,sound_info.speaker_ids(2)));find(sound_info.condition_per_speaker(:,sound_info.speaker_ids(3)))]);
     end
 end
 

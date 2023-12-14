@@ -261,6 +261,8 @@ sound_outputs_trials(file).VR_sounds = condition_group_array;
 %% final step - classify pure tones only// assuming sounds look properly examined
 pure_tones_only= pure_tone_signal;
 pure_tones_only(:,sounds) = 0; %get rid of task sounds so only pure tones are left
+actual_sounds = rescaled_sounds;
+actual_sounds(:,sounds) = 0;
 if ~isempty(sound_info.correct)
     %assumes ITI sound happens .1 to 1 sec after last sound of trial
 [sound_outputs_trials_file,pure_tones_trials] = determine_pure_tones(pure_tones_only,sync_sampling_rate,sound_info.correct,sound_info.incorrect,sound_outputs_trials(file));
@@ -269,11 +271,11 @@ sound_outputs_trials(file).ITI_sounds = sound_outputs_trials_file.ITI_sounds;
     
     
 %MAKE FIGURE OF ITI SOUNDS!
-    figure(111);clf
-    trials = {};
-    trials{1} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 1);
-    trials{2} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 0);
-    colorss = [0 0.8 0.4;.9 0 0];
+figure(111);clf
+trials = {};
+trials{1} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 1);
+trials{2} = find(sound_outputs_trials(file).ITI_sounds(:,1) == 0);
+colorss = [0 0.8 0.4;.9 0 0];
 hold on
 % Plot the trials for each condition
 for c = 1:2 %correct or incorrect

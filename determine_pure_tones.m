@@ -243,10 +243,21 @@ for t = 1:size(condition_onset_array_all.VR_sounds,1)
     end
 %         condition_onset_array_all.ITI_sounds(t,:) = pure_tones_trial(t,:);
 end
-
+% fine tune pure tones
+% [~,pure_tone_peaks] = findpeaks(abs(actual_sounds(1,:)),'minpeakheight',0.1);
+pure_tones_together = [pure_tones_trial;pure_tones_trial2];
+% for p = 1:length(pure_tones_together)
+%     temp = find(pure_tone_peaks>pure_tones_together(p,2) & pure_tone_peaks<pure_tones_together(p,3));
+%     if ~isempty(temp)
+%         onset_offset(p,:) = [pure_tone_peaks(temp(1)), pure_tone_peaks(temp(end))];
+%     else
+%         onset_offset(p,:) = [nan, nan];
+%     end
+% end
+% pure_tones_together(:,2:3) = onset_offset;
 %organize data
-[combined_pure_tones,order] = sortrows([pure_tones_trial;pure_tones_trial2],2);
-[combined_pure_tones_ordered,~] = sortrows([pure_tones_trial;pure_tones_trial2],4);
+[combined_pure_tones,order] = sortrows(pure_tones_together,2);
+[combined_pure_tones_ordered,order2] = sortrows(pure_tones_together,4);
 condition_onset_array_all.ITI_sounds = combined_pure_tones_ordered;
 %adding this so arrays are the same size!
 nan_array = cell(size(pure_tones_trial2,1),size(pure_tones_trial2,2)+1);
@@ -254,7 +265,7 @@ nan_array(1:size(pure_tones_trial2,1),1:size(pure_tones_trial2,2)+2) = {nan};
 combined_list = [condition_onset_array_all.VR_sounds;nan_array];%nan(size(pure_tones_trial2))
 
 if ~isempty(pure_tones_trial2)
-    condition_onset_array_all.VR_sounds = combined_list(order,:);
+    condition_onset_array_all.VR_sounds = combined_list(order2,:);
 end
 
 
@@ -310,7 +321,7 @@ plot((pure_tone_signal(1,:)));
 plot(combined_pure_tones(:,2),0,'*c')
 if length(find(isnan(combined_pure_tones(:,1))))>0  
     
-    a = plot([condition_onset_array_all.VR_sounds{order(find(isnan(combined_pure_tones(:,1)))),3}],0,'*m');
+    a = plot([condition_onset_array_all.VR_sounds{(find(isnan(combined_pure_tones_ordered(:,1)))),3}],0,'*m');
 end
 hold off
 legend('Pure Tones Diff','Pure Tones regular','Start Pure Tone','Last sound near NaN')

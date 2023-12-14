@@ -36,4 +36,6 @@ for file = 1:length(virmen_it)
 end
 % figure plot the difference between the two predictions
 difference =  reward_loc_pure(:,2)- reward_loc_end_trial(:,2);
-figure(44);clf; plot(difference*1000/digidata_its(1).sync_sampling_rate);
+difference = difference*1000/digidata_its(1).sync_sampling_rate;
+figure(44);clf; plot(difference); xlabel('trial id'); ylabel('difference between pure and end trial prediction')
+text(1,1,['mean: ' num2str(mean(abs(difference(difference~=0)))) 'var: ' num2str(var(abs(difference(difference~=0))))])

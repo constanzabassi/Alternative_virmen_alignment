@@ -8,7 +8,9 @@ runyan4 = 'W:';
 data_base = 'CBHA1-00_230825';%;
 sync_base_path = [ server '/Connie/RawData/' mousename '/wavesurfer/' date '/'];
 virmen_base = [server '/Connie/RawData/' mousename '/virmen/' data_base ];
-imaging_base_path=[server '/Connie\RawData/' mousename '/' date '/'];
+imaging_base_path=[server '/Connie/RawData/' mousename '/' date '/'];
+save_path = [server '/Connie/ProcessedData/' mousename '/' date '/VR/'];
+processed_path = [server '/Connie/ProcessedData/' mousename '/' date '/'];
 is_stim_dataset = 1; 
 % give data inputs!
 galvo_channel = 7;
@@ -36,14 +38,22 @@ code_folder = uigetdir;
 addpath(genpath(code_folder));
 % cd('C:\Code\Github\Alternative_virmen_alignment');
 % addpath(genpath('C:\Code\Align_signals_imaging'));
-
+%% load imaging data
+% load(strcat(processed_path,'dff.mat'));
+% load(strcat(processed_path,'deconv/deconv.mat'));
+dff = zeros(10,15e4);
+deconv = dff;
 %% load virmen data
-data = load(strcat(virmen_base, '.mat'));
-dataCell = load(strcat(virmen_base, '_Cell.mat'));
-
-
-% data = load(strcat(virmen_base, '_1.mat'));
-% dataCell = load(strcat(virmen_base, '_Cell_1.mat'));
+if isfile(strcat(virmen_base, '_Cell_2.mat'))
+    data = load(strcat(virmen_base, '_2.mat'));
+    dataCell = load(strcat(virmen_base, '_Cell_2.mat'));
+elseif isfile(strcat(virmen_base, '_Cell_1.mat'))
+    data = load(strcat(virmen_base, '_1.mat'));
+    dataCell = load(strcat(virmen_base, '_Cell_1.mat'));
+else
+    data = load(strcat(virmen_base, '.mat'));
+    dataCell = load(strcat(virmen_base, '_Cell.mat'));
+end
 
 %% get frame times of all files in this folder
 mkdir(strcat(server,'/Connie/ProcessedData/',num2str(mouse),'/',num2str(date)))
@@ -63,7 +73,7 @@ sound_info.correct = .250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
-sound_info.detection_threshold = 0.4;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.detection_threshold = 0.5;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 
 [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(server,mousename,date,alignment_info,'VR',sound_info);
 
@@ -94,9 +104,14 @@ digidata_its = get_digidata_iterations(sync_base_path,string, virmen_channel);
  % (assumes all sounds are the same distance apart)
 sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids);
 %% determine reward location 
-rewards_per_file = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_inds)
+[rewards_per_file,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its,digidata_its,trial_info);
 
 %%  align virmen data!
 imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell);
 
+%% save data!
+mkdir(save_path)
+cd(save_path)
+save('alignment_variables',"task_info",'sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array');
+save('imaging.mat','imaging.mat');
 

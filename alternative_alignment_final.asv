@@ -3,41 +3,52 @@ mousename = 'HA1-00';%;
 mouse = mousename;
 date = '2023-08-25'; %;
 server = 'W:'; %/Volumes/Runyan5
+runyan5 = "U:";
+runyan4 = 'W:';
 data_base = 'CBHA1-00_230825';%;
 sync_base_path = [ server '/Connie/RawData/' mousename '/wavesurfer/' date '/'];
 virmen_base = [server '/Connie/RawData/' mousename '/virmen/' data_base ];
-imaging_base_path=[server '/Connie\RawData/' mousename '/' date '/'];
+imaging_base_path=[server '/Connie/RawData/' mousename '/' date '/'];
+save_path = [server '/Connie/ProcessedData/' mousename '/' date '/VR/'];
 is_stim_dataset = 1; 
 % give data inputs!
 galvo_channel = 7;
 virmen_channel = 6;
-
-task_info.correct = 3; %correct ITI time in sec (distance between end trial and end ITI is ITI +1 sec due to virmen bug)
-task_info.incorrect = 5; %incorrect ITI time in sec
-task_info.min = 3.5;% minimum time in sec to complete a trial (without ITI)
 
 sound_info = {};
 sound_info.spkr_channel_number = [4,8];%[4,5,8];
 sound_info.speaker_ids = [1,2];%[1,2,4]; 
 sound_info.mult_spkr = 0; %if multiple speakers are used in a single trial (8 locs)
 %load conditions per speaker in runyan 5 server
-load('U:/Connie/condition_per_speaker');
+load(strcat(runyan5,'/Connie/condition_per_speaker'));
 %load('/Volumes/Runyan5/Connie/condition_per_speaker.mat');
 sound_info.condition_per_speaker = conditions_per_speaker;
 
+task_info.correct = 3; %correct ITI time in sec (distance between end trial and end ITI is ITI +1 sec due to virmen bug)
+task_info.incorrect = 5; %incorrect ITI time in sec
+task_info.min = 3.5;% minimum time in sec to complete a trial (without ITI)
+task_info.channel_number = [galvo_channel,virmen_channel,sound_info.spkr_channel_number];
+
+%reward info from runyan 4 server
+load(strcat(runyan4,'/Connie/extra_tests/2023-12-11/mdl_pure_sol.mat'));
+load(strcat(runyan4,'/Connie/extra_tests/2023-12-11/mdl_end_trial_sol.mat'));
 
 code_folder = uigetdir; 
 addpath(genpath(code_folder));
 % cd('C:\Code\Github\Alternative_virmen_alignment');
 % addpath(genpath('C:\Code\Align_signals_imaging'));
-
+%% load imaging
 %% load virmen data
-data = load(strcat(virmen_base, '.mat'));
-dataCell = load(strcat(virmen_base, '_Cell.mat'));
-
-
-% data = load(strcat(virmen_base, '_1.mat'));
-% dataCell = load(strcat(virmen_base, '_Cell_1.mat'));
+if isfile(strcat(virmen_base, '_Cell_2.mat'))
+    data = load(strcat(virmen_base, '_2.mat'));
+    dataCell = load(strcat(virmen_base, '_Cell_2.mat'));
+elseif isfile(strcat(virmen_base, '_Cell_1.mat'))
+    data = load(strcat(virmen_base, '_1.mat'));
+    dataCell = load(strcat(virmen_base, '_Cell_1.mat'));
+else
+    data = load(strcat(virmen_base, '.mat'));
+    dataCell = load(strcat(virmen_base, '_Cell.mat'));
+end
 
 %% get frame times of all files in this folder
 mkdir(strcat(server,'/Connie/ProcessedData/',num2str(mouse),'/',num2str(date)))
@@ -57,7 +68,7 @@ sound_info.correct = .250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
-sound_info.detection_threshold = 0.4;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.detection_threshold = 0.5;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 
 [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(server,mousename,date,alignment_info,'VR',sound_info);
 
@@ -75,7 +86,6 @@ string = 'VR';
 digidata_its = get_digidata_iterations(sync_base_path,string, virmen_channel);
 
 %% find its in the data that best match the its for each trial dividing files into trials that match them
-task_info.channel_number = [galvo_channel,virmen_channel,sound_info.spkr_channel_number];
 
 [file_estimated_trial_info,file_matching_trials] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info);
 
@@ -89,8 +99,14 @@ task_info.channel_number = [galvo_channel,virmen_channel,sound_info.spkr_channel
  % (assumes all sounds are the same distance apart)
 sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids);
 %% determine reward location 
+[rewards_per_file,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its,digidata_its,trial_info);
 
 %%  align virmen data!
 imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell);
 
+%% save data!
+mkdir(save_path)
+cd(save_path)
+save('alignment_variables',"task_info",'sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array');
+save('imaging.mat','imaging.mat');
 

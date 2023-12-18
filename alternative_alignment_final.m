@@ -102,12 +102,13 @@ digidata_its = get_digidata_iterations(sync_base_path,string, virmen_channel);
  
 %% binarize trial sounds and determine sounds for trials without speaker
  % (assumes all sounds are the same distance apart)
-sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids);
+sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info);
 %% determine reward location 
-[rewards_per_file,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its,digidata_its,trial_info);
+[rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its,digidata_its,trial_info,alignment_info);
 
 %%  align virmen data!
-imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell);
+%(dff,deconv,virmen_aq,alignment_info,data,dataCell,trial_its,stimulus_info,reward_info)
+imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell,trial_its,sounds_per_file,rewards_per_file);
 
 %% save data!
 mkdir(save_path)

@@ -85,8 +85,8 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
 
             % include frames for reward period between end of trial and
             % start of iti
-            imaging(vr_trial).frame_id_events.reward = imaging(vr_trial).frame_id_events.maze(end):imaging(vr_trial).frame_id_events.iti(1);
-            %imaging(vr_trial).frame_id = sort([imaging(vr_trial).frame_id,imaging(vr_trial).frame_id_reward]);   
+            imaging(vr_trial).frame_id_events.reward = imaging(vr_trial).frame_id_events.maze(end)+1:imaging(vr_trial).frame_id_events.iti(1)-1;
+            %imaging(vr_trial).frame_id = sort([imaging(vr_trial).frame_id,imaging(vr_trial).frame_id_events.reward]);   
 
 %              %frames per trial based on file 
 %             imaging(vr_trial).file_frames_start = maze_start_frame+previous_frames_sum:imaging(vr_trial).frame_id(find(diff(imaging(vr_trial).frame_id)>20))+previous_frames_sum;
@@ -121,9 +121,12 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
             this_ITI = zeros(1,size(imaging(vr_trial).dff,2));
                 
             frame_indices = [];
+            maze_frames =[];
+            iti_frames = [];
+            reward_frames = [];
             for frame = 1:size(imaging(vr_trial).dff,2)
                 ind = find(imaging(vr_trial).frame_id-min(imaging(vr_trial).frame_id)+1==frame,1,'first');  %%%here finding the index of the virmen iteration that matches this frame id, then takes the value only at that first iteration that matches the imaging frame id. Could in the future decide to bin across all virmen iterations that occur during an imaging frame
-                if isempty(ind)==0
+                if ~isempty(ind) 
                     this_y_position(frame) = movement_in_virmen_time(vr_trial).y_position(ind); %this is carolines variable's names
                     this_y_velocity(frame) = movement_in_virmen_time(vr_trial).y_velocity(ind);
                     this_x_velocity(frame) = movement_in_virmen_time(vr_trial).x_velocity(ind);
@@ -133,10 +136,29 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
                     this_ITI(frame) = movement_in_virmen_time(vr_trial).in_ITI(ind);
                     if ~isempty(this_stimulus)
                         this_stimulus(frame) = this_stimulus(frame);
+                    end  
+                    frame_indices(frame) = imaging(vr_trial).frame_id(ind);
+
+                    % define what event the frame belongs to
+                    if ismember(imaging(vr_trial).frame_id(ind),imaging(vr_trial).frame_id_events.maze)
+                        maze_frames = [maze_frames,frame];
+                    else
+                        iti_frames = [iti_frames,frame];
                     end
-                    frame_indices(frame) = ind;
                     
-                else % if there are no frames for that iteration
+                else 
+                    % if there are no frames for that iteration
+                    %happens between trials, between end of trial and start
+                    %iti and in the middle of sounds and before first sound
+                    ind2 = find(imaging(vr_trial).frame_id_events.reward-min(imaging(vr_trial).frame_id_events.maze)+1==frame,1,'first');
+                    if ~isempty(ind2) 
+                        reward_frames = [reward_frames,frame];
+                    elseif imaging(vr_trial).frame_id_events.maze(1) >= frame & imaging(vr_trial).frame_id_events.maze(1) <= frame
+                        maze_frames = [maze_frames,frame];
+                    else
+                        iti_frames = [iti_frames,frame];
+                    end
+                     
                     this_y_position(frame) = NaN;
                     this_y_velocity(frame) = NaN;
                     this_x_velocity(frame) = NaN;
@@ -148,9 +170,11 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
                         this_stimulus(frame) = nan;
                     end
                     frame_indices(frame) = nan;
+                    
                 end
                 
             end
+
             movement_in_imaging_time.y_position = this_y_position;
             movement_in_imaging_time.x_position = this_x_position;
             movement_in_imaging_time.y_velocity = this_y_velocity;
@@ -158,8 +182,16 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
             movement_in_imaging_time.view_angle = this_view_angle;
             movement_in_imaging_time.is_reward = this_reward;
             movement_in_imaging_time.in_ITI = this_ITI;
-            movement_in_imaging_time.stimulus = this_stimulus;
-            
+            movement_in_imaging_time.maze_frames = maze_frames;
+            movement_in_imaging_time.iti_frames = iti_frames;
+            movement_in_imaging_time.reward_frames = reward_frames;
+
+
+            if ~isempty(this_stimulus)
+                movement_in_imaging_time.stimulus = this_stimulus;
+            end
+
+
             %keep track of which indices in virmen time go with imaging time!
             movement_in_imaging_time.frame_indices = frame_indices; 
             

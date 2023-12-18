@@ -81,7 +81,7 @@ for p = 1:length(sounds_per_file(file).offsets)
     binary_sounds(sounds_per_file(file).onsets(p):sounds_per_file(file).offsets(p)) = 1; %in digidata time
     %find onset and offset frames and binarize based on their positions
     binary_sounds_frames(p,:) =  [find_closest_frames(alignment_info(file).frame_times,sounds_per_file(file).onsets(p),min_distance),find_closest_frames(alignment_info(file).frame_times,sounds_per_file(file).offsets(p),min_distance)];
-    if ~isnan(binary_sounds_frames(p,:))
+    if all(~isnan(binary_sounds_frames(p,:)))
         binary_sounds_imaging_time(binary_sounds_frames(p,1):binary_sounds_frames(p,2)) = 1;
     end
 end

@@ -11,6 +11,9 @@ mean_freq = round(mode(diff(iterations_in_time)));
 start_trial_number = file_trial_ids(file,1);%+file_trial_ids(file,3)-2; 
 end_trial_number = file_trial_ids(file,2);
 
+ex_data = abfload(strcat(digidata_its(file).directory));
+total_length= length(ex_data(:,1));
+
 %initialize variables
 possible_it_times = [];
 possible_iterations = [];
@@ -33,7 +36,8 @@ if ~isempty(digidata_its(file).pos_loc)
         
         shift = pos_peak_pos;% need to test vs pos_peak_pos  pos_peak_pos;%
         possible_it_times = iterations_in_time+shift-iterations_in_time(1); %assign iterations times with added shift
-        %iteration ids of iterations withing imaging limits
+        %iteration ids of iterations within imaging limits
+
         possible_iterations = trial_its.start_trial_its(start_trial_number):trial_its.end_iti_its(end_trial_number); %limit iterations to ones within imaging frames// this is iterations ids
         possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
         
@@ -175,7 +179,6 @@ ylabel('Number of sound onsets')
 hold off
 
 
-ex_data = abfload(strcat(digidata_its(file).directory));
 figure(999);clf; 
 title(strcat('Shifted data file # ', num2str(file)));
 hold on; aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'-k');  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');a = plot(possible_it_locs,0,'*c');

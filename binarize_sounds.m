@@ -1,4 +1,4 @@
-function sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids)
+function sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info)
 overall_diff = [];
 for file = 1:length(virmen_it)
 %     within_trials = virmen_it(file).file_trial_id_start:virmen_it(file).file_trial_id_end;
@@ -73,11 +73,21 @@ end
 sounds_per_file(file).onsets = [[sound_st(file).file.onset],[sound_onsets{:,:}]];
 sounds_per_file(file).offsets = [[sound_st(file).file.offset],[sound_offsets{:,:}]];
 binary_sounds = zeros(1,(max(sounds_per_file(file).offsets)+sound_info.sync_sampling_rate));
+binary_sounds_frames = [];
+min_distance = mode(diff(alignment_info(file).frame_times)); %minimum distance between frames in digidata time
+binary_sounds_imaging_time = zeros(1,length(alignment_info(file).frame_times));
 for p = 1:length(sounds_per_file(file).offsets)
-    binary_sounds(sounds_per_file(file).onsets(p):sounds_per_file(file).offsets(p)) = 1;
+    %binarize signal based on digidata time
+    binary_sounds(sounds_per_file(file).onsets(p):sounds_per_file(file).offsets(p)) = 1; %in digidata time
+    %find onset and offset frames and binarize based on their positions
+    binary_sounds_frames(p,:) =  [find_closest_frames(alignment_info(file).frame_times,sounds_per_file(file).onsets(p),min_distance),find_closest_frames(alignment_info(file).frame_times,sounds_per_file(file).offsets(p),min_distance)];
+    if ~isnan(binary_sounds_frames(p,:))
+        binary_sounds_imaging_time(binary_sounds_frames(p,1):binary_sounds_frames(p,2)) = 1;
+    end
 end
 
-sounds_per_file(file).binary_sounds = binary_sounds;
+sounds_per_file(file).binary_digidata_times = binary_sounds;
+sounds_per_file(file).binary_frame_times = binary_sounds_imaging_time;
 
 dist = [];
 for s = 1:length(first_onset)

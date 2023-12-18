@@ -88,13 +88,9 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
             imaging(vr_trial).frame_id_events.reward = imaging(vr_trial).frame_id_events.maze(end)+1:imaging(vr_trial).frame_id_events.iti(1)-1;
             %imaging(vr_trial).frame_id = sort([imaging(vr_trial).frame_id,imaging(vr_trial).frame_id_events.reward]);   
 
-%              %frames per trial based on file 
-%             imaging(vr_trial).file_frames_start = maze_start_frame+previous_frames_sum:imaging(vr_trial).frame_id(find(diff(imaging(vr_trial).frame_id)>20))+previous_frames_sum;
-%             imaging(vr_trial).file_frames_ITI = imaging(vr_trial).frame_id(find(diff(imaging(vr_trial).frame_id)>20))+1+previous_frames_sum:imaging(vr_trial).frame_id(end)+previous_frames_sum;
-
             %use these frames to get the neural activity 
             %have to add previous frames from previous folders to make sure things match up
-            %e.g. frame #1 in t-series folder 2 might actually be frames 10000
+            %e.g. frame #1 in t-series folder 2 might actually be frames 10001
             imaging(vr_trial).dff = dff(:,maze_start_frame+previous_frames_sum:iti_end_frame+previous_frames_sum);
             imaging(vr_trial).z_dff = z_dff(:,maze_start_frame+previous_frames_sum:iti_end_frame+previous_frames_sum);
             imaging(vr_trial).deconv = deconv(:,maze_start_frame+previous_frames_sum:iti_end_frame+previous_frames_sum);
@@ -137,7 +133,7 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
                     if ~isempty(this_stimulus)
                         this_stimulus(frame) = this_stimulus(frame);
                     end  
-                    frame_indices(frame) = imaging(vr_trial).frame_id(ind);
+                    frame_indices(frame) = ind;
 
                     % define what event the frame belongs to
                     if ismember(imaging(vr_trial).frame_id(ind),imaging(vr_trial).frame_id_events.maze)
@@ -153,7 +149,7 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
                     ind2 = find(imaging(vr_trial).frame_id_events.reward-min(imaging(vr_trial).frame_id_events.maze)+1==frame,1,'first');
                     if ~isempty(ind2) 
                         reward_frames = [reward_frames,frame];
-                    elseif imaging(vr_trial).frame_id_events.maze(1) >= frame & imaging(vr_trial).frame_id_events.maze(1) <= frame
+                    elseif imaging(vr_trial).frame_id_events.maze(1)-min(imaging(vr_trial).frame_id)+1 <= frame && imaging(vr_trial).frame_id_events.maze(end)-min(imaging(vr_trial).frame_id)+1 >= frame
                         maze_frames = [maze_frames,frame];
                     else
                         iti_frames = [iti_frames,frame];

@@ -1,8 +1,9 @@
-function [rewards_per_file,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its,digidata_its,trial_info)
+function [rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its,digidata_its,trial_info,alignment_info)
 % for each trial find distance between end trial and start ITI in ms
 rewards_per_file ={};
 reward_loc_end_trial = zeros(length(trial_info),2);
 reward_loc_pure = zeros(length(trial_info),4);
+reward_loc_pure_frames = zeros(length(trial_info),3);
 for file = 1:length(virmen_it) 
     %initialize variable to save
     it_distance = [];
@@ -10,6 +11,10 @@ for file = 1:length(virmen_it)
     count = 0;
     %loop across trials inside file and find distance between end of trial
     %and start of ITI
+    
+        %find frames based on pure tones
+    min_distance = mode(diff(alignment_info(file).frame_times)); %minimum distance between frames in digidata time
+
     for trial = within_all_trials
         start_it = virmen_it(file).actual_it_values(1);
         end_it = trial_its.end_trial_its-start_it+1;
@@ -30,14 +35,24 @@ for file = 1:length(virmen_it)
             reward_loc_pure(trial,2) = sound_condition_array(file).ITI_sounds(sound_trial,2) - reward_loc_pure(trial,1)/1000*digidata_its(file).sync_sampling_rate; %distance in digidata time
             reward_loc_pure(trial,3) = sound_condition_array(file).ITI_sounds(sound_trial,2);
             reward_loc_pure(trial,4) = sound_condition_array(file).ITI_sounds(sound_trial,3);
+            %find frames
+            reward_loc_pure_frames(trial,1) = find_closest_frames(alignment_info(file).frame_times,reward_loc_pure(trial,2),min_distance);
+
         end
         reward_loc_pure(trial,3) = sound_condition_array(file).ITI_sounds(sound_trial,2);
         reward_loc_pure(trial,4) = sound_condition_array(file).ITI_sounds(sound_trial,3);
+
+        reward_loc_pure_frames(trial,2) = find_closest_frames(alignment_info(file).frame_times,reward_loc_pure(trial,3),min_distance);
+        reward_loc_pure_frames(trial,3) = find_closest_frames(alignment_info(file).frame_times,reward_loc_pure(trial,4),min_distance);
+
+    
     end
     %use distance information to determine probable reward location
     %1) compare to distance from end of trial
 
     rewards_per_file(file).it_distance = it_distance;
+
+    
 end
 % figure plot the difference between the two predictions
 difference =  reward_loc_pure(:,2)- reward_loc_end_trial(:,2);

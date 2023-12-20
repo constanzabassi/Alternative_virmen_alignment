@@ -109,10 +109,11 @@ sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sou
 %%  align virmen data!
 %(dff,deconv,virmen_aq,alignment_info,data,dataCell,trial_its,stimulus_info,reward_info)
 imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell,trial_its,sounds_per_file,reward_loc_pure_frames);
-
+selected_fields = [1,6,7]; %1 y position, 6 reward, 7 ITI %inside movememnt_in_imaging_time
+plot_random_trials_alignment (imaging,selected_fields);
 %% save data!
 mkdir(save_path)
 cd(save_path)
-save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames','reward_loc_end_trial');
+save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames');
 save('imaging','imaging');
 

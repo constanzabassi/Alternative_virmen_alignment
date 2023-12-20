@@ -1,6 +1,7 @@
 function sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info)
 overall_diff = [];
 for file = 1:length(virmen_it)
+
 %     within_trials = virmen_it(file).file_trial_id_start:virmen_it(file).file_trial_id_end;
     within_trials_all = file_trial_ids(file,1):file_trial_ids(file,2);
     
@@ -14,8 +15,7 @@ for file = 1:length(virmen_it)
     first_sound_trial = b-1;
     end_trial_time = virmen_it(file).it_times(trial_its.end_trial_its(within_trials_all)-virmen_it(file).actual_it_values(1)+1);
     first_onset = [];
-    for s = 1:length(sound_trigger_time)
-            
+    for s = 1:length(within_trials_all)
             onset = [];
             %if nan determine onset and estimate where sounds might be
             %it before gap is about ~180ms from sound onset

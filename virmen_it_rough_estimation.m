@@ -47,20 +47,27 @@ trial_its_time.incorrect_its_time = incorrect_its_time;
 
 %look at sound onset first
 temp_onset = sort([find(round(floor(data.data(3,:))) == 50),find(round(floor(data.data(3,:))) == 51),find(round(floor(data.data(3,:))) == 52)]);
-%find ones that are too close together and delete them
-temp = find(diff(temp_onset)< threshold);
-temp_onset(temp+1) = [];
-sound_trigger_its = temp_onset;
-%make sure there is one trigger per trial! finding repeats getting rid of
-%anything after first one
-temp_sound_trigger = [];
+sound_trigger_its = [];
+% keep only the first one and delete the rest
 for t = 1:min([length(trial_its.start_trial_its),length(trial_its.end_trial_its)])
-    find(abs(trial_its.start_trial_its(t) - sound_trigger_its) == min(abs(trial_its.start_trial_its(t) - sound_trigger_its))) 
-    temp_sound_trigger = [temp_sound_trigger, t];
+    temp = temp_onset(find(temp_onset >trial_its.start_trial_its(t) & temp_onset <trial_its.end_trial_its(t),1,'first'));
+    sound_trigger_its = [sound_trigger_its,temp];
 end
-[U, I] = unique(temp_sound_trigger, 'first');
-x = 1:length(temp_sound_trigger);
-x(I) = [];
-sound_trigger_its(x) = [];% getting rid of repeats after first
+
+% %find ones that are too close together and delete them
+% temp = find(diff(temp_onset)< threshold);
+% temp_onset(temp+1) = [];
+% sound_trigger_its = temp_onset;
+% %make sure there is one trigger per trial! finding repeats getting rid of
+% %anything after first one
+% temp_sound_trigger = [];
+% for t = 1:min([length(trial_its.start_trial_its),length(trial_its.end_trial_its)])
+%     find(abs(trial_its.start_trial_its(t) - sound_trigger_its) == min(abs(trial_its.start_trial_its(t) - sound_trigger_its))); 
+%     temp_sound_trigger = [temp_sound_trigger, t];
+% end
+% [U, I] = unique(temp_sound_trigger, 'first');
+% x = 1:length(temp_sound_trigger);
+% x(I) = [];
+% sound_trigger_its(x) = [];% getting rid of repeats after first
 
 trial_its.sound_trigger_its = sound_trigger_its;

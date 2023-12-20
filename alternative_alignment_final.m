@@ -39,10 +39,10 @@ addpath(genpath(code_folder));
 % cd('C:\Code\Github\Alternative_virmen_alignment');
 % addpath(genpath('C:\Code\Align_signals_imaging'));
 %% load imaging data
-% load(strcat(processed_path,'dff.mat'));
-% load(strcat(processed_path,'deconv/deconv.mat'));
-dff = zeros(10,15e4);
-deconv = dff;
+load(strcat(processed_path,'dff.mat'));
+load(strcat(processed_path,'deconv/deconv.mat'));
+% dff = zeros(10,15e4);
+% deconv = dff;
 %% load virmen data
 if isfile(strcat(virmen_base, '_Cell_2.mat'))
     data = load(strcat(virmen_base, '_2.mat'));

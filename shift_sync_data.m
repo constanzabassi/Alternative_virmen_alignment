@@ -1,4 +1,4 @@
-function [virmen_it,trial_its] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info)
+function [virmen_it,trial_its,sound_condition_array] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info)
 [trial_its,trial_its_time] = virmen_it_rough_estimation(data); 
 
 for file = 1:length(digidata_its)
@@ -205,7 +205,9 @@ sound_onsets_iterations = trial_its.sound_trigger_its(find(trial_its.sound_trigg
 virmen_it(file).sound_trigger = sound_onsets_iterations;
 virmen_it(file).sound_trigger_time = possible_it_times(sound_onsets_iterations);
 
-
+if ismember('weird_trial',fields(file_estimated_trial_info))
+    sound_condition_array(file).weird_trial = file_estimated_trial_info(file).weird_trial;
+end
 
 end
 

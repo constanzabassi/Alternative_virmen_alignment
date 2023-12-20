@@ -98,7 +98,7 @@ digidata_its = get_digidata_iterations(sync_base_path,string, virmen_channel);
 % puts trials into context of all other trials (file_digidata_trial_info)
 [file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,sync_base_path,task_info);
 %% shift iterations in time until they match positive peaks or first trial iteration
-[virmen_it,trial_its] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info);
+[virmen_it,trial_its,sound_condition_array] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info);
  
 %% binarize trial sounds and determine sounds for trials without speaker
  % (assumes all sounds are the same distance apart)

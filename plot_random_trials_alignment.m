@@ -3,16 +3,22 @@ empty_trials = find(cellfun(@isempty,{imaging.movement_in_imaging_time}));
 good_trials =  setdiff(1:length(imaging),empty_trials);
 sel_trials = randperm(length(good_trials),9);
 selected_trials = good_trials(sel_trials);
+fieldname = fieldnames(imaging(good_trials(1)).movement_in_imaging_time);
 figure(1010);clf;
 tiledlayout(3,3,"TileSpacing","compact");
 for t = 1:9
     imaging_cell = struct2cell(imaging(selected_trials(t)).movement_in_imaging_time);
     nexttile
+    hold on
     for f = 1:length(selected_fields)
-        if max(selected_fields(f)) > 1
+        if max(abs(imaging_cell{selected_fields(f),1})) > 1
             plot(rescale(imaging_cell{selected_fields(f),1},0,1));
         else
             plot(imaging_cell{selected_fields(f),1});
         end
     end
+    legend(fieldname{selected_fields});
+    title(num2str(selected_trials(t)))
+    hold off
 end
+set(gcf,'position', [1,1,1500,900])

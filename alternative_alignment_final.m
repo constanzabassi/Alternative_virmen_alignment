@@ -1,11 +1,11 @@
 %% provide all inputs
-mousename = 'HA1-00';%;
+mousename = 'HA11-1R';%;
 mouse = mousename;
-date = '2023-08-25'; %;
-server = 'W:'; %/Volumes/Runyan5
+date = '2023-04-03'; %;
+server = 'U:'; %/Volumes/Runyan5
 runyan5 = "U:";
 runyan4 = 'W:';
-data_base = 'CBHA1-00_230825';%;
+data_base = 'CBHA11-1R_230403';%;
 sync_base_path = [ server '/Connie/RawData/' mousename '/wavesurfer/' date '/'];
 virmen_base = [server '/Connie/RawData/' mousename '/virmen/' data_base ];
 imaging_base_path=[server '/Connie/RawData/' mousename '/' date '/'];
@@ -108,11 +108,11 @@ sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sou
 
 %%  align virmen data!
 %(dff,deconv,virmen_aq,alignment_info,data,dataCell,trial_its,stimulus_info,reward_info)
-imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell,trial_its,sounds_per_file,rewards_per_file);
+imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell,trial_its,sounds_per_file,reward_loc_pure_frames);
 
 %% save data!
 mkdir(save_path)
 cd(save_path)
-save('alignment_variables',"task_info",'sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array');
-save('imaging.mat','imaging.mat');
+save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames','reward_loc_end_trial');
+save('imaging','imaging');
 

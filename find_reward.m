@@ -3,7 +3,7 @@ function [rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_lo
 rewards_per_file ={};
 reward_loc_end_trial = zeros(length(trial_info),2);
 reward_loc_pure = zeros(length(trial_info),4);
-reward_loc_pure_frames = zeros(length(trial_info),3);
+reward_loc_pure_frames = zeros(length(trial_info),4);
 for file = 1:length(virmen_it) 
     %initialize variable to save
     it_distance = [];
@@ -36,15 +36,19 @@ for file = 1:length(virmen_it)
             reward_loc_pure(trial,3) = sound_condition_array(file).ITI_sounds(sound_trial,2);
             reward_loc_pure(trial,4) = sound_condition_array(file).ITI_sounds(sound_trial,3);
             %find frames
-            reward_loc_pure_frames(trial,1) = find_closest_frames(alignment_info(file).frame_times,reward_loc_pure(trial,2),min_distance);
+            reward_loc_pure_frames(trial,3) = find_closest_frames(alignment_info(file).frame_times,reward_loc_pure(trial,2),min_distance);
+            reward_loc_end_trial(trial,3) = find_closest_frames(alignment_info(file).frame_times,reward_loc_end_trial(trial,2),min_distance);
 
+            %saving frames of end of trial in this structure/ maybe more
+            %accurate?
+            reward_loc_pure_frames(trial,1) = find_closest_frames(alignment_info(file).frame_times,reward_loc_end_trial(trial,2),min_distance);
         end
         reward_loc_pure(trial,3) = sound_condition_array(file).ITI_sounds(sound_trial,2);
         reward_loc_pure(trial,4) = sound_condition_array(file).ITI_sounds(sound_trial,3);
 
         reward_loc_pure_frames(trial,2) = find_closest_frames(alignment_info(file).frame_times,reward_loc_pure(trial,3),min_distance);
         reward_loc_pure_frames(trial,3) = find_closest_frames(alignment_info(file).frame_times,reward_loc_pure(trial,4),min_distance);
-
+        
     
     end
     %use distance information to determine probable reward location

@@ -6,6 +6,7 @@ imaging ={};
 file_ind = 1; % equivalent to imaging_trials in match_virmen_imaging - wavesurfer files 
 previous_frames_sum = 0; previous_frames_temp = 0; previous_frames = 0;
 turning_threshold = 0.1; %this is used to decide when the mouse has started to turn looking at x_position for that trial
+
 for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % virmen trials within each acquisition (ex: VR_stim01)
     
     %new method to get iterations
@@ -177,12 +178,14 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
                     end
                     % INCLUDE PURE TONES!
                     if ~isempty(this_pure_tone) && ismember(frame,this_pure_tone-min(imaging(vr_trial).frame_id_events.maze)+1)
-                        this_pure_tones(frame) = 1;
+                        this_pure_tones(frame) = 1; 
                     end
                     if ~isempty(ind2) 
                         reward_frames = [reward_frames,frame];
                     elseif imaging(vr_trial).frame_id_events.maze(1)-min(imaging(vr_trial).frame_id)+1 <= frame && imaging(vr_trial).frame_id_events.maze(end)-min(imaging(vr_trial).frame_id)+1 >= frame
                         maze_frames = [maze_frames,frame];
+                        this_pure_tones(frame) = nan;
+                        this_reward(frame) = nan;
                     else
                         iti_frames = [iti_frames,frame];
                     end
@@ -219,7 +222,6 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
             if ~isempty(this_stimulus)
                 movement_in_imaging_time.stimulus = this_stimulus;
             end
-
 
             %keep track of which indices in virmen time go with imaging time!
             movement_in_imaging_time.frame_indices = frame_indices; 

@@ -34,6 +34,15 @@ for file = 1:length(virmen_it)
     
 sounds_per_file(file).onsets = [sound_onsets{:,:}];%[[sound_st(file).file.onset],[sound_onsets{:,:}]];
 sounds_per_file(file).offsets = [sound_offsets{:,:}];%[[sound_st(file).file.offset],[sound_offsets{:,:}]];
+
+%to deal with trials where sound started before maze (fixed in may 2023)
+og_weird = [];
+if ismember('weird_trial',fields(sound_condition_array(file)))
+    % need to figure out indexing 
+    og_weird = sound_condition_array(file).weird_trial;
+    sounds_per_file(file).weird_trial = og_weird+within_trials_all(1)-first_sound_trial-1;
+end
+
 binary_sounds = zeros(1,(max(sounds_per_file(file).offsets)+sound_info.sync_sampling_rate));
 for p = 1:length(sounds_per_file(file).offsets)
     binary_sounds(sounds_per_file(file).onsets(p):sounds_per_file(file).offsets(p)) = 1;
@@ -49,6 +58,9 @@ a = plot(binary_sounds,'-k');
 legend([ cc dd  a(1) ],'Speaker 1','Speaker 2', 'binary sounds')
 if length(sound_info.spkr_channel_number)>2
     plot(rescale(ex_data(:,sound_info.spkr_channel_number(3)),0,1),'-r')
+end
+if ~isempty(og_weird)
+    plot([sound_condition_array(file).VR_sounds{og_weird,2}],1,'*c')
 end
 hold off;
 pause

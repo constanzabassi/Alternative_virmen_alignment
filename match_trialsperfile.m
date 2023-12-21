@@ -214,7 +214,7 @@ ex_data = abfload(strcat(digidata_its(file).directory));
 figure(55);clf;
 title(strcat('Detected trial events file # ', num2str(file)));
 hold on;aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'color',[0.7 0.7 0.7]);  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');
-a = plot(end_trials_digidata_time,0,'*c');b = plot(start_trials_digidata_time,0,'*g');c= plot(end_iti_digidata_time,0,'*y'); movegui(gcf,'center');
+a = plot(end_trials_digidata_time,0,'*g');b = plot(start_trials_digidata_time,0,'*c');c= plot(end_iti_digidata_time,0,'*r'); movegui(gcf,'center');
 %plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-r');
 legend([aa bb cc dd  a(1) b(1) c(1)],'Imaging frames','Virmen its','Speaker 1','Speaker 2', 'end trial', 'start trial', 'end iti')
 if length(task_info.channel_number)>4
@@ -372,7 +372,13 @@ end
 
 
 %% match trials using levenshteinDistance (smallest change to strings gives distance)
-bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedConditions)
+if file == 1
+    startTrial = 1;
+    bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedConditions,startTrial);
+else
+    startTrial = file_matching_trials(file-1,1);
+    bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedConditions,startTrial);
+end
 file_matching_trials(file,:) = [bestTrialIndices(1), bestTrialIndices(2)];
 
 end
@@ -383,6 +389,7 @@ for file = 1:length(digidata_its)
             fprintf('Trial order makes sense!\n'); %\n next line
         else
             fprintf('Error! Trials are out of order! Need to go back and check\n')
+            keyboard;
         end
     end
 end

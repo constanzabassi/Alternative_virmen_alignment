@@ -1,4 +1,4 @@
-function bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedConditions)
+function bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedConditions,startTrial)
 % Convert cell arrays to strings for comparison
     trueStr = strjoin(trueConditions, '|'); % '|' as a delimiter
     estimatedStr = strjoin(estimatedConditions, '|'); % '|' as a delimiter
@@ -12,7 +12,7 @@ function bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedCondi
     bestDistance = Inf;
     bestTrialIndices = [];
     % Iterate through true trials with a sliding window
-    for i = 1:numTrueTrials - windowSize + 1
+    for i = startTrial:numTrueTrials - windowSize + 1
         trueWindow = trueTrials(i:i+windowSize-1);
         % Calculate Levenshtein distance for the window against the estimated trials
         windowDistance = 0;

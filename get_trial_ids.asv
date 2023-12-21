@@ -1,8 +1,5 @@
 function [file_trial_ids,file_estimated_trial_info_updated] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,sync_base_path,task_info)
-%%%Output: file_trial_inds(starting full trial across all files,ending full
-%%%trial across all files,starting full trial in this file,ending full
-%%%trial in this file,yes/no preivous ITI within imaging,yes/no next trial
-%%%within imaging)
+%%%Output: file_trial_inds(full
 file_trial_ids = zeros(size(file_matching_trials,1),6);
 for file = 1:size(file_matching_trials,1)
 %% 1) find the first trial that would have imaging data and start with this trial if it is a full trial

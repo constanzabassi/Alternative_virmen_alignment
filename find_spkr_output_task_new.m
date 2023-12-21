@@ -30,9 +30,13 @@ for file = 1:num_files
     pure_tone_signal=[];
     figure(120);clf; 
     for s = 1:size(rawSounds,1)
-    [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),sound_info.detection_threshold,sync_sampling_rate,sound_info.smoothing_factor); %last value is smoothing factor
-    bin_sound_signal(s,:) = binary_sound_signal;
-    pure_tone_signal(s,:) = pure_tone;
+        if isfield(sound_info,'unique_detection_threshold') && ~isempty(find(sound_info.unique_detection_threshold(:,1) == file_ind))
+            [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),sound_info.unique_detection_threshold(find(sound_info.unique_detection_threshold(:,1) == file_ind),2),sync_sampling_rate,sound_info.smoothing_factor); %last value is smoothing factor
+        else %assume all files will use the same threshold
+            [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),sound_info.detection_threshold,sync_sampling_rate,sound_info.smoothing_factor); %last value is smoothing factor
+        end
+        bin_sound_signal(s,:) = binary_sound_signal;
+        pure_tone_signal(s,:) = pure_tone;
     end
 
     originalVector = [];

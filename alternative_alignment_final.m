@@ -1,11 +1,11 @@
 %% provide all inputs
 mousename = 'HA11-1R';%;
 mouse = mousename;
-date = '2023-04-03'; %;
+date = '2023-04-13'; %;
 server = 'U:'; %/Volumes/Runyan5
 runyan5 = "U:";
 runyan4 = 'W:';
-data_base = 'CBHA11-1R_230403';%;
+data_base = 'CBHA11-1R_230413';%;
 sync_base_path = [ server '/Connie/RawData/' mousename '/wavesurfer/' date '/'];
 virmen_base = [server '/Connie/RawData/' mousename '/virmen/' data_base ];
 imaging_base_path=[server '/Connie/RawData/' mousename '/' date '/'];
@@ -73,7 +73,8 @@ sound_info.correct = .250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
-sound_info.detection_threshold = 0.5;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.unique_detection_threshold = [1,0.59];%list file and threshold wanted
+sound_info.detection_threshold = 0.45;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 
 [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(server,mousename,date,alignment_info,'VR',sound_info);
 

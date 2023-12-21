@@ -6,6 +6,8 @@ imaging ={};
 file_ind = 1; % equivalent to imaging_trials in match_virmen_imaging - wavesurfer files 
 previous_frames_sum = 0; previous_frames_temp = 0; previous_frames = 0;
 turning_threshold = 0.1; %this is used to decide when the mouse has started to turn looking at x_position for that trial
+weird_trials = [];
+
 for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % virmen trials within each acquisition (ex: VR_stim01)
     
     %new method to get iterations
@@ -172,16 +174,19 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
                     %iti and in the middle of sounds and before first sound
                     ind2 = find(imaging(vr_trial).frame_id_events.reward-min(imaging(vr_trial).frame_id_events.maze)+1==frame,1,'first');
                     % INCLUDE REWARD ONSET FRAME
-                    if ~isempty(this_reward_onset) && frame-min(imaging(vr_trial).frame_id_events.maze)+1 == this_reward_onset;
+                    if ~isempty(this_reward_onset) && frame == this_reward_onset-min(imaging(vr_trial).frame_id_events.maze)+1
                         this_reward(frame) = 1;
                     end
                     % INCLUDE PURE TONES!
-                    if ~isempty(this_pure_tone) && 
-                    
+                    if ~isempty(this_pure_tone) && ismember(frame,this_pure_tone-min(imaging(vr_trial).frame_id_events.maze)+1)
+                        this_pure_tones(frame) = 1; 
+                    end
                     if ~isempty(ind2) 
                         reward_frames = [reward_frames,frame];
                     elseif imaging(vr_trial).frame_id_events.maze(1)-min(imaging(vr_trial).frame_id)+1 <= frame && imaging(vr_trial).frame_id_events.maze(end)-min(imaging(vr_trial).frame_id)+1 >= frame
                         maze_frames = [maze_frames,frame];
+                        this_pure_tones(frame) = nan;
+                        this_reward(frame) = nan;
                     else
                         iti_frames = [iti_frames,frame];
                     end
@@ -209,15 +214,20 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
             movement_in_imaging_time.view_angle = this_view_angle;
             movement_in_imaging_time.is_reward = this_reward;
             movement_in_imaging_time.in_ITI = this_ITI;
+            movement_in_imaging_time.pure_tones = this_pure_tones;
             movement_in_imaging_time.maze_frames = maze_frames;
             movement_in_imaging_time.iti_frames = iti_frames;
             movement_in_imaging_time.reward_frames = reward_frames;
 
+            %deal with weird trials where sound plays in the wrong place
+            last_val = movement_in_virmen_time(vr_trial).y_position(end);
+            if last_val<round(max(movement_in_virmen_time(vr_trial).y_position))-15 && last_val>0 %could need to be readjusted
+                weird_trials = [weird_trials,vr_trial+1];
+            end
 
             if ~isempty(this_stimulus)
                 movement_in_imaging_time.stimulus = this_stimulus;
             end
-
 
             %keep track of which indices in virmen time go with imaging time!
             movement_in_imaging_time.frame_indices = frame_indices; 
@@ -249,5 +259,7 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
     end
 end
 
+weird_trials = unique([weird_trials,[stimulus_info(:).weird_trial]]);
+imaging
 end
 

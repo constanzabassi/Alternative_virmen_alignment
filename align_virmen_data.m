@@ -6,6 +6,7 @@ imaging ={};
 file_ind = 1; % equivalent to imaging_trials in match_virmen_imaging - wavesurfer files 
 previous_frames_sum = 0; previous_frames_temp = 0; previous_frames = 0;
 turning_threshold = 0.1; %this is used to decide when the mouse has started to turn looking at x_position for that trial
+weird_trials = [];
 
 for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % virmen trials within each acquisition (ex: VR_stim01)
     
@@ -218,6 +219,11 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
             movement_in_imaging_time.iti_frames = iti_frames;
             movement_in_imaging_time.reward_frames = reward_frames;
 
+            %deal with weird trials where sound plays in the wrong place
+            last_val = movement_in_virmen_time(vr_trial).y_position(end);
+            if last_val<round(max(movement_in_virmen_time(vr_trial).y_position))-15 && last_val>0 %could need to be readjusted
+                weird_trials = [weird_trials,vr_trial+1];
+            end
 
             if ~isempty(this_stimulus)
                 movement_in_imaging_time.stimulus = this_stimulus;
@@ -253,5 +259,15 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
     end
 end
 
+%empty trials if they are considered weird
+if exist('weird_trials','var')
+    weird_trials = unique([weird_trials,[stimulus_info(:).weird_trial]]);
+    fn = fieldnames(imaging);
+    for w = 1:length(weird_trials)
+        for k = 6:length(fn)
+            imaging(weird_trials(w)).(fn{k})= [];
+        end
+    end
+end
 end
 

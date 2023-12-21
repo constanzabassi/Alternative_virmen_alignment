@@ -239,7 +239,9 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
             
             %save movement in imaging frames
             imaging(vr_trial).movement_in_imaging_time = movement_in_imaging_time; 
-
+            
+            %good trial: the entire trial is usable
+            imaging(vr_trial).good_trial = 1;
           else %if not within the frame limit (of start_it and end_it) go to the next trial
             vr_trial = vr_trial +1 
           end
@@ -264,9 +266,10 @@ if exist('weird_trials','var')
     weird_trials = unique([weird_trials,[stimulus_info(:).weird_trial]]);
     fn = fieldnames(imaging);
     for w = 1:length(weird_trials)
-        for k = 6:length(fn)
-            imaging(weird_trials(w)).(fn{k})= [];
-        end
+%         for k = 6:length(fn)
+%             imaging(weird_trials(w)).(fn{k})= [];
+%         end
+        imaging(weird_trials(w)).good_trial = []; %keep info in case want to use ITI or for something else
     end
 end
 end

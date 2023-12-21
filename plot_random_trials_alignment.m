@@ -1,5 +1,5 @@
 function plot_random_trials_alignment (imaging,selected_fields)
-empty_trials = find(cellfun(@isempty,{imaging.movement_in_imaging_time}));
+empty_trials = find(cellfun(@isempty,{imaging.good_trial}));
 good_trials =  setdiff(1:length(imaging),empty_trials);
 sel_trials = randperm(length(good_trials),9);
 selected_trials = good_trials(sel_trials);

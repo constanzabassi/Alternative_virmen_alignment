@@ -179,17 +179,6 @@ xlabel('Distance between iteration at onset and sound onset in ms')
 ylabel('Number of sound onsets')
 hold off
 
-%include iti before first trial and full maze trial at the end if possible?
-if file_trial_ids(file,5) == 1 && file_trial_ids(file,6) == 1
-    possible_iterations = trial_its.start_iti_its(start_trial_number-1):trial_its.end_trial_its(end_trial_number+1); %limit iterations to ones within imaging frames// this is iterations ids
-    possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
-elseif file_trial_ids(file,5) == 1
-    possible_iterations = trial_its.start_iti_its(start_trial_number-1):trial_its.end_iti_its(end_trial_number); %limit iterations to ones within imaging frames// this is iterations ids
-    possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
-elseif file_trial_ids(file,6) == 1
-    possible_iterations = trial_its.start_trial_its(start_trial_number):trial_its.end_trial_its(end_trial_number+1); %limit iterations to ones within imaging frames// this is iterations ids
-    possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
-end
 
 figure(999);clf; 
 title(strcat('Shifted data file # ', num2str(file)));
@@ -204,6 +193,21 @@ if ~isempty(pos_peak_id) && pos_peak_id-possible_iterations(1) > 0 && pos_peak_i
 end
 hold off
 pause
+
+%include iti before first trial and full maze trial at the end if possible?
+if file_trials_ids(file,5) == 1 && file_trials_ids(file,6) == 1
+    possible_it_times = iterations_in_time+it_time_difference;
+    possible_iterations = trial_its.start_trial_its(start_trial_number-1):trial_its.end_iti_its(end_trial_number); %limit iterations to ones within imaging frames// this is iterations ids
+    possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
+elseif file_trials_ids(file,5) == 1
+    possible_it_times = iterations_in_time+it_time_difference;
+    possible_iterations = trial_its.start_trial_its(start_trial_number):trial_its.end_iti_its(end_trial_number); %limit iterations to ones within imaging frames// this is iterations ids
+    possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
+elseif file_trials_ids(file,6) == 1
+    possible_it_times = iterations_in_time+it_time_difference;
+    possible_iterations = trial_its.start_trial_its(start_trial_number):trial_its.end_iti_its(end_trial_number); %limit iterations to ones within imaging frames// this is iterations ids
+    possible_it_locs = possible_it_times(possible_iterations); %locations of iterations within limits
+end
 
 virmen_it(file).it_times = possible_it_locs;
 virmen_it(file).actual_it_values = possible_iterations; %ids

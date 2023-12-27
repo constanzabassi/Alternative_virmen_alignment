@@ -9,7 +9,6 @@ turning_threshold = 0.1; %this is used to decide when the mouse has started to t
 weird_trials = [];
 
 for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % virmen trials within each acquisition (ex: VR_stim01)
-    
     %new method to get iterations
     start_it = trial_its.start_trial_its(vr_trial); 
     end_it = trial_its.end_trial_its(vr_trial); 
@@ -37,12 +36,12 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
         output_data.frame_times = alignment_info(file_ind).frame_times; % frame times from res galvo signal in digidata time
         output_data.iteration_times = virmen_aq(file_ind).it_times; % it times from virmen iterations in digidata time
         output_data.iteration_ids = virmen_aq(file_ind).actual_it_values; % it_ids from virmen iterations
-            
+        
           if  iti_end_it <= output_data.iteration_ids(end) && any(output_data.iteration_times(find(output_data.iteration_ids==start_it)) >= output_data.frame_times(1)) ...
                   && any(output_data.iteration_times(find(output_data.iteration_ids==end_it))<=alignment_info(file_ind).frame_times(end))
                     %this if statement gets rid of trials if not within the frame limit at the very start since finding min will say multiple trials start and end in frame 1
-    
-              %now that we know this is a good trial with imaging data we can get more info
+
+                    %now that we know this is a good trial with imaging data we can get more info
                   %movement in virmen time using virmen iterations for that
                   %trial! starting with start it ending with the last iteration of the iti (keep in mind that reward period is not
                   %accounted for in virmen time)

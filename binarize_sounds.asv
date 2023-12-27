@@ -99,11 +99,8 @@ for p = 1:length(sounds_per_file(file).offsets)
     end
 end
 figure(557);clf;
-hold on
 title(strcat('Frame times sounds in file # ', num2str(file)));
 plot(binary_sounds_imaging_time,'-k')
-hold off
-pause(2)
 
 sounds_per_file(file).binary_digidata_times = binary_sounds;
 sounds_per_file(file).binary_frame_times = binary_sounds_imaging_time;

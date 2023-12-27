@@ -13,7 +13,7 @@ for file = 1:length(virmen_it)
     %and start of ITI
     
         %find frames based on pure tones
-    min_distance = mode(diff(alignment_info(file).frame_times)); %minimum distance between frames in digidata time
+    min_distance = mode(diff(alignment_info(file).frame_times))+(2*alignment_info(file).sync_sampling_rate/1000); %minimum distance between frames in digidata time
 
     for trial = within_all_trials
         start_it = virmen_it(file).actual_it_values(1);

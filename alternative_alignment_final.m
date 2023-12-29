@@ -1,16 +1,16 @@
 %% provide all inputs
-mousename = 'HA11-1R';%;
-mouse = mousename;
-date = '2023-04-13'; %;
-server = 'U:'; %/Volumes/Runyan5
+info.mousename = 'HA11-1R';%;
+info.mouse = mousename;
+info.date = '2023-04-13'; %;
+info.server = 'U:'; %/Volumes/Runyan5
 runyan5 = "U:";
 runyan4 = 'W:';
 data_base = 'CBHA11-1R_230413';%;
-sync_base_path = [ server '/Connie/RawData/' mousename '/wavesurfer/' date '/'];
-virmen_base = [server '/Connie/RawData/' mousename '/virmen/' data_base ];
-imaging_base_path=[server '/Connie/RawData/' mousename '/' date '/'];
-save_path = [server '/Connie/ProcessedData/' mousename '/' date '/VR/'];
-processed_path = [server '/Connie/ProcessedData/' mousename '/' date '/'];
+info.sync_base_path = [ info.server '/Connie/RawData/' info.mousename '/wavesurfer/' info.date '/'];
+info.virmen_base = [info.server '/Connie/RawData/' info.mousename '/virmen/' data_base ];
+info.imaging_base_path=[info.server '/Connie/RawData/' info.mousename '/' info.date '/'];
+info.save_path = [info.server '/Connie/ProcessedData/' info.mousename '/' info.date '/VR/'];
+info.processed_path = [info.server '/Connie/ProcessedData/' info.mousename '/' info.date '/'];
 is_stim_dataset = 1; 
 % give data inputs!
 galvo_channel = 7;
@@ -20,7 +20,7 @@ sound_info = {};
 sound_info.spkr_channel_number = [4,8];%[4,5,8];
 sound_info.speaker_ids = [1,2];%[1,2,4]; 
 sound_info.mult_spkr = 0; %if multiple speakers are used in a single trial (8 locs)
-%load conditions per speaker in runyan 5 server
+%load conditions per speaker in runyan 5 info.server
 load(strcat(runyan5,'/Connie/condition_per_speaker'));
 %load('/Volumes/Runyan5/Connie/condition_per_speaker.mat');
 sound_info.condition_per_speaker = conditions_per_speaker;
@@ -39,8 +39,8 @@ addpath(genpath(code_folder));
 % cd('C:\Code\Github\Alternative_virmen_alignment');
 % addpath(genpath('C:\Code\Align_signals_imaging'));
 %% load imaging data
-load(strcat(processed_path,'dff.mat'));
-load(strcat(processed_path,'deconv/deconv.mat'));
+load(strcat(info.processed_path,'dff.mat'));
+load(strcat(info.processed_path,'deconv/deconv.mat'));
 % dff = zeros(10,15e4);
 % deconv = dff;
 %% load virmen data
@@ -56,12 +56,12 @@ else
 end
 
 %% get frame times of all files in this folder
-mkdir(strcat(server,'/Connie/ProcessedData/',num2str(mouse),'/',num2str(date)))
-cd(strcat(server,'/Connie/ProcessedData/',num2str(mouse),'/',num2str(date)));
+mkdir(strcat(info.server,'/Connie/ProcessedData/',num2str(info.mouse),'/',num2str(info.date)))
+cd(strcat(info.server,'/Connie/ProcessedData/',num2str(info.mouse),'/',num2str(info.date)));
 if isfile("alignment_info.mat")
     load("alignment_info.mat");
 else
-    [alignment_info] = get_frame_times(imaging_base_path, sync_base_path, [], galvo_channel,1,[],[]); %7 is res galvo channel in investigator
+    [alignment_info] = get_frame_times(info.imaging_base_path, info.sync_base_path, [], galvo_channel,1,[],[]); %7 is res galvo channel in investigator
 end
 save ('alignment_info','alignment_info');
 %% find sound info for each file
@@ -76,7 +76,7 @@ sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 sound_info.unique_detection_threshold = [1,0.59];%list specific file and threshold wanted
 sound_info.detection_threshold = 0.45;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 
-[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(server,mousename,date,alignment_info,'VR',sound_info);
+[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info.server,info.mousename,info.date,alignment_info,'VR',sound_info);
 
 %% get trial info using the virmen files!
 for tr = 1:length(dataCell.dataCell)
@@ -89,7 +89,7 @@ end
 
 %% get digidata iteration locations and difference between them
 string = 'VR';
-digidata_its = get_digidata_iterations(sync_base_path,string, virmen_channel);
+digidata_its = get_digidata_iterations(info.sync_base_path,string, virmen_channel);
 
 %% find its in the data that best match the its for each trial dividing files into trials that match them
 
@@ -114,8 +114,8 @@ imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell,tr
 selected_fields = [1,6,7]; %1 y position, 6 reward, 7 ITI %inside movememnt_in_imaging_time
 plot_random_trials_alignment (imaging,selected_fields);
 %% save data!
-mkdir(save_path)
-cd(save_path)
-save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames');
+mkdir(info.save_path)
+cd(info.save_path)
+save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames','trial_its','file_trial_ids','file_matching_trials','digidata_its');
 save('imaging','imaging');
 

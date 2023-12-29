@@ -220,7 +220,7 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
 
             %deal with weird trials where sound plays in the wrong place
             last_val = movement_in_virmen_time(vr_trial).y_position(end);
-            if last_val<round(max(movement_in_virmen_time(vr_trial).y_position))-15 && last_val>0 %could need to be readjusted
+            if last_val<round(max(movement_in_virmen_time(vr_trial).y_position))-9 && last_val>0 %could need to be readjusted
                 weird_trials = [weird_trials,vr_trial+1];
             end
 

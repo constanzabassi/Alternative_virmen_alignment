@@ -50,24 +50,25 @@ if ~isempty(digidata_its(file).pos_loc)
         [sound_trials,ind] = setdiff(all_sound_trials,excluded_trials);
         difference_it_sound = [([sound_condition_array(file).VR_sounds{sound_trials,3}]-0.005*digidata_its(file).sync_sampling_rate) - possible_it_locs(test_iterations(ind)-possible_iterations(1)+1)];
         
-%         pos_sound = find(difference_it_sound < mean_freq*3 & difference_it_sound > 0);
-%         neg_sound = find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0);
-%         small_shift = nan; %find closest ones and determine if there needs to be another small shift
-%         small_shift_neg = nan; %find closest ones and determine if there needs to be another small shift
-%     
-%         if length(pos_sound)>2 %sometimes sounds only have 5 iterations and don't want to take them into account if the rest are different
-%             small_shift = round(mean(difference_it_sound(pos_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
-%         elseif length(neg_sound)>2
-%             small_shift_neg = round(mean(difference_it_sound(neg_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
-%         end
-% 
-%         if ~isnan(small_shift) && isnan(small_shift_neg)
-%             new_shift = shift+small_shift;
-%         elseif ~isnan(small_shift_neg) && isnan(small_shift)
-%             new_shift = shift+small_shift_neg;
-%         else
+        pos_sound = find(difference_it_sound < mean_freq*10 & difference_it_sound > 0);
+        neg_sound = find(difference_it_sound > -mean_freq*10 & difference_it_sound < 0);
+        small_shift = nan; %find closest ones and determine if there needs to be another small shift
+        small_shift_neg = nan; %find closest ones and determine if there needs to be another small shift
+    
+        if length(pos_sound)>2 %sometimes sounds only have 5 iterations and don't want to take them into account if the rest are different
+        small_shift = round(mean(difference_it_sound(pos_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
+        end
+        if length(neg_sound)>2
+            small_shift_neg = round(mean(difference_it_sound(neg_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
+        end
+
+        if ~isnan(small_shift) && isnan(small_shift_neg)
+            new_shift = shift+small_shift;
+        elseif ~isnan(small_shift_neg) && isnan(small_shift)
+            new_shift = shift+small_shift_neg;
+        else
             new_shift = shift;%
-%         end
+        end
 
         it_time_difference = new_shift-iterations_in_time(1);
         possible_it_times = iterations_in_time+it_time_difference; %assign iterations times with added shift
@@ -92,24 +93,25 @@ if ~isempty(digidata_its(file).pos_loc)
         [sound_trials,ind] = setdiff(all_sound_trials,excluded_trials);
         difference_it_sound = [([sound_condition_array(file).VR_sounds{sound_trials,3}]-0.005*digidata_its(file).sync_sampling_rate) - possible_it_locs(test_iterations(ind)-possible_iterations(1)+1)];
         % sound always ends ~3ms after last iteration in the trial
-%         pos_sound = find(difference_it_sound < mean_freq*3 & difference_it_sound > 0);
-%         neg_sound = find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0);
-%         small_shift = nan; %find closest ones and determine if there needs to be another small shift
-%         small_shift_neg = nan; %find closest ones and determine if there needs to be another small shift
-%     
-%         if length(pos_sound)>2 %sometimes sounds only have 5 iterations and don't want to take them into account if the rest are different
-%             small_shift = round(mean(difference_it_sound(pos_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
-%         elseif length(neg_sound)>2
-%             small_shift_neg = round(mean(difference_it_sound(neg_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
-%         end
-% 
-%         if ~isnan(small_shift) && isnan(small_shift_neg)
-%             new_shift = shift+small_shift;
-%         elseif ~isnan(small_shift_neg) && isnan(small_shift)
-%             new_shift = shift+small_shift_neg;
-%         else
+        pos_sound = find(difference_it_sound < mean_freq*10 & difference_it_sound > 0);
+        neg_sound = find(difference_it_sound > -mean_freq*10 & difference_it_sound < 0);
+        small_shift = nan; %find closest ones and determine if there needs to be another small shift
+        small_shift_neg = nan; %find closest ones and determine if there needs to be another small shift
+    
+        if length(pos_sound)>2 %sometimes sounds only have 5 iterations and don't want to take them into account if the rest are different
+        small_shift = round(mean(difference_it_sound(pos_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
+        end
+        if length(neg_sound)>2
+            small_shift_neg = round(mean(difference_it_sound(neg_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
+        end
+
+        if ~isnan(small_shift) && isnan(small_shift_neg)
+            new_shift = shift+small_shift;
+        elseif ~isnan(small_shift_neg) && isnan(small_shift)
+            new_shift = shift+small_shift_neg;
+        else
             new_shift = shift;%
-%         end
+        end
 
         it_time_difference = new_shift-iterations_in_time(pos_peak_id-1); 
         possible_it_times = iterations_in_time+it_time_difference; %assign iterations times with added shift
@@ -136,14 +138,15 @@ else
     excluded_trials = find([sound_condition_array(file).VR_sounds{:,6}]~=1); %only include unifinished sounds in analysis
     [sound_trials,ind] = setdiff(all_sound_trials,excluded_trials);
     difference_it_sound = [([sound_condition_array(file).VR_sounds{sound_trials,3}]-0.005*digidata_its(file).sync_sampling_rate) - possible_it_locs(test_iterations(ind)-possible_iterations(1)+1)];
-    pos_sound = find(difference_it_sound < mean_freq*3 & difference_it_sound > 0);
-    neg_sound = find(difference_it_sound > -mean_freq*5 & difference_it_sound < 0);
+    pos_sound = find(difference_it_sound < mean_freq*10 & difference_it_sound > 0);
+    neg_sound = find(difference_it_sound > -mean_freq*10 & difference_it_sound < 0);
     small_shift = nan; %find closest ones and determine if there needs to be another small shift
     small_shift_neg = nan; %find closest ones and determine if there needs to be another small shift
 
     if length(pos_sound)>2 %sometimes sounds only have 5 iterations and don't want to take them into account if the rest are different
         small_shift = round(mean(difference_it_sound(pos_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
-    elseif length(neg_sound)>2
+    end
+    if length(neg_sound)>2
         small_shift_neg = round(mean(difference_it_sound(neg_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
     end
 

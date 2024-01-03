@@ -1,11 +1,11 @@
 %% provide all inputs
 info.mousename = 'HA11-1R';%;
-info.mouse = mousename;
-info.date = '2023-04-13'; %;
+info.mouse = info.mousename;
+info.date = '2023-04-03'; %;
 info.server = 'U:'; %/Volumes/Runyan5
 runyan5 = "U:";
 runyan4 = 'W:';
-data_base = 'CBHA11-1R_230413';%;
+data_base = 'CBHA11-1R_230403';%;
 info.sync_base_path = [ info.server '/Connie/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 info.virmen_base = [info.server '/Connie/RawData/' info.mousename '/virmen/' data_base ];
 info.imaging_base_path=[info.server '/Connie/RawData/' info.mousename '/' info.date '/'];
@@ -44,15 +44,15 @@ load(strcat(info.processed_path,'deconv/deconv.mat'));
 % dff = zeros(10,15e4);
 % deconv = dff;
 %% load virmen data
-if isfile(strcat(virmen_base, '_Cell_2.mat'))
-    data = load(strcat(virmen_base, '_2.mat'));
-    dataCell = load(strcat(virmen_base, '_Cell_2.mat'));
-elseif isfile(strcat(virmen_base, '_Cell_1.mat'))
-    data = load(strcat(virmen_base, '_1.mat'));
-    dataCell = load(strcat(virmen_base, '_Cell_1.mat'));
+if isfile(strcat(info.virmen_base, '_Cell_2.mat'))
+    data = load(strcat(info.virmen_base, '_2.mat'));
+    dataCell = load(strcat(info.virmen_base, '_Cell_2.mat'));
+elseif isfile(strcat(info.virmen_base, '_Cell_1.mat'))
+    data = load(strcat(info.virmen_base, '_1.mat'));
+    dataCell = load(strcat(info.virmen_base, '_Cell_1.mat'));
 else
-    data = load(strcat(virmen_base, '.mat'));
-    dataCell = load(strcat(virmen_base, '_Cell.mat'));
+    data = load(strcat(info.virmen_base, '.mat'));
+    dataCell = load(strcat(info.virmen_base, '_Cell.mat'));
 end
 
 %% get frame times of all files in this folder
@@ -73,8 +73,8 @@ sound_info.correct = .250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
-sound_info.unique_detection_threshold = [1,0.59];%list specific file and threshold wanted
-sound_info.detection_threshold = 0.45;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.unique_detection_threshold = [];%list specific file and threshold wanted
+sound_info.detection_threshold = 0.5;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 
 [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info.server,info.mousename,info.date,alignment_info,'VR',sound_info);
 
@@ -97,7 +97,7 @@ digidata_its = get_digidata_iterations(info.sync_base_path,string, virmen_channe
 
 % find the start and end trials that are within the imaging frames!// also
 % puts trials into context of all other trials (file_digidata_trial_info)
-[file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,sync_base_path,task_info);
+[file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,info.sync_base_path,task_info);
 
 %% shift iterations in time until they match positive peaks or first trial iteration
 [virmen_it,trial_its,sound_condition_array] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info);

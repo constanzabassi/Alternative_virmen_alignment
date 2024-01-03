@@ -1,11 +1,11 @@
 %% provide all inputs
-info.mousename = 'HA11-1R';%;
+info.mousename = 'HA10-1L';%;
 info.mouse = info.mousename;
-info.date = '2023-04-03'; %;
+info.date = '2023-04-17'; %;
 info.server = 'U:'; %/Volumes/Runyan5
 runyan5 = "U:";
 runyan4 = 'W:';
-data_base = 'CBHA11-1R_230403';%;
+data_base = 'CBHA10-1L_230417';%;
 info.sync_base_path = [ info.server '/Connie/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 info.virmen_base = [info.server '/Connie/RawData/' info.mousename '/virmen/' data_base ];
 info.imaging_base_path=[info.server '/Connie/RawData/' info.mousename '/' info.date '/'];
@@ -54,7 +54,7 @@ else
     data = load(strcat(info.virmen_base, '.mat'));
     dataCell = load(strcat(info.virmen_base, '_Cell.mat'));
 end
-
+fprintf(['number virmen trials: ' num2str(length(dataCell.dataCell)) '\n'])
 %% get frame times of all files in this folder
 mkdir(strcat(info.server,'/Connie/ProcessedData/',num2str(info.mouse),'/',num2str(info.date)))
 cd(strcat(info.server,'/Connie/ProcessedData/',num2str(info.mouse),'/',num2str(info.date)));

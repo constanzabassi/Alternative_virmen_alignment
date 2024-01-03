@@ -30,7 +30,7 @@ for file = 1:num_files
     pure_tone_signal=[];
     figure(120);clf; 
     for s = 1:size(rawSounds,1)
-        if isfield(sound_info,'unique_detection_threshold') && ~isempty(find(sound_info.unique_detection_threshold(:,1) == file_ind))
+        if ~isempty(sound_info.unique_detection_threshold) && ~isempty(find(sound_info.unique_detection_threshold(:,1) == file_ind))
             [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),sound_info.unique_detection_threshold(find(sound_info.unique_detection_threshold(:,1) == file_ind),2),sync_sampling_rate,sound_info.smoothing_factor); %last value is smoothing factor
         else %assume all files will use the same threshold
             [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),sound_info.detection_threshold,sync_sampling_rate,sound_info.smoothing_factor); %last value is smoothing factor

@@ -1,6 +1,7 @@
 function plot_random_trials_alignment (imaging,selected_fields)
 empty_trials = find(cellfun(@isempty,{imaging.good_trial}));
 good_trials =  setdiff(1:length(imaging),empty_trials);
+fprintf(['number of full trials: ' num2str(length(good_trials)) '\n'])
 sel_trials = randperm(length(good_trials),9);
 selected_trials = good_trials(sel_trials);
 fieldname = fieldnames(imaging(good_trials(1)).movement_in_imaging_time);

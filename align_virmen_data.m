@@ -261,7 +261,7 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
 end
 
 %empty trials if they are considered weird
-if exist('weird_trials','var')
+if ~isempty(weird_trials)
     weird_trials = unique([weird_trials,[stimulus_info(:).weird_trial]]);
     fn = fieldnames(imaging);
     for w = 1:length(weird_trials)

@@ -36,12 +36,33 @@ sounds_per_file(file).onsets = [sound_onsets{:,:}];%[[sound_st(file).file.onset]
 sounds_per_file(file).offsets = [sound_offsets{:,:}];%[[sound_st(file).file.offset],[sound_offsets{:,:}]];
 
 %to deal with trials where sound started before maze (fixed in may 2023)
-og_weird = [];
-if ismember('weird_trial',fields(sound_condition_array(file)))
-    % need to figure out indexing 
-    og_weird = sound_condition_array(file).weird_trial;
-    sounds_per_file(file).weird_trial = og_weird+within_trials_all(1)-first_sound_trial-1;
-end
+    og_weird = [];
+    if ismember('weird_trial',fields(sound_condition_array(file)))
+        % need to figure out indexing 
+        og_weird = sound_condition_array(file).weird_trial;
+        sounds_per_file(file).weird_trial = og_weird+within_trials_all(1)-first_sound_trial-1;
+
+        dist1 = [];
+        for s = 1:length(first_onset)
+            temp = min(abs([sound_condition_array(file).VR_sounds{~isnan([sound_condition_array(file).VR_sounds{:,2}]),2}] - first_onset(s)));
+            dist1 = [dist1,temp];
+        end
+        
+        %find weird trials that might be missed (happens if it's the very
+        %first trial of the file)--- assumes there will be more weird
+        %trials within the entire session
+        temp_weird = [];
+        for d = 1:length(dist1)
+            if dist1(d) > 0.03*sound_info.sync_sampling_rate %more than a frame apart
+                temp_weird = [temp_weird,d+within_trials_all(1)-first_sound_trial];
+                og_weird = [og_weird,d+first_sound_trial];
+            end
+        end
+        og_weird = unique(og_weird);
+        sounds_per_file(file).weird_trial = unique([sounds_per_file(file).weird_trial,temp_weird]);
+    end
+    
+    
 
 binary_sounds = zeros(1,(max(sounds_per_file(file).offsets)+sound_info.sync_sampling_rate));
 for p = 1:length(sounds_per_file(file).offsets)

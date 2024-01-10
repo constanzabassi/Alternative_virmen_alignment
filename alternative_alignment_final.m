@@ -1,20 +1,20 @@
 %% provide all inputs
-info.mousename = 'HA10-1L';%;
+info.mousename = 'HE4-1L1R';%;
 info.mouse = info.mousename;
-info.date = '2023-04-17'; %;
-info.server = 'U:'; %/Volumes/Runyan5
+info.date = '2023-08-21'; %;
+info.server = 'W:'; %/Volumes/Runyan5
 runyan5 = "U:";
 runyan4 = 'W:';
-data_base = 'CBHA10-1L_230417';%;
+data_base = 'CBHE4-1L1R_230821';%;
 info.sync_base_path = [ info.server '/Connie/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 info.virmen_base = [info.server '/Connie/RawData/' info.mousename '/virmen/' data_base ];
 info.imaging_base_path=[info.server '/Connie/RawData/' info.mousename '/' info.date '/'];
 info.save_path = [info.server '/Connie/ProcessedData/' info.mousename '/' info.date '/VR/'];
 info.processed_path = [info.server '/Connie/ProcessedData/' info.mousename '/' info.date '/'];
-is_stim_dataset = 1; 
+info.is_stim_dataset = 1; 
 % give data inputs!
-galvo_channel = 7;
-virmen_channel = 6;
+info.galvo_channel = 7;
+info.virmen_channel = 6;
 
 sound_info = {};
 sound_info.spkr_channel_number = [4,8];%[4,5,8];
@@ -28,7 +28,7 @@ sound_info.condition_per_speaker = conditions_per_speaker;
 task_info.correct = 3; %correct ITI time in sec (distance between end trial and end ITI is ITI +1 sec due to virmen bug)
 task_info.incorrect = 5; %incorrect ITI time in sec
 task_info.min = 3.5;% minimum time in sec to complete a trial (without ITI)
-task_info.channel_number = [galvo_channel,virmen_channel,sound_info.spkr_channel_number];
+task_info.channel_number = [info.galvo_channel,info.virmen_channel,sound_info.spkr_channel_number];
 
 %reward info from runyan 4 server
 load(strcat(runyan4,'/Connie/extra_tests/2023-12-11/mdl_pure_sol.mat'));
@@ -61,7 +61,7 @@ cd(strcat(info.server,'/Connie/ProcessedData/',num2str(info.mouse),'/',num2str(i
 if isfile("alignment_info.mat")
     load("alignment_info.mat");
 else
-    [alignment_info] = get_frame_times(info.imaging_base_path, info.sync_base_path, [], galvo_channel,1,[],[]); %7 is res galvo channel in investigator
+    [alignment_info] = get_frame_times(info.imaging_base_path, info.sync_base_path, [], info.galvo_channel,1,[],[]); %7 is res galvo channel in investigator
 end
 save ('alignment_info','alignment_info');
 %% find sound info for each file
@@ -73,8 +73,8 @@ sound_info.correct = .250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
-sound_info.unique_detection_threshold = [];%list specific file and threshold wanted
-sound_info.detection_threshold = 0.5;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
+sound_info.detection_threshold = 0.45;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 
 [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info.server,info.mousename,info.date,alignment_info,'VR',sound_info);
 
@@ -82,14 +82,14 @@ sound_info.detection_threshold = 0.5;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets
 for tr = 1:length(dataCell.dataCell)
     trial_info(tr).correct = dataCell.dataCell{1,tr}.result.correct;
     trial_info(tr).condition = dataCell.dataCell{1,tr}.maze.condition;
-    if is_stim_dataset == 1
+    if info.is_stim_dataset == 1
         trial_info(tr).is_stim = dataCell.dataCell{1,tr}.maze.is_stim_trial;
     end
 end
 
 %% get digidata iteration locations and difference between them
 string = 'VR';
-digidata_its = get_digidata_iterations(info.sync_base_path,string, virmen_channel);
+digidata_its = get_digidata_iterations(info.sync_base_path,string, info.virmen_channel);
 
 %% find its in the data that best match the its for each trial dividing files into trials that match them
 
@@ -118,4 +118,3 @@ mkdir(info.save_path)
 cd(info.save_path)
 save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames','trial_its','file_trial_ids','file_matching_trials','digidata_its','info');
 save('imaging','imaging');
-

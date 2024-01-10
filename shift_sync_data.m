@@ -55,12 +55,12 @@ if ~isempty(digidata_its(file).pos_loc)
         small_shift = nan; %find closest ones and determine if there needs to be another small shift
         small_shift_neg = nan; %find closest ones and determine if there needs to be another small shift
     
-        if length(pos_sound)>2 %sometimes sounds only have 5 iterations and don't want to take them into account if the rest are different
-        small_shift = round(mean(difference_it_sound(pos_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
-        end
-        if length(neg_sound)>2
-            small_shift_neg = round(mean(difference_it_sound(neg_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
-        end
+%         if length(pos_sound)>2 %sometimes sounds only have 5 iterations and don't want to take them into account if the rest are different
+%         small_shift = round(mean(difference_it_sound(pos_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
+%         end
+%         if length(neg_sound)>2
+%             small_shift_neg = round(mean(difference_it_sound(neg_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
+%         end
 
         if ~isnan(small_shift) && isnan(small_shift_neg)
             new_shift = shift+small_shift;
@@ -98,12 +98,12 @@ if ~isempty(digidata_its(file).pos_loc)
         small_shift = nan; %find closest ones and determine if there needs to be another small shift
         small_shift_neg = nan; %find closest ones and determine if there needs to be another small shift
     
-        if length(pos_sound)>2 %sometimes sounds only have 5 iterations and don't want to take them into account if the rest are different
-        small_shift = round(mean(difference_it_sound(pos_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
-        end
-        if length(neg_sound)>2
-            small_shift_neg = round(mean(difference_it_sound(neg_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
-        end
+%         if length(pos_sound)>2 %sometimes sounds only have 5 iterations and don't want to take them into account if the rest are different
+%         small_shift = round(mean(difference_it_sound(pos_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
+%         end
+%         if length(neg_sound)>2
+%             small_shift_neg = round(mean(difference_it_sound(neg_sound))/(mean_freq/2))*(mean_freq/2); %find closest ones and determine if there needs to be another small shift
+%         end
 
         if ~isnan(small_shift) && isnan(small_shift_neg)
             new_shift = shift+small_shift;

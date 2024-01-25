@@ -1,11 +1,11 @@
 %% provide all inputs
-info.mousename = 'HE4-1L1R';%;
+info.mousename = 'HA1-00';%;
 info.mouse = info.mousename;
-info.date = '2023-08-21'; %;
+info.date = '2023-08-28'; %;
 info.server = 'W:'; %/Volumes/Runyan5
 runyan5 = "U:";
 runyan4 = 'W:';
-data_base = 'CBHE4-1L1R_230821';%;
+data_base = 'CBHA1-00_230828';%;
 info.sync_base_path = [ info.server '/Connie/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 info.virmen_base = [info.server '/Connie/RawData/' info.mousename '/virmen/' data_base ];
 info.imaging_base_path=[info.server '/Connie/RawData/' info.mousename '/' info.date '/'];
@@ -74,7 +74,7 @@ sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
 sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
-sound_info.detection_threshold = 0.45;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.detection_threshold = 0.5;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 
 [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info.server,info.mousename,info.date,alignment_info,'VR',sound_info);
 
@@ -118,3 +118,6 @@ mkdir(info.save_path)
 cd(info.save_path)
 save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames','trial_its','file_trial_ids','file_matching_trials','digidata_its','info');
 save('imaging','imaging');
+%% redo imaging (loads necesarry info and reruns aling_virmen_data)
+
+redo_imaging(mouse,date,server);

@@ -104,7 +104,7 @@ digidata_its = get_digidata_iterations(info.sync_base_path,string, info.virmen_c
  
 %% binarize trial sounds and determine sounds for trials without speaker
  % (assumes all sounds are the same distance apart)
-sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info);
+[sounds_per_file,vr_sound_frames] = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info);
 %% determine reward location 
 [rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its,digidata_its,trial_info,alignment_info);
 

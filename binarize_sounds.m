@@ -1,5 +1,10 @@
-function sounds_per_file = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info)
+function [sounds_per_file,all_sounds_together] = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info)
 overall_diff = [];
+
+%add up all frames in the prior alignment structures (so things line up
+%with suite2p where all frames are concatenated together)
+frame_lengths = cellfun(@length,{alignment_info.frame_times});
+
 for file = 1:length(virmen_it)
 
 %     within_trials = virmen_it(file).file_trial_id_start:virmen_it(file).file_trial_id_end;
@@ -15,6 +20,22 @@ for file = 1:length(virmen_it)
     first_sound_trial = b-1;
     end_trial_time = virmen_it(file).it_times(trial_its.end_trial_its(within_trials_all)-virmen_it(file).actual_it_values(1)+1);
     first_onset = [];
+
+    % adding to make nice structure similar to passive
+    previous_sum = sum(frame_lengths(1:file-1)); %keep track of all previous frames
+
+    relevant_trials = 1:length([sound_st(file).file.true_condition]);%find([sound_st(file).file.trial_num]>=within_trials_all(1) & [sound_st(file).file.trial_num]<=within_trials_all(end));
+    cond = [sound_st(file).file.true_condition]';
+    new_sound_st(file).condition = cond(relevant_trials);
+    og_trial = [sound_st(file).file.trial_num]';
+    og_trial_file(file,:) = og_trial(end);
+    new_sound_st(file).og_trial_num = og_trial(relevant_trials);
+    if file == 1
+        new_sound_st(file).trial_num = og_trial;
+    else
+        new_sound_st(file).trial_num = og_trial+sum(og_trial_file(file-1:-1:1,:));
+    end
+
     for s = 1:length(within_trials_all)
             onset = [];
             %if nan determine onset and estimate where sounds might be
@@ -115,10 +136,16 @@ for p = 1:length(sounds_per_file(file).offsets)
     binary_sounds(sounds_per_file(file).onsets(p):sounds_per_file(file).offsets(p)) = 1; %in digidata time
     %find onset and offset frames and binarize based on their positions
     binary_sounds_frames(p,:) =  [find_closest_frames(alignment_info(file).frame_times,sounds_per_file(file).onsets(p),min_distance),find_closest_frames(alignment_info(file).frame_times,sounds_per_file(file).offsets(p),min_distance)];
+    new_sound_st(file).frames(p,:) =  binary_sounds_frames(p,:);
+    new_sound_st(file).corr_frames(p,:) = new_sound_st(file).frames(p,:)+previous_sum;
+
     if all(~isnan(binary_sounds_frames(p,:)))
         binary_sounds_imaging_time(binary_sounds_frames(p,1):binary_sounds_frames(p,2)) = 1;
     end
 end
+
+
+
 figure(557);clf;
 hold on
 title(strcat('Frame times sounds in file # ', num2str(file)));
@@ -138,6 +165,14 @@ end
 sounds_per_file(file).distance_to_true = dist*1000/sound_info.sync_sampling_rate; %convert to ms
 
 end
+
+%make structure similar to passive data!
+all_sounds_together = [];
+f = fieldnames(new_sound_st);
+for i = 1:length(f)
+    all_sounds_together.(f{i}) = cat(1,new_sound_st(1:length(sound_st)).(f{i}));%[new_sound_st(1:length(sound_st)).(f{i})];%{[new_sound_st(1:2).(f{i})]};
+end
+
  mean_al = [];var_al =[];for i = 1:length(virmen_it); mean_al = [mean_al,mean(sounds_per_file(i).distance_to_true)];var_al = [var_al,var(sounds_per_file(i).distance_to_true)];end
  figure(556);clf; scatter(mean_al,var_al,[],'markeredgecolor','k','linewidth',1.5);xlabel('mean distance from true sound in ms'); ylabel('variance in  ms'); title('distance between true and predicted sound onsets')
 

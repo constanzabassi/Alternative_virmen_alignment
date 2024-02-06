@@ -3,7 +3,7 @@ info.mousename = 'HA1-00';%;
 info.mouse = info.mousename;
 info.date = '2023-08-28'; %;
 info.server = 'W:'; %/Volumes/Runyan5
-runyan5 = "U:";
+runyan5 = "V:";
 runyan4 = 'W:';
 data_base = 'CBHA1-00_230828';%;
 info.sync_base_path = [ info.server '/Connie/RawData/' info.mousename '/wavesurfer/' info.date '/'];
@@ -120,4 +120,4 @@ save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it
 save('imaging','imaging');
 %% redo imaging (loads necesarry info and reruns aling_virmen_data)
 
-redo_imaging(mouse,date,server);
+redo_imaging(info);

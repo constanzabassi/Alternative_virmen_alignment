@@ -1,6 +1,6 @@
-function redo_imaging(mouse,date,server)
+function redo_imaging(info)
 % Load necessary variables
-basepath = strcat(server,'\Connie\ProcessedData\',mouse,'\',date,'\');
+basepath = strcat(info.server,'\Connie\ProcessedData\',info.mouse,'\',info.date,'\');
 cd(basepath);
 load('dff.mat');
 load('alignment_info.mat');

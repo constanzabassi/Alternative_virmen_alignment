@@ -1,4 +1,4 @@
-function redo_imaging(info)
+function redo_imaging(info,redoornot)
 % Load necessary variables
 basepath = strcat(info.server,'\Connie\ProcessedData\',info.mouse,'\',info.date,'\');
 cd(basepath);
@@ -22,10 +22,12 @@ else
     dataCell = load(strcat(info.virmen_base, '_Cell.mat'));
 end
 
-%align data
-imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell,trial_its,sounds_per_file,reward_loc_pure_frames);
-
-% save new imaging structure
-mkdir(info.save_path)
-cd(info.save_path)
-save('imaging','imaging');
+if redoornot == 1
+    %align data
+    imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell,trial_its,sounds_per_file,reward_loc_pure_frames);
+    
+    % save new imaging structure
+    mkdir(info.save_path)
+    cd(info.save_path)
+    save('imaging','imaging');
+end

@@ -120,4 +120,4 @@ save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it
 save('imaging','imaging');
 %% redo imaging (loads necesarry info and reruns aling_virmen_data)
 
-redo_imaging(info);
+redo_imaging(info,0);

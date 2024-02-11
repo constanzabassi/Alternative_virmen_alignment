@@ -30,9 +30,13 @@ for file = 1:num_files
     pure_tone_signal=[];
     figure(120);clf; 
     for s = 1:size(rawSounds,1)
-    [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),sound_info.detection_threshold,sync_sampling_rate,sound_info.smoothing_factor); %last value is smoothing factor
-    bin_sound_signal(s,:) = binary_sound_signal;
-    pure_tone_signal(s,:) = pure_tone;
+        if ~isempty(sound_info.unique_detection_threshold) && ~isempty(find(sound_info.unique_detection_threshold(:,1) == file_ind))
+            [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),sound_info.unique_detection_threshold(find(sound_info.unique_detection_threshold(:,1) == file_ind),2),sync_sampling_rate,sound_info.smoothing_factor); %last value is smoothing factor
+        else %assume all files will use the same threshold
+            [binary_sound_signal,pure_tone] = process_sound_signal(rescaled_sounds(s,:),sound_info.detection_threshold,sync_sampling_rate,sound_info.smoothing_factor); %last value is smoothing factor
+        end
+        bin_sound_signal(s,:) = binary_sound_signal;
+        pure_tone_signal(s,:) = pure_tone;
     end
 
     originalVector = [];
@@ -261,9 +265,16 @@ sound_outputs_trials(file).VR_sounds = condition_group_array;
 %% final step - classify pure tones only// assuming sounds look properly examined
 pure_tones_only= pure_tone_signal;
 pure_tones_only(:,sounds) = 0; %get rid of task sounds so only pure tones are left
+actual_sounds = rescaled_sounds;
+actual_sounds(:,sounds) = 0;
 if ~isempty(sound_info.correct)
     %assumes ITI sound happens .1 to 1 sec after last sound of trial
 [sound_outputs_trials_file,pure_tones_trials] = determine_pure_tones(pure_tones_only,sync_sampling_rate,sound_info.correct,sound_info.incorrect,sound_outputs_trials(file));
+
+if ~isempty(sound_info.corrected_iti) && ~isempty(find(sound_info.corrected_iti(:,1) == file_ind))
+    sound_outputs_trials_file(file_ind).ITI_sound(find(sound_info.corrected_iti(:,1) == file_ind),2),1:3) = find(sound_info.corrected_iti(:,1) == file_ind),3:5)
+end
+
 sound_outputs_trials(file).VR_sounds = sound_outputs_trials_file.VR_sounds;
 sound_outputs_trials(file).ITI_sounds = sound_outputs_trials_file.ITI_sounds;
     

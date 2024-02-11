@@ -1,11 +1,11 @@
 %% provide all inputs
-info.mousename = 'HA1-00';%;
+info.mousename = 'HA10-1L';%;
 info.mouse = info.mousename;
-info.date = '2023-08-28'; %;
-info.server = 'W:'; %/Volumes/Runyan5
+info.date = '2023-04-12'; %;
+info.server = 'V:'; %/Volumes/Runyan5
 runyan5 = "V:";
 runyan4 = 'W:';
-data_base = 'CBHA1-00_230828';%;
+data_base = 'CBHA10-1L_230412';%;
 info.sync_base_path = [ info.server '/Connie/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 info.virmen_base = [info.server '/Connie/RawData/' info.mousename '/virmen/' data_base ];
 info.imaging_base_path=[info.server '/Connie/RawData/' info.mousename '/' info.date '/'];
@@ -73,8 +73,9 @@ sound_info.correct = .250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
-sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
+sound_info.unique_detection_threshold = [1,.45;2,.45;3,.45;5,0.55;8,0.55];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
 sound_info.detection_threshold = 0.5;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.corrected_iti = [5,16,1,185879,186129;8,15,1,170627,170876];%only needed when no thresholds work [file#,trial#,correctorno,start,end] 
 
 [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info.server,info.mousename,info.date,alignment_info,'VR',sound_info);
 

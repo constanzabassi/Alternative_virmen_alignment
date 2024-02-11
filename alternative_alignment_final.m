@@ -119,6 +119,7 @@ mkdir(info.save_path)
 cd(info.save_path)
 save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames','trial_its','file_trial_ids','file_matching_trials','digidata_its','info');
 save('imaging','imaging');
+save('vr_sound_frames',"vr_sound_frames"); 
 %% redo imaging (loads necesarry info and reruns aling_virmen_data)
 
 redo_imaging(info,0);

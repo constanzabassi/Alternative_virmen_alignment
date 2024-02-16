@@ -1,8 +1,9 @@
 % [sound_outputs,trialConditions, condition_onset_array_all]=
-function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_new(server,mouse,date,alignment_info,string,sound_info) 
+function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_new(info,alignment_info,string,sound_info) 
 %find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr,smoothing_factor) 
 %pc=1 if windows, any other number if mac
-cd(strcat(server,'/Connie/RawData/',num2str(mouse),'/wavesurfer/',num2str(date)));
+% cd(strcat(server,'/Connie/RawData/',num2str(mouse),'/wavesurfer/',num2str(date)));
+cd(info.sync_base_path);
 sync_dir = dir(strcat('*',string,'*.abf'));
 num_files = length(sync_dir);
 file_ind = 0;
@@ -43,8 +44,12 @@ for file = 1:num_files
     originalVector = bin_sound_signal;
     % Reverse 0s and 1s
     reversedSoundVector = 1 - originalVector;
-    % Include all sounds in one vector
-    soundVector = max(reversedSoundVector);
+    % Include all sounds in one vector (find the max across sounds
+    if size(reversedSoundVector,1) >1
+        soundVector = max(reversedSoundVector);
+    else
+        soundVector = reversedSoundVector;
+    end
 
     %figure(); hold on;plot(soundVector); plot(rescaled_sounds(1,:));plot(rescaled_sounds(2,:)); hold off
     % Initialize a counter
@@ -53,7 +58,7 @@ for file = 1:num_files
     % Create a vector with numbers indicating the order of sound
     orderedVector = zeros(size(originalVector));
     
-    groupedVector = [];
+    groupedVector = []; %create a matrix that increases by 1 every time a new repeat is played (size: 1 x time)
     % Iterate through the original vector
     for i = 1:length(soundVector)
         if soundVector(i) == 1

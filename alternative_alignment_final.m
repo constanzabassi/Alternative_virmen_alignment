@@ -1,20 +1,29 @@
 %% provide all inputs
-info.mousename = 'HA10-1L';%;
+info.mousename = 'HA11-1R';%;
 info.mouse = info.mousename;
-info.date = '2023-04-12'; %;
+info.date = '2023-04-07'; %;
 info.server = 'V:'; %/Volumes/Runyan5
 runyan5 = "V:";
 runyan4 = 'W:';
-data_base = 'CBHA10-1L_230412';%;
-info.sync_base_path = [ info.server '/Connie/RawData/' info.mousename '/wavesurfer/' info.date '/'];
-info.virmen_base = [info.server '/Connie/RawData/' info.mousename '/virmen/' data_base ];
-info.imaging_base_path=[info.server '/Connie/RawData/' info.mousename '/' info.date '/'];
-info.save_path = [info.server '/Connie/ProcessedData/' info.mousename '/' info.date '/VR/'];
-info.processed_path = [info.server '/Connie/ProcessedData/' info.mousename '/' info.date '/'];
+data_base = 'CBHA11-1R_230407';%;
+info.experimenter_name = 'Connie';
+info.sync_base_path = [ info.server '/' info.experimenter_name '/RawData/' info.mousename '/wavesurfer/' info.date '/'];
+info.virmen_base = [info.server '/' info.experimenter_name '/RawData/' info.mousename '/virmen/' data_base ];
+info.imaging_base_path=[info.server '/' info.experimenter_name '/RawData/' info.mousename '/' info.date '/'];
+info.save_path = [info.server '/' info.experimenter_name '/ProcessedData/' info.mousename '/' info.date '/VR/'];
+info.processed_path = [info.server '/' info.experimenter_name '/ProcessedData/' info.mousename '/' info.date '/'];
+
+% info.sync_base_path = [ info.server '/Akhil/' info.mousename '/' info.date '/layer4/wavesurfer/'];
+% info.virmen_base = [ info.server '/Akhil/' info.mousename '/' info.date '/layer4/virmen/' data_base];
+% info.imaging_base_path=[info.server '/Akhil/' info.mousename '/' info.date '/layer4/'];
+% info.save_path = [info.server '/Akhil/ProcessedData/' info.mousename '/' info.date '/layer4/'];
+% info.processed_path = [info.server '/Akhil/' info.mousename '/' info.date '/layer4/spikes/'];
+
 info.is_stim_dataset = 1; 
 % give data inputs!
 info.galvo_channel = 7;
 info.virmen_channel = 6;
+info.vr_sync_string = 'VR'; %string within VR files to look for so it doesn't read other unnecessary files
 
 sound_info = {};
 sound_info.spkr_channel_number = [4,8];%[4,5,8];
@@ -56,8 +65,8 @@ else
 end
 fprintf(['number virmen trials: ' num2str(length(dataCell.dataCell)) '\n'])
 %% get frame times of all files in this folder
-mkdir(strcat(info.server,'/Connie/ProcessedData/',num2str(info.mouse),'/',num2str(info.date)))
-cd(strcat(info.server,'/Connie/ProcessedData/',num2str(info.mouse),'/',num2str(info.date)));
+mkdir(strcat(info.server,'/', info.experimenter_name, '/ProcessedData/',num2str(info.mouse),'/',num2str(info.date)))
+cd(strcat(info.server,'/', info.experimenter_name, '/ProcessedData/',num2str(info.mouse),'/',num2str(info.date)));
 if isfile("alignment_info.mat")
     load("alignment_info.mat");
 else
@@ -73,11 +82,13 @@ sound_info.correct = .250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
-sound_info.unique_detection_threshold = [1,.45;2,.45;3,.45;5,0.55;8,0.55];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
-sound_info.detection_threshold = 0.5;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
-sound_info.corrected_iti = [5,16,1,185879,186129;8,15,1,170627,170876];%only needed when no thresholds work [file#,trial#,correctorno,start,end] 
+sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
+sound_info.detection_threshold = 0.55;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.corrected_iti = [];%only needed when no thresholds work [file#,trial#,correctorno,start,end] 
 
-[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info.server,info.mousename,info.date,alignment_info,'VR',sound_info);
+%if you don't want ITI info (need at least 2 speakers) make sound_info.correct = [];
+
+[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info,alignment_info,info.vr_sync_string,sound_info); % include string that is in the name of the abf files you want to read
 
 %% get trial info using the virmen files!
 for tr = 1:length(dataCell.dataCell)
@@ -89,19 +100,22 @@ for tr = 1:length(dataCell.dataCell)
 end
 
 %% get digidata iteration locations and difference between them
-string = 'VR';
-digidata_its = get_digidata_iterations(info.sync_base_path,string, info.virmen_channel);
 
-%% find its in the data that best match the its for each trial dividing files into trials that match them
+digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, info.virmen_channel);
 
-[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info);
+%% find its in the data that best match the its for each trial dividing files into trials that match them (IF ITERATIONS ARE WEIRD USE THIS)
+
+[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info); %uses ITI sounds
 
 % find the start and end trials that are within the imaging frames!// also
 % puts trials into context of all other trials (file_digidata_trial_info)
 [file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,info.sync_base_path,task_info);
 
-%% shift iterations in time until they match positive peaks or first trial iteration
+%% shift iterations in time until they match positive peaks or first trial iteration (IF ITERATIONS ARE WEIRD USE THIS)
 [virmen_it,trial_its,sound_condition_array] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info);
+
+%% IF ITERATIONS ARE GOOD CAN USE THIS AND SKIP CODE ABOVE
+% virmen_it = get_virmen_iterations_and_times_digidata_cb7(info.sync_base_path info.virmen_channel,info.vr_sync_string);
  
 %% binarize trial sounds and determine sounds for trials without speaker
  % (assumes all sounds are the same distance apart)

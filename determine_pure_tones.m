@@ -89,7 +89,7 @@ pos_peaks = []; pos_peaks2 = [];
 %reprocessing signal
 %binary_pure_signal = heaviside(abs(pure_tone_signal)*-1);
 for s = 1:size(pure_tone_signal,1)
-    [~,pos_peaks2] = findpeaks(abs(diff(pure_tone_signal(s,:))),'MinPeakHeight', 0.005);%findpeaks(abs(diff(binary_pure_signal(s,:))),'MinPeakHeight', 0.005);%
+    [~,pos_peaks2] = findpeaks(abs(diff(pure_tone_signal(s,:))),'MinPeakHeight', 0.006);%findpeaks(abs(diff(binary_pure_signal(s,:))),'MinPeakHeight', 0.005);%
     pos_peaks = [pos_peaks,pos_peaks2];
 end
 pos_peaks = unique(pos_peaks);
@@ -118,6 +118,21 @@ for ii = 1:length(incorr_peakss)
 end
 corr_to_eliminate = unique(corr_to_eliminate);
 cor_diff(corr_to_eliminate) = [];
+
+%new method to find peaks using zeros
+zero_values = find(abs(diff(pure_tone_signal(s,:))) == 0);
+binarized_zeros = heaviside(rescale(diff(zero_values),0,1)*-1); %
+[~,b] = findpeaks(abs(diff(binarized_zeros)));
+[distance,location] = findpeaks(diff(b));
+
+corr_zero = []; incorr_zero = [];
+for val = 1:length(distance); 
+    if ismember(distance(val),target_differences)
+        corr_zero = [corr_zero,zero_values(b(location(val)))];
+    elseif ismember(distance(val),target_differences_incorrect)
+        incorr_zero = [incorr_zero,zero_values(b(location(val)))];
+    end
+end
 
 good_diff=sort([ in_diff,cor_diff]); 
 for t = 1:size(condition_onset_array_all.VR_sounds,1)

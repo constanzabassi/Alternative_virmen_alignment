@@ -105,7 +105,9 @@ digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, 
 
 %% find its in the data that best match the its for each trial dividing files into trials that match them (IF ITERATIONS ARE WEIRD USE THIS)
 
-[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info); %uses ITI sounds
+%[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info); %uses ITI sounds
+[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile_v2(digidata_its, trial_info,sound_condition_array,task_info,data); %uses ITI sounds if you have positive peaks
+
 
 % find the start and end trials that are within the imaging frames!// also
 % puts trials into context of all other trials (file_digidata_trial_info)

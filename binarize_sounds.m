@@ -36,18 +36,24 @@ for file = 1:length(virmen_it)
         new_sound_st(file).trial_num = og_trial+sum(og_trial_file(file-1:-1:1,:));
     end
 
-    for s = 1:length(within_trials_all)
+    for s = 1:length(sound_trigger_time) %within_trials_all
             onset = [];
+            
             %if nan determine onset and estimate where sounds might be
             %it before gap is about ~180ms from sound onset
             %on for 1 sec off for 200ms
-            onset = sound_trigger_time(s)+virmen_it(file).mean_sound_distance; %conver to ms
-            sound_onsets{s,:} = round(onset:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));
-            sound_offsets{s,:} = round(onset+sound_info.sound_duration:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));
-            if size(sound_onsets{s,:},2)>size(sound_offsets{s,:},2)% if last sound is unifinsehd
-                sound_offsets{s,:} = [sound_offsets{s,:},round(end_trial_time(s))];
+            if s == 14 && file == 3
+                s
             end
-            first_onset = [first_onset,sound_onsets{s,1}(1,1)];
+            onset = sound_trigger_time(s)+virmen_it(file).mean_sound_distance; %conver to ms
+            if onset < end_trial_time(s)
+                sound_onsets{s,:} = round(onset:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));
+                sound_offsets{s,:} = round(onset+sound_info.sound_duration:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));
+                if size(sound_onsets{s,:},2)>size(sound_offsets{s,:},2)% if last sound is unifinsehd
+                    sound_offsets{s,:} = [sound_offsets{s,:},round(end_trial_time(s))];
+                end
+                first_onset = [first_onset,sound_onsets{s,1}(1,1)];
+            end
 
     end
     file
@@ -94,10 +100,16 @@ end
 ex_data = abfload(strcat(virmen_it(file).directory));
 figure(555);clf;
 title(strcat('Predicted binary sounds in file # ', num2str(file)));
-hold on;cc = plot(rescale(ex_data(:,sound_info.spkr_channel_number(1)),0,1),'-b');dd = plot(rescale(ex_data(:,sound_info.spkr_channel_number(2)),0,1),'-m');
+hold on;cc = plot(rescale(ex_data(:,sound_info.spkr_channel_number(1)),0,1),'-b');
+if length(sound_info.spkr_channel_number) > 1
+    dd = plot(rescale(ex_data(:,sound_info.spkr_channel_number(2)),0,1),'-m');
+    legend([ cc dd  a(1) ],'Speaker 1','Speaker 2', 'binary sounds')
+
+end
 a = plot(binary_sounds,'-k');
+legend([ cc  a(1) ],'Speaker 1','Speaker 2', 'binary sounds')
+
 %plot(rescale(ex_data(:,sound_info.spkr_channel_number(3)),-1,0),'-r');
-legend([ cc dd  a(1) ],'Speaker 1','Speaker 2', 'binary sounds')
 if length(sound_info.spkr_channel_number)>2
     plot(rescale(ex_data(:,sound_info.spkr_channel_number(3)),0,1),'-r')
 end
@@ -110,17 +122,20 @@ pause
 %organize with actually detected sounds
 sound_onsets = cell(1,1);
 sound_offsets= cell(1,1);
-for s = 1:length(sound_trigger_time)
-    if isnan(sound_condition_array(file).VR_sounds{s+first_sound_trial,3}) 
+for s = 1:length(sound_trigger_time) %
+    if s+first_sound_trial < length(sound_condition_array(file).VR_sounds) && isnan(sound_condition_array(file).VR_sounds{s+first_sound_trial,3}) 
         onset = [];
         %if nan determine onset and estimate where sounds might be
         %it before gap is about ~180ms from sound onset
         %on for 1 sec off for 200ms
         onset = sound_trigger_time(s)+virmen_it(file).mean_sound_distance; %conver to ms
-        sound_onsets{s,:} = round(onset:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));
-        sound_offsets{s,:} = round(onset+sound_info.sound_duration:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));
-        if size(sound_onsets{s,:},2)>size(sound_offsets{s,:},2)% if last sound is unifinsehd
-            sound_offsets{s,:} = [sound_offsets{s,:},round(end_trial_time(s))];
+        if onset < end_trial_time(s)
+
+            sound_onsets{s,:} = round(onset:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));
+            sound_offsets{s,:} = round(onset+sound_info.sound_duration:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));
+            if size(sound_onsets{s,:},2)>size(sound_offsets{s,:},2)% if last sound is unifinsehd
+                sound_offsets{s,:} = [sound_offsets{s,:},round(end_trial_time(s))];
+            end
         end
     end
 end

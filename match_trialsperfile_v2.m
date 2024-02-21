@@ -1,4 +1,4 @@
-function [file_digidata_trial_info,file_matching_trials,sound_condition_array2] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info)
+function [file_digidata_trial_info,file_matching_trials,sound_condition_array2] = match_trialsperfile_v2(digidata_its, trial_info,sound_condition_array,task_info,data)
 %initialize variable to save trials
 file_matching_trials = [];
 
@@ -362,50 +362,63 @@ pause
 % fprintf('Minimum MSE value: %.4f\n', minMSE);
 
 %%
-% Example data (replace with your actual data)
-trueMatrix = [trial_info.correct; trial_info.condition]'; % Replace with your true trial information matrix
-estimatedMatrix = possible_outcome; % Replace with your estimated trial information matrix
+if ~isempty(digidata_its(file).pos_pks)%if positive peaks exist try to use them instead to assign trials to iterations
 
-% Assuming trueMatrix and estimatedMatrix are appropriately defined
-sizeTrueMatrix = size(trueMatrix);
-trueConditions = cell(sizeTrueMatrix(1), 1);
-
-%Convert arrays into string - helps deal with multiple conditions
-for i = 1:sizeTrueMatrix(1)
-    conditionStr = strjoin(cellstr(num2str(trueMatrix(i, 2))));
-    correctness = trueMatrix(i, 1); % assuming 1st column contains correctness
-    if isnan(correctness)
-        correctnessStr = 'NaN';
-    else
-        correctnessStr = num2str(correctness);
-    end
-    trueConditions{i} = strcat(correctnessStr, '_', conditionStr);
-end
-
-size_estimatedMatrix = size(estimatedMatrix);
-estimatedConditions = cell(size_estimatedMatrix(1), 1);
-for i = 1:size_estimatedMatrix(1)
-    conditionStr = strjoin(cellstr(num2str(estimatedMatrix{i, 2})));
-    correctness = estimatedMatrix{i, 1};
-    if isnan(correctness)
-        correctnessStr = 'NaN';
-    else
-        correctnessStr = num2str(correctness);
-    end
-    estimatedConditions{i} = strcat(correctnessStr, '_', conditionStr);
-end
+    [trial_its,trial_its_time] = virmen_it_rough_estimation(data); %get iterations that go with each trial
+    assigned_pk_trial = find(digidata_its(file).pos_pks(1)*1e5 - trial_its.start_trial_its <= 0 ,1,'first'); 
+    assgined_pk_time = digidata_its(file).pos_loc(1);
+    within_file_trial = find(assgined_pk_time - file_digidata_trial_info(file).start_trials_digidata_time<= 0 ,1,'first'); 
+    start_trial_index = assigned_pk_trial - within_file_trial;
+    end_trial_index = start_trial_index + length(sound_condition_array(file).VR_sounds);%have to figure out if I wanna use start trial or end trial
+    
+    file_matching_trials(file,:) = [start_trial_index,end_trial_index];
 
 
-%% match trials using levenshteinDistance (smallest change to strings gives distance)
-if file == 1
-    startTrial = 1;
-    bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedConditions,startTrial);
 else
-    startTrial = file_matching_trials(file-1,1);
-    bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedConditions,startTrial);
+    
+    % Example data (replace with your actual data)
+    trueMatrix = [trial_info.correct; trial_info.condition]'; % Replace with your true trial information matrix
+    estimatedMatrix = possible_outcome; % Replace with your estimated trial information matrix
+    
+    % Assuming trueMatrix and estimatedMatrix are appropriately defined
+    sizeTrueMatrix = size(trueMatrix);
+    trueConditions = cell(sizeTrueMatrix(1), 1);
+    
+    %Convert arrays into string - helps deal with multiple conditions
+    for i = 1:sizeTrueMatrix(1)
+        conditionStr = strjoin(cellstr(num2str(trueMatrix(i, 2))));
+        correctness = trueMatrix(i, 1); % assuming 1st column contains correctness
+        if isnan(correctness)
+            correctnessStr = 'NaN';
+        else
+            correctnessStr = num2str(correctness);
+        end
+        trueConditions{i} = strcat(correctnessStr, '_', conditionStr);
+    end
+    
+    size_estimatedMatrix = size(estimatedMatrix);
+    estimatedConditions = cell(size_estimatedMatrix(1), 1);
+    for i = 1:size_estimatedMatrix(1)
+        conditionStr = strjoin(cellstr(num2str(estimatedMatrix{i, 2})));
+        correctness = estimatedMatrix{i, 1};
+        if isnan(correctness)
+            correctnessStr = 'NaN';
+        else
+            correctnessStr = num2str(correctness);
+        end
+        estimatedConditions{i} = strcat(correctnessStr, '_', conditionStr);
+    end
+    
+    %% match trials using levenshteinDistance (smallest change to strings gives distance)
+    if file == 1
+        startTrial = 1;
+        bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedConditions,startTrial);
+    else
+        startTrial = file_matching_trials(file-1,1);
+        bestTrialIndices = findBestMatchingTrials(trueConditions,estimatedConditions,startTrial);
+    end
+    file_matching_trials(file,:) = [bestTrialIndices(1), bestTrialIndices(2)];
 end
-file_matching_trials(file,:) = [bestTrialIndices(1), bestTrialIndices(2)];
-
 end
 % verify that trials make sense... they go in chronological order
 for file = 1:length(digidata_its) 
@@ -418,4 +431,3 @@ for file = 1:length(digidata_its)
         end
     end
 end
-

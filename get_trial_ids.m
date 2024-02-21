@@ -48,11 +48,14 @@ end
 ex_data = abfload([sync_base_path alignment_info(file).sync_id]);
 figure(55);clf;
 title(strcat('Check start and end trials in file # ', num2str(file)));
-hold on;aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'color',[0.7 0.7 0.7]);  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');
+hold on;aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'color',[0.7 0.7 0.7]);  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');
+
 a = plot(file_estimated_trial_info(file).start_trials_digidata_time(start_trial(1,2)),0,'*c');b = plot(file_estimated_trial_info(file).end_iti_digidata_time(end_trial(1,2)),0,'*g');movegui(gcf,'center');
 %plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-r');
-legend([aa bb cc dd  a(1) b(1) ],'Imaging frames','Virmen its','Speaker 1','Speaker 2', 'first full trial', 'last full trial')
-if length(task_info.channel_number)>4
+legend([aa bb cc a(1) b(1) ],'Imaging frames','Virmen its','Speaker 1', 'first full trial', 'last full trial')
+if length(task_info.channel_number)>3
+    dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');
+elseif length(task_info.channel_number)>4
     plot(rescale(ex_data(:,task_info.channel_number(5)),-1,0),'-r')
 end
 hold off;

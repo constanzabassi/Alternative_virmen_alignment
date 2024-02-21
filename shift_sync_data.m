@@ -221,8 +221,11 @@ end
 
 figure(999);clf; 
 title(strcat('Shifted data file # ', num2str(file)));
-hold on; aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'-k');  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');a = plot(possible_it_locs,0,'*c');
-legend([aa bb cc dd  a(1)],'Imaging frames','Virmen its','Speaker 1','Speaker 2', 'Estimated iteration times')
+hold on; aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'-k');  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');a = plot(possible_it_locs,0,'*c');
+legend([aa bb cc  a(1)],'Imaging frames','Virmen its','Speaker 1','Speaker 2', 'Estimated iteration times')
+if length(task_info.channel_number)>3
+    dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');
+end
 if ~isempty(pos_peak_id) && pos_peak_id-possible_iterations(1) > 0 && pos_peak_id-possible_iterations(1) < length(possible_it_locs)
     if pos_peak_id(1) == 1000000
         plot(possible_it_locs(1),0,'*r');

@@ -274,7 +274,7 @@ actual_sounds = rescaled_sounds;
 actual_sounds(:,sounds) = 0;
 if ~isempty(sound_info.correct)
     %assumes ITI sound happens .1 to 1 sec after last sound of trial
-[sound_outputs_trials_file] = determine_pure_tones_v2(pure_tones_only,sync_sampling_rate,sound_info.correct,sound_info.incorrect,sound_outputs_trials(file));
+[sound_outputs_trials_file] = determine_pure_tones(pure_tones_only,sync_sampling_rate,sound_info.correct,sound_info.incorrect,sound_outputs_trials(file));
 
 if ~isempty(sound_info.corrected_iti) && ~isempty(find(sound_info.corrected_iti(:,1) == file_ind))
     sound_outputs_trials_file.ITI_sounds(sound_info.corrected_iti(find(sound_info.corrected_iti(:,1) == file_ind),2),1:3) = sound_info.corrected_iti(find(sound_info.corrected_iti(:,1) == file_ind),3:5);

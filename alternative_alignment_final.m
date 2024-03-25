@@ -1,11 +1,11 @@
 %% provide all inputs
-info.mousename = 'HA11-1R';%;
+info.mousename = 'HA10-1L';%;
 info.mouse = info.mousename;
-info.date = '2023-04-07'; %;
+info.date = '2023-03-31'; %;
 info.server = 'V:'; %/Volumes/Runyan5
 runyan5 = "V:";
 runyan4 = 'W:';
-data_base = 'CBHA11-1R_230407';%;
+data_base = 'CBHA10-1L_230331';%;
 info.experimenter_name = 'Connie';
 info.sync_base_path = [ info.server '/' info.experimenter_name '/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 info.virmen_base = [info.server '/' info.experimenter_name '/RawData/' info.mousename '/virmen/' data_base ];
@@ -83,7 +83,7 @@ sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
 sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
-sound_info.detection_threshold = 0.55;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.detection_threshold = 0.450;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 sound_info.corrected_iti = [];%only needed when no thresholds work [file#,trial#,correctorno,start,end] 
 
 %if you don't want ITI info (need at least 2 speakers) make sound_info.correct = [];
@@ -105,8 +105,8 @@ digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, 
 
 %% find its in the data that best match the its for each trial dividing files into trials that match them (IF ITERATIONS ARE WEIRD USE THIS)
 
-%[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info); %uses ITI sounds
-[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile_v2(digidata_its, trial_info,sound_condition_array,task_info,data); %uses ITI sounds if you have positive peaks
+[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info); %uses ITI sounds
+%[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile_v2(digidata_its, trial_info,sound_condition_array,task_info,data); %uses ITI sounds if you have positive peaks
 
 
 % find the start and end trials that are within the imaging frames!// also

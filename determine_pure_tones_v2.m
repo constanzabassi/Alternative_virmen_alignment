@@ -49,14 +49,16 @@ end
 
 condition_onset_array_all_final.ITI_sounds = pure_tones_trial2;
 %adding this so arrays are the same size!
-nan_array = cell(size(pure_tones_trial2,1),size(pure_tones_trial2,2)+1);
-nan_array(1:size(pure_tones_trial2,1),1:size(pure_tones_trial2,2)+2) = {nan};
 if length(order1) < length(condition_onset_array_all.VR_sounds) && condition_onset_array_all.VR_sounds{end,3} > pure_tones_trial2(end,2)
     combined_list(order1,:) = [condition_onset_array_all.VR_sounds(1:end-1,:)]; %if there is a sound not paired with pure tune at the end!
-    combined_list(order2,:) = {nan};
+    if ~isempty(order2)
+        combined_list(order2,:) = {nan};
+    end
 else
     combined_list(order1,:) = condition_onset_array_all.VR_sounds;
-    combined_list(order2,:) = {nan};
+    if ~isempty(order2)
+        combined_list(order2,:) = {nan};
+    end
 end
 
 if ~isempty(pure_tones_trial2)
@@ -65,7 +67,7 @@ end
 
 
 %%
-combined_pure_tones = pure_tones_trial2
+combined_pure_tones = pure_tones_trial2;
 figure(112);clf; hold on; title('ITI Pure tones with NaN')
 hold on
 plot(diff(pure_tone_signal(1,:)));

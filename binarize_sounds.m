@@ -103,11 +103,11 @@ title(strcat('Predicted binary sounds in file # ', num2str(file)));
 hold on;cc = plot(rescale(ex_data(:,sound_info.spkr_channel_number(1)),0,1),'-b');
 if length(sound_info.spkr_channel_number) > 1
     dd = plot(rescale(ex_data(:,sound_info.spkr_channel_number(2)),0,1),'-m');
-    legend([ cc dd  a(1) ],'Speaker 1','Speaker 2', 'binary sounds')
+    %legend([ cc dd  a(1) ],'Speaker 1','Speaker 2', 'binary sounds')
 
 end
 a = plot(binary_sounds,'-k');
-legend([ cc  a(1) ],'Speaker 1','Speaker 2', 'binary sounds')
+legend([ cc  a(1) ],'Speaker 1', 'binary sounds')
 
 %plot(rescale(ex_data(:,sound_info.spkr_channel_number(3)),-1,0),'-r');
 if length(sound_info.spkr_channel_number)>2

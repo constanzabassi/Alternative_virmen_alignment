@@ -105,6 +105,7 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
             imaging(vr_trial).z_dff = z_dff(:,maze_start_frame+previous_frames_sum:iti_end_frame+previous_frames_sum);
             imaging(vr_trial).deconv = deconv(:,maze_start_frame+previous_frames_sum:iti_end_frame+previous_frames_sum);
             
+            imaging(vr_trial).relative_frames = maze_start_frame+previous_frames_sum:iti_end_frame+previous_frames_sum;
             
             imaging(vr_trial).file_num = file_ind;
             

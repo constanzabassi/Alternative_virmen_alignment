@@ -1,11 +1,11 @@
 %% provide all inputs
-info.mousename = 'HA10-1L';%;
+info.mousename = 'HA11-1R';%;
 info.mouse = info.mousename;
-info.date = '2023-03-31'; %;
+info.date = '2023-05-05'; %;
 info.server = 'V:'; %/Volumes/Runyan5
 runyan5 = "V:";
 runyan4 = 'W:';
-data_base = 'CBHA10-1L_230331';%;
+data_base = 'CBHA11-1R_230505';%;
 info.experimenter_name = 'Connie';
 info.sync_base_path = [ info.server '/' info.experimenter_name '/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 info.virmen_base = [info.server '/' info.experimenter_name '/RawData/' info.mousename '/virmen/' data_base ];
@@ -86,9 +86,12 @@ sound_info.unique_detection_threshold = [];%list specific file and threshold wan
 sound_info.detection_threshold = 0.450;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 sound_info.corrected_iti = [];%only needed when no thresholds work [file#,trial#,correctorno,start,end] 
 
+sound_info.iti_tone_version = 1;% use version 2 if you have nice data
+
 %if you don't want ITI info (need at least 2 speakers) make sound_info.correct = [];
 
-[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info,alignment_info,info.vr_sync_string,sound_info); % include string that is in the name of the abf files you want to read
+% include string that is in the name of the abf files you want to read
+[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info,alignment_info,info.vr_sync_string,sound_info,sound_info.iti_tone_version);
 
 %% get trial info using the virmen files!
 for tr = 1:length(dataCell.dataCell)
@@ -106,22 +109,30 @@ digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, 
 %% find its in the data that best match the its for each trial dividing files into trials that match them (IF ITERATIONS ARE WEIRD USE THIS)
 
 [file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info); %uses ITI sounds
+
+%try this one if above does not work
 %[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile_v2(digidata_its, trial_info,sound_condition_array,task_info,data); %uses ITI sounds if you have positive peaks
+
+%use this one if you have pulse sounds
+% [file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile_pulse_maze(digidata_its, trial_info,sound_condition_array,task_info,data); %changes to ITI gap distance for pulse maze
 
 
 % find the start and end trials that are within the imaging frames!// also
 % puts trials into context of all other trials (file_digidata_trial_info)
 [file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,info.sync_base_path,task_info);
 
-%% shift iterations in time until they match positive peaks or first trial iteration (IF ITERATIONS ARE WEIRD USE THIS)
+%% shift iterations in time until they match positive peaks or first trial iteration (IF ITERATIONS ARE WEIRD USE THIS!!)
 [virmen_it,trial_its,sound_condition_array] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info);
 
-%% IF ITERATIONS ARE GOOD CAN USE THIS AND SKIP CODE ABOVE
-% virmen_it = get_virmen_iterations_and_times_digidata_cb7(info.sync_base_path info.virmen_channel,info.vr_sync_string);
- 
+% IF ITERATIONS ARE GOOD CAN USE THIS AND SKIP CODE ABOVE
+% [virmen_it,trial_its,sound_condition_array] = get_virmen_iterations_and_times_digidata_positive_peaks(info.sync_base_path,info.virmen_channel,info.vr_sync_string,sound_condition_array,data);
+
 %% binarize trial sounds and determine sounds for trials without speaker
  % (assumes all sounds are the same distance apart)
 [sounds_per_file,vr_sound_frames] = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info);
+
+% IF ITERATIONS ARE GOOD CAN USE THIS AND SKIP CODE ABOVE - use this if you have all the sounds and are happy with onsets/offsets
+% [sounds_per_file,vr_sound_frames] = binarize_sounds_simple(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info); %can ignore vr_sound_frames
 %% determine reward location 
 [rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its,digidata_its,trial_info,alignment_info);
 

@@ -42,10 +42,12 @@ for file = 1:length(virmen_it)
             %if nan determine onset and estimate where sounds might be
             %it before gap is about ~180ms from sound onset
             %on for 1 sec off for 200ms
-            if s == 14 && file == 3
-                s
+            
+            if ~isnan(virmen_it(file).mean_sound_distance)
+                onset = sound_trigger_time(s)+virmen_it(file).mean_sound_distance; %conver to ms
+            else
+                onset = sound_trigger_time(s);
             end
-            onset = sound_trigger_time(s)+virmen_it(file).mean_sound_distance; %conver to ms
             if onset < end_trial_time(s)
                 sound_onsets{s,:} = round(onset:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));
                 sound_offsets{s,:} = round(onset+sound_info.sound_duration:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));
@@ -128,7 +130,11 @@ for s = 1:length(sound_trigger_time) %
         %if nan determine onset and estimate where sounds might be
         %it before gap is about ~180ms from sound onset
         %on for 1 sec off for 200ms
-        onset = sound_trigger_time(s)+virmen_it(file).mean_sound_distance; %conver to ms
+        if ~isnan(virmen_it(file).mean_sound_distance)
+                onset = sound_trigger_time(s)+virmen_it(file).mean_sound_distance; %conver to ms
+        else
+            onset = sound_trigger_time(s);
+        end
         if onset < end_trial_time(s)
 
             sound_onsets{s,:} = round(onset:sound_info.distance_within_sounds+sound_info.sound_duration:end_trial_time(s));

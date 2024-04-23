@@ -33,6 +33,7 @@ file_estimated_trial_info_updated = file_estimated_trial_info;
 
 %include iti before start trial and full maze after end iti if they are
 %within imaging limits
+frame_end_maze= [];
 frame_start_trial_iti = find(file_estimated_trial_info(file).start_iti_digidata_time(start_trial(1,2)) - alignment_info(file).frame_times(1)>0);
 if length(file_estimated_trial_info(file).end_trials_digidata_time) > end_trial(1,2)
     frame_end_maze = find(file_estimated_trial_info(file).end_trials_digidata_time(end_trial(1,2)+1) - alignment_info(file).frame_times(end)<0);

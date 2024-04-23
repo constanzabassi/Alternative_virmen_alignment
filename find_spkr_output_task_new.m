@@ -1,5 +1,5 @@
 % [sound_outputs,trialConditions, condition_onset_array_all]=
-function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_new(info,alignment_info,string,sound_info) 
+function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_new(info,alignment_info,string,sound_info,iti_tone_version) 
 %find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr,smoothing_factor) 
 %pc=1 if windows, any other number if mac
 % cd(strcat(server,'/Connie/RawData/',num2str(mouse),'/wavesurfer/',num2str(date)));
@@ -278,7 +278,11 @@ actual_sounds = rescaled_sounds;
 actual_sounds(:,sounds) = 0;
 if ~isempty(sound_info.correct)
     %assumes ITI sound happens .1 to 1 sec after last sound of trial
-[sound_outputs_trials_file] = determine_pure_tones_v2(pure_tones_only,sync_sampling_rate,sound_info.correct,sound_info.incorrect,sound_outputs_trials(file));
+    if iti_tone_version == 1
+        [sound_outputs_trials_file] = determine_pure_tones(pure_tones_only,sync_sampling_rate,sound_info.correct,sound_info.incorrect,sound_outputs_trials(file));
+    elseif iti_tone_version == 2
+        [sound_outputs_trials_file] = determine_pure_tones_v2(pure_tones_only,sync_sampling_rate,sound_info.correct,sound_info.incorrect,sound_outputs_trials(file));
+    end
 
 if ~isempty(sound_info.corrected_iti) && ~isempty(find(sound_info.corrected_iti(:,1) == file_ind))
     sound_outputs_trials_file.ITI_sounds(sound_info.corrected_iti(find(sound_info.corrected_iti(:,1) == file_ind),2),1:3) = sound_info.corrected_iti(find(sound_info.corrected_iti(:,1) == file_ind),3:5);

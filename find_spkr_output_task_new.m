@@ -116,7 +116,7 @@ for file = 1:num_files
         
     difference = [true_sound_pairs(:,2) - true_sound_pairs(:,1)]; 
     all_trial_sounds = [];
-    range_sound_duration = [sound_info.sound_duration-(sound_info.sound_duration*0.01),sound_info.sound_duration+(sound_info.sound_duration*0.1)];
+    range_sound_duration = [round(sound_info.sound_duration-(sound_info.sound_duration*0.01)),round(sound_info.sound_duration+(sound_info.sound_duration*0.1))];
     all_trial_sounds = true_sound_pairs(find(difference >range_sound_duration(1) & difference < range_sound_duration(2)),:); %sounds that are outside limits of sound duration
     % adding code to also include sounds that are cut off early
     count = 0; unfinished_sounds = [];unfinished_sounds_toadd =[];
@@ -125,7 +125,7 @@ for file = 1:num_files
     if ~isempty(unfinished_sounds)
         for es = 1:length(unfinished_sounds)
             extra_sound = unfinished_sounds(es);
-            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < (sound_info.distance_within_sounds*.1+sound_info.distance_within_sounds) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > (sound_info.distance_within_sounds-(sound_info.distance_within_sounds*.1)) ...
+            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < any(sound_info.distance_within_sounds*.1+sound_info.distance_within_sounds) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > any(sound_info.distance_within_sounds-(sound_info.distance_within_sounds*.1)) ...
                     && (difference(extra_sound-1) >range_sound_duration(1) & difference(extra_sound-1) < range_sound_duration(2))==1
                 count = count+1;
                     unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,:)];
@@ -150,7 +150,11 @@ else %true condition is equal to the condition array
 end
 
 numSounds = length(onset_array);
-numConditions = length(unique(condition_array));
+if length(unique(condition_array)) < length(sound_info.speaker_ids)
+    numConditions = length(sound_info.speaker_ids);
+else
+    numConditions = length(unique(condition_array));
+end
 expectedDistance = sound_info.distance_within_sounds; %distance_between*sync_sampling_rate; 
 
 % Initialize cell arrays to store trial information for each condition
@@ -171,7 +175,7 @@ for i = 1:numSounds
         lastOffsetTime = lastTrial(2);
         
         % Check if the current sound can be added to the last trial
-        if abs(lastOffsetTime - onsetTime) <= expectedDistance+expectedDistance*.1 && abs(lastOffsetTime - onsetTime) >= expectedDistance-expectedDistance*.1
+        if any(abs(lastOffsetTime - onsetTime) <= expectedDistance+expectedDistance*.1) && any(abs(lastOffsetTime - onsetTime) >= expectedDistance-expectedDistance*.1);%abs(lastOffsetTime - onsetTime) <= expectedDistance+expectedDistance*.1 && abs(lastOffsetTime - onsetTime) >= expectedDistance-expectedDistance*.1
             % Extend the last trial
             trialsPerCondition{condition}(end, 2) = offsetTime;
         else
@@ -274,7 +278,7 @@ actual_sounds = rescaled_sounds;
 actual_sounds(:,sounds) = 0;
 if ~isempty(sound_info.correct)
     %assumes ITI sound happens .1 to 1 sec after last sound of trial
-[sound_outputs_trials_file] = determine_pure_tones(pure_tones_only,sync_sampling_rate,sound_info.correct,sound_info.incorrect,sound_outputs_trials(file));
+[sound_outputs_trials_file] = determine_pure_tones_v2(pure_tones_only,sync_sampling_rate,sound_info.correct,sound_info.incorrect,sound_outputs_trials(file));
 
 if ~isempty(sound_info.corrected_iti) && ~isempty(find(sound_info.corrected_iti(:,1) == file_ind))
     sound_outputs_trials_file.ITI_sounds(sound_info.corrected_iti(find(sound_info.corrected_iti(:,1) == file_ind),2),1:3) = sound_info.corrected_iti(find(sound_info.corrected_iti(:,1) == file_ind),3:5);

@@ -1,16 +1,22 @@
-function [acquisitions,trial_its,sound_condition_array]  = get_virmen_iterations_and_times_digidata_positive_peaks(base, virmen_channel_number,string,sound_condition_array,data)
-[trial_its,trial_its_time] = virmen_it_rough_estimation(data); 
+function [acquisitions,trial_its,sound_condition_array]  = get_virmen_iterations_and_times_digidata_positive_peaks(base, virmen_channel_number,string,sound_condition_array,data,file_trial_ids)
+[trial_its,~] = virmen_it_rough_estimation(data); 
 %base = "\\136.142.49.216\Runyan2\Connie\2p_results\DM1-00\wavesurfer\2021-05-20"
-cd(base)
-%%%%%loop through each wavesurfer file, load it
-z = dir;
-num_files = length(z);
+
 file_ind = 0;
-last_it_num = 0;
-for n = 3:num_files   %%%%still need to deal with iteration #1
-    keep n file_ind z virmen_channe l_number acquisitions
-    if contains(z(n).name,string)==1 
-    file_ind = file_ind +1;
+
+
+%initialize variables
+possible_it_times = [];
+possible_iterations = [];
+
+cd(base);
+z = dir(strcat('*',string,'*.abf'));
+num_files = length(z);
+for n = 1:num_files  %%%%still need to deal with iteration #1
+  %keep n file_ind z virmen_channel_number acquisitions string
+  %if contains(z(n).name,string)==1
+  file_ind = n;
+  [sync_data,sync_sampling_interval,~]= abfload(z(n).name);
     [sync_data,sync_sampling_interval,~]= abfload(z(n).name);
     sync_sampling_rate = 1/sync_sampling_interval*1e6;
     temp = sync_data(:,virmen_channel_number);
@@ -164,35 +170,58 @@ for n = 3:num_files   %%%%still need to deal with iteration #1
         actual_it_values(length(actual_it_values))
     end
     
+    %
+    start_trial_number = file_trial_ids(file_ind,1);%+file_trial_ids(file,3)-2; 
+    end_trial_number = file_trial_ids(file_ind,2);
+
+    %assign iterations within file limits!
+    possible_iterations = trial_its.start_trial_its(start_trial_number):trial_its.end_iti_its(end_trial_number); %limit iterations to ones within imaging frames// this is iterations ids
+    possible_it_locs = find(ismember(actual_it_values,possible_iterations)); %locations of iterations within limits
+
+
     %for dealing with weird zeros before acqusition counter for first file
     if file_ind ==1
         if length(find(actual_it_values==0)) >0
         no_zeros = find(actual_it_values>0);
         no_zeros = [no_zeros(1)-1,no_zeros];
-        acquisitions(file_ind).actual_it_values = actual_it_values(no_zeros);
-        acquisitions(file_ind).it_times = it_times(no_zeros);
+        acquisitions(file_ind).actual_it_values = actual_it_values(possible_it_locs);%(no_zeros);
+%         acquisitions(file_ind).it_times = it_times(no_zeros); %unsure if I need this
+        acquisitions(file_ind).it_times = it_times(possible_it_locs);
+        acquisitions(file_ind).directory = z(file_ind).name;
+        %save sound onsets
+        sound_onsets_speakers = [sound_condition_array(file_ind).VR_sounds{:,2}]; 
+        nan_ind = find(isnan(sound_onsets_speakers));
+        sound_onsets_speakers = sound_onsets_speakers(~isnan(sound_onsets_speakers));
+        possible_sound_onsets = sound_onsets_speakers;
+        acquisitions(file_ind).sound_trigger_time = possible_sound_onsets;
         else
-        acquisitions(file_ind).actual_it_values = actual_it_values;
-        acquisitions(file_ind).it_times = it_times;
+        acquisitions(file_ind).actual_it_values = actual_it_values(possible_it_locs);
+        acquisitions(file_ind).it_times = it_times(possible_it_locs);
+        acquisitions(file_ind).directory = z(file_ind).name;
+        %save sound onsets
+        sound_onsets_speakers = [sound_condition_array(file_ind).VR_sounds{:,2}]; 
+        nan_ind = find(isnan(sound_onsets_speakers));
+        sound_onsets_speakers = sound_onsets_speakers(~isnan(sound_onsets_speakers));
+        possible_sound_onsets = sound_onsets_speakers;
+        acquisitions(file_ind).sound_trigger_time = possible_sound_onsets;
+        
         end
     else
-    acquisitions(file_ind).actual_it_values = actual_it_values;
-    acquisitions(file_ind).it_times = it_times;
+    acquisitions(file_ind).actual_it_values = actual_it_values(possible_it_locs);
+    acquisitions(file_ind).it_times = it_times(possible_it_locs);
     acquisitions(file_ind).directory = z(file_ind).name;
 
-    %final test- see if there are about 7 iterations from tiny gap before sound
-    %onset
+    %save sound onsets
     sound_onsets_speakers = [sound_condition_array(file_ind).VR_sounds{:,2}]; 
     nan_ind = find(isnan(sound_onsets_speakers));
     sound_onsets_speakers = sound_onsets_speakers(~isnan(sound_onsets_speakers));
-%     sound_onsets_iterations = trial_its.sound_trigger_its(find(trial_its.sound_trigger_its > trial_its.start_trial_its(start_trial_number) & trial_its.sound_trigger_its <trial_its.end_iti_its(end_trial_number)))+6; %sound happens within 7 iterations
     possible_sound_onsets = sound_onsets_speakers;
-    virmen_it(file_ind).sound_trigger_time = possible_sound_onsets;
+    acquisitions(file_ind).sound_trigger_time = possible_sound_onsets;
 
     end
     figure(2);clf; hold on;plot(temp); plot(it_times(marked_its),0,'*c'); hold off
     end
-    end
+
 end
 %figure(3);clf;hold on; for i= 1:length(acquisitions) ; plot(acquisitions(i).it_times,acquisitions(i).actual_it_values);end;hold off
 %figure (3); clf;for i = 1:8; subplot(8,1,i); hold on; plot(ex_file_long(:,i)'); hold off; end

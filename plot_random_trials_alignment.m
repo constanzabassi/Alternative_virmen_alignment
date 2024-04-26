@@ -5,6 +5,7 @@ fprintf(['number of full trials: ' num2str(length(good_trials)) '\n'])
 sel_trials = randperm(length(good_trials),9);
 selected_trials = good_trials(sel_trials);
 fieldname = fieldnames(imaging(good_trials(1)).movement_in_imaging_time);
+colors = jet(length(selected_fields)+5);
 figure(1010);clf;
 tiledlayout(3,3,"TileSpacing","compact");
 for t = 1:9
@@ -13,9 +14,9 @@ for t = 1:9
     hold on
     for f = 1:length(selected_fields)
         if max(abs(imaging_cell{selected_fields(f),1})) > 1
-            plot(rescale(imaging_cell{selected_fields(f),1},0,1));
+            plot(rescale(imaging_cell{selected_fields(f),1},0,1),'color',colors(f,:));
         else
-            plot(imaging_cell{selected_fields(f),1});
+            plot(imaging_cell{selected_fields(f),1},'color',colors(f,:));
         end
     end
     legend(fieldname{selected_fields});

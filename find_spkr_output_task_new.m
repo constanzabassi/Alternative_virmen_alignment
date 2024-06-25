@@ -125,7 +125,7 @@ for file = 1:num_files
     if ~isempty(unfinished_sounds)
         for es = 1:length(unfinished_sounds)
             extra_sound = unfinished_sounds(es);
-            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < any(sound_info.distance_within_sounds*.1+sound_info.distance_within_sounds) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > any(sound_info.distance_within_sounds-(sound_info.distance_within_sounds*.1)) ...
+            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < sound_info.distance_within_sounds*.1+sound_info.distance_within_sounds && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > sound_info.distance_within_sounds-(sound_info.distance_within_sounds*.1) ...
                     && (difference(extra_sound-1) >range_sound_duration(1) & difference(extra_sound-1) < range_sound_duration(2))==1
                 count = count+1;
                     unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,:)];

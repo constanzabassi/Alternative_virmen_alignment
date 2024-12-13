@@ -87,10 +87,15 @@ end
 
 %get indices without gaps to eliminate
 end_trials_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps>.8*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);
-end_iti_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .71*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);%digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate));
+end_iti_digidata_time = setdiff(digidata_its(file).locs(find(digidata_its(file).it_gaps >=.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .71*digidata_its(file).sync_sampling_rate)),gaps_to_eliminate);%digidata_its(file).locs(find(digidata_its(file).it_gaps >.25*digidata_its(file).sync_sampling_rate & digidata_its(file).it_gaps < .55*digidata_its(file).sync_sampling_rate));
 
 unpaired = {};
-unpaired.iti = setdiff(end_iti_digidata_time,probable_end_iti_gaps(:,1));
+if ~isempty(probable_end_iti_gaps)
+    unpaired.iti = setdiff(end_iti_digidata_time,probable_end_iti_gaps(:,1));
+    probable_end_iti_gaps = end_iti_digidata_time;
+else
+    unpaired.iti = [];
+end
 unpaired.trial = setdiff(end_trials_digidata_time,probable_end_trial_gaps(:,1));
 %define difference in seconds between end of trial and end of ITI
 %bc of virmen bug there is one extra second between them
@@ -131,7 +136,7 @@ for t = 1:size(trial_pairs,1)
         else
             trial_pairs(t,:) = [probable_end_trial_gaps(t), end_iti_digidata_time(a),end_iti_digidata_time(b)];
         end
-    elseif probable_end_iti_gaps(t) >0
+    elseif ~isempty(probable_end_iti_gaps) && probable_end_iti_gaps(t) >0
         difference = probable_end_iti_gaps(t) - end_trials_digidata_time; 
         [~,a]=find(difference>range_incorrect_distance(1) & difference < range_incorrect_distance(2)); %finds closest gap incorrect will be ~5.8sec and correct should be ~4sec
         [~,b]=find(difference>range_correct_distance(1) & difference < range_correct_distance(2)); %finds closest gap incorrect will be ~5.8sec and correct should be ~4sec

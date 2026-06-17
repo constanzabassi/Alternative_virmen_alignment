@@ -22,7 +22,7 @@ for m = 1:length(info.mouse_date)
     load([base_path 'context_stim\60\bad_frames.mat']);
     load([base_path 'passive\passive_frames.mat']);
     load([base_path 'corrected_velocity.mat']); %contains 3 channels
-    load([base_path 'velocity_vector.mat']); %combines channels 1 & 2
+%     load([base_path 'velocity_vector.mat']); %combines channels 1 & 2
 
     %get rid of NAN trials
     nan_trials = find(isnan(passive_frames.corr_frames(:,2)));

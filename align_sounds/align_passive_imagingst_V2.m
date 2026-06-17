@@ -1,6 +1,4 @@
-function [imaging_st,temp] = align_passive_imagingst_updated(info,before_frames,after_frames)
-%updated to make sure sounds are aligned with bad_frames (sometimes
-%slightly after)
+function imaging_st = align_passive_imagingst(info,before_frames,after_frames)
 % % before_frames = 7; %same as task
 % % after_frames = 90;
 
@@ -13,7 +11,6 @@ for m = 1:length(info.mouse_date)
     ss = ss {1,1};
     base_path = strcat(num2str(ss),'\Connie\ProcessedData\',num2str(info.mouse_date{1,m}),'\');
     passive_savepath = strcat(num2str(ss),'\Connie\ProcessedData\',num2str(info.mouse_date{1,m}),'\passive\');
-
     
     %1) load data! 
     load([base_path 'dff.mat']);
@@ -21,18 +18,11 @@ for m = 1:length(info.mouse_date)
     
     deconv = load([base_path 'deconv\deconv.mat']);
     deconv = deconv.deconv;
-    load([base_path 'context_stim\60\context_tr.mat']);
-    load([base_path 'context_stim\60\bad_frames.mat']);
-    load([base_path 'passive\passive_frames.mat']);
+    load([base_path 'context_stim\60\context_tr.mat']); %related to LED
+    load([base_path 'context_stim\60\bad_frames.mat']); %related to LED
+    load([base_path 'passive\passive_frames.mat']); %relative to all imaging frames which are passive
     load([base_path 'corrected_velocity.mat']); %contains 3 channels
 %     load([base_path 'velocity_vector.mat']); %combines channels 1 & 2
-
-%     oldFolderName = passive_savepath; % Full path to the current folder
-%     newFolderName = strcat(passive_savepath, 'original'); % Generate a new name
-%     
-%     % Rename the folder
-%     movefile(oldFolderName, newFolderName);
-
 
     %get rid of NAN trials
     nan_trials = find(isnan(passive_frames.corr_frames(:,2)));
@@ -68,17 +58,9 @@ for m = 1:length(info.mouse_date)
     
     %adjust alignment frames (based on bad_frames so I dont make adjustments
     %using control and sound only trials
-%     sound_onsets = [control_output;sound_only_output];
-    %alignment_frames = [passive_frames.corr_frames(:,1),passive_frames.corr_frames(:,1)-2]; %gets rid of any gap (if using -1 +2)
     alignment_frames = [passive_frames.corr_frames(:,1),passive_frames.corr_frames(:,1)+2]; %gives same gap as opto (if using -1 +2)
     
-    
-    % % x1=frames_before_event+1;
-    % % x2=1;
-    % % y1=2;
-    % % y2=frames_after_event+2;
-    % % bfint= x-x1:x-x2; 
-    % %    afint= y+y1:y+y2;
+   
     
     context_num = 2; %1 task, 2 passive, 3 spont
     
@@ -88,39 +70,13 @@ for m = 1:length(info.mouse_date)
     %the difference in negative (add 1)
     file_starts = [find(diff(passive_frames.frames(:,1))<0)+1];
     file_starts = [file_starts;length(passive_frames.frames)];
-
-    %update passive frames to make sure they are aligned with photostim
-    passive_frames.corr_frames_updated = passive_frames.corr_frames;
-
-    %decide how to adjust based on photostim
-    to_add = ones(length(first_repeat),1);
-    to_add = to_add *0;
-    for trial = 1:length(first_repeat)
-        if ~isempty(bad_frames) %determine stim trials and control?
-                if any(find(ismember(passive_frames.corr_frames(first_repeat(trial),1)-1,bad_frames(context_tr{context_num,1}))) ==1) 
-                    passive_frames.corr_frames_updated(first_repeat(trial),1) = passive_frames.corr_frames(first_repeat(trial),1)-1;
-                    to_add(trial) = [1];
-                elseif any(find(ismember(passive_frames.corr_frames(first_repeat(trial),1)-2,bad_frames(context_tr{context_num,1}))) ==1)
-                    passive_frames.corr_frames_updated(first_repeat(trial),1) = passive_frames.corr_frames(first_repeat(trial),1)-2;
-                    to_add(trial) = [2];
-                end
-    
-                if any(find(ismember(passive_frames.corr_frames(first_repeat(trial),1)-1,bad_frames(context_tr{context_num,2}))) ==1) 
-                    passive_frames.corr_frames_updated(first_repeat(trial),1) = passive_frames.corr_frames(first_repeat(trial),1)-1;
-                    to_add(trial) = [1];
-                elseif any(find(ismember(passive_frames.corr_frames(first_repeat(trial),1)-2,bad_frames(context_tr{context_num,2}))) ==1)
-                    passive_frames.corr_frames_updated(first_repeat(trial),1) = passive_frames.corr_frames(first_repeat(trial),1)-2;
-                    to_add(trial) = [2];
-                end
-        end 
-    end
     
     %initialize structure
-    imaging = {};trial_lengths = []; temp = [];
+    imaging = {};trial_lengths = [];
     for trial = 1:length(first_repeat)
         trial
-        start_trial_frame = passive_frames.corr_frames_updated(first_repeat(trial),1)-before_frames;
-        end_trial_frame = passive_frames.corr_frames_updated(first_repeat(trial)+2,2)+after_frames;
+        start_trial_frame = passive_frames.corr_frames(first_repeat(trial),1)-before_frames;
+        end_trial_frame = passive_frames.corr_frames(first_repeat(trial)+2,2)+after_frames;
         trial_length = length(start_trial_frame:end_trial_frame);
         trial_lengths = [trial_lengths,trial_length];
     % for each trial in this folder/acquisition find the start and end iteration #
@@ -134,14 +90,16 @@ for m = 1:length(info.mouse_date)
         virmen_trial_info(trial).left_turn = 0; %left turn or not for that trial
     
         virmen_trial_info(trial).condition = passive_frames.condition(first_repeat(trial)); %stimulus condition for that trial
-        if ~isempty(bad_frames) %determine stim trials and control?
-            if any(find(ismember(passive_frames.corr_frames_updated(first_repeat(trial),1)-1,bad_frames(context_tr{context_num,1}))) ==1) ||  any(find(ismember(passive_frames.corr_frames_updated(first_repeat(trial),1),bad_frames(context_tr{context_num,1}))) ==1)|| any(find(ismember(passive_frames.corr_frames_updated(first_repeat(trial),1)-2,bad_frames(context_tr{context_num,1}))) ==1)
-                virmen_trial_info(trial).is_stim_trial = 1;
-                temp = [temp,trial];
-            else
-                virmen_trial_info(trial).is_stim_trial = 0;
-            end
-        end 
+
+        %%NOT RELEVANT
+%         if ~isempty(bad_frames) %determine stim trials and control?
+%             if any(find(ismember(passive_frames.corr_frames(first_repeat(trial),1)-1,bad_frames(context_tr{context_num,1}))) ==1) ||  any(find(ismember(passive_frames.corr_frames(first_repeat(trial),1),bad_frames(context_tr{context_num,1}))) ==1)|| any(find(ismember(passive_frames.corr_frames(first_repeat(trial),1)-2,bad_frames(context_tr{context_num,1}))) ==1)
+%                 virmen_trial_info(trial).is_stim_trial = 1;
+%                 temp = [temp,trial];
+%             else
+%                 virmen_trial_info(trial).is_stim_trial = 0;
+%             end
+%         end 
     
         imaging(trial).virmen_trial_info = virmen_trial_info(trial);
     
@@ -163,15 +121,13 @@ for m = 1:length(info.mouse_date)
         movement_in_imaging_time.is_reward = zeros(1,trial_length);
         movement_in_imaging_time.in_ITI = zeros(1,trial_length);
         movement_in_imaging_time.pure_tones =zeros(1,trial_length);
-        movement_in_imaging_time.maze_frames = 1:(passive_frames.corr_frames_updated(first_repeat(trial)+2,2)+1-start_trial_frame);
-        movement_in_imaging_time.iti_frames = (passive_frames.corr_frames_updated(first_repeat(trial)+2,2)+1-start_trial_frame)+1:trial_length;
+        movement_in_imaging_time.maze_frames = 1:(passive_frames.corr_frames(first_repeat(trial)+2,2)+1-start_trial_frame);
+        movement_in_imaging_time.iti_frames = (passive_frames.corr_frames(first_repeat(trial)+2,2)+1-start_trial_frame)+1:trial_length;
         movement_in_imaging_time.reward_frames = zeros(1,trial_length);
 
         %binarize stimulus onsets
         temp_stimulus = zeros(1,trial_length);
-%         stimulus_onsets = [passive_frames.corr_frames(first_repeat(trial),1)-start_trial_frame+1:passive_frames.corr_frames(first_repeat(trial),2)-start_trial_frame+1,passive_frames.corr_frames(first_repeat(trial)+1,1)-start_trial_frame+1:passive_frames.corr_frames(first_repeat(trial)+1,2)-start_trial_frame+1,passive_frames.corr_frames(first_repeat(trial)+2,1)-start_trial_frame+1:passive_frames.corr_frames(first_repeat(trial)+2,2)-start_trial_frame+1];
-
-        stimulus_onsets = [passive_frames.corr_frames_updated(first_repeat(trial),1)-start_trial_frame+1:passive_frames.corr_frames_updated(first_repeat(trial),2)-start_trial_frame+1,passive_frames.corr_frames_updated(first_repeat(trial)+1,1)-start_trial_frame+1:passive_frames.corr_frames_updated(first_repeat(trial)+1,2)-start_trial_frame+1,passive_frames.corr_frames_updated(first_repeat(trial)+2,1)-start_trial_frame+1:passive_frames.corr_frames_updated(first_repeat(trial)+2,2)-start_trial_frame+1];
+        stimulus_onsets = [passive_frames.corr_frames(first_repeat(trial),1)-start_trial_frame+1:passive_frames.corr_frames(first_repeat(trial),2)-start_trial_frame+1,passive_frames.corr_frames(first_repeat(trial)+1,1)-start_trial_frame+1:passive_frames.corr_frames(first_repeat(trial)+1,2)-start_trial_frame+1,passive_frames.corr_frames(first_repeat(trial)+2,1)-start_trial_frame+1:passive_frames.corr_frames(first_repeat(trial)+2,2)-start_trial_frame+1];
         temp_stimulus(stimulus_onsets) = 1;
         movement_in_imaging_time.stimulus = temp_stimulus;
     
@@ -183,8 +139,8 @@ for m = 1:length(info.mouse_date)
         iti_end_frame = end_trial_frame;
     
         %finding the closest frames per trial epoch
-        imaging(trial).frame_id_events.maze =start_trial_frame:passive_frames.corr_frames_updated(first_repeat(trial)+2,2);
-        imaging(trial).frame_id_events.iti = passive_frames.corr_frames_updated(first_repeat(trial)+2,2)+1:passive_frames.corr_frames_updated(first_repeat(trial)+2,2)+after_frames;
+        imaging(trial).frame_id_events.maze =start_trial_frame:passive_frames.corr_frames(first_repeat(trial)+2,2);
+        imaging(trial).frame_id_events.iti = passive_frames.corr_frames(first_repeat(trial)+2,2)+1:passive_frames.corr_frames(first_repeat(trial)+2,2)+after_frames;
     
         imaging(trial).dff = dff(:,start_trial_frame:end_trial_frame);
         imaging(trial).z_dff = z_dff(:,start_trial_frame:end_trial_frame);
@@ -202,8 +158,7 @@ for m = 1:length(info.mouse_date)
         imaging(trial).good_trial = 1;
 
 
-    end
-    to_add
+end
 %save variables
 if ~isempty(passive_savepath)
     cd(passive_savepath)

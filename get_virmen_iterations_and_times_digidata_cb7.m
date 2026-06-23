@@ -7,7 +7,7 @@ z = dir;
 num_files = length(z);
 file_ind = 0;
 last_it_num = 0;
-for n = 3:num_files   %%%%still need to deal with iteration #1
+for n = 1:num_files   %%%%still need to deal with iteration #1
     keep n file_ind z virmen_channe l_number acquisitions
     if contains(z(n).name,string)==1 
     file_ind = file_ind +1;

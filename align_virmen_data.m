@@ -31,6 +31,9 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
     imaging(vr_trial).virmen_trial_info = virmen_trial_info(vr_trial);
    % for each trial making sure you are within bounds of this tseries folder's iteration numbers else go to the next folder!
     if start_it>= virmen_aq(file_ind).actual_it_values(1)&& end_it <  virmen_aq(file_ind).actual_it_values(end) 
+        if vr_trial == 44
+            a = 1
+        end
         
         output_data = {}; % file_frame_data equivalent to output_data from CR code
         output_data.frame_times = alignment_info(file_ind).frame_times; % frame times from res galvo signal in digidata time
@@ -123,8 +126,10 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
                 %use frames included to find which sounds are in this trial
                 this_reward_onset = reward_info(vr_trial,1);
                 this_pure_tone = reward_info(vr_trial,2):reward_info(vr_trial,3);
-            else
+            elseif ~isempty(reward_info)
                 this_pure_tone = reward_info(vr_trial,2):reward_info(vr_trial,3); %onset to offset frames of pure tone
+            else
+                this_pure_tone = nan;
             end
 
             

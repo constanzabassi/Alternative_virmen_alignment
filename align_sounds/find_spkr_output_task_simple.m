@@ -1,5 +1,4 @@
-% [sound_outputs,trialConditions, condition_onset_array_all]=
-function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_new(info,alignment_info,string,sound_info,iti_tone_version) 
+function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_simple(info,alignment_info,string,sound_info,iti_tone_version) 
 %find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr,smoothing_factor) 
 %pc=1 if windows, any other number if mac
 % cd(strcat(server,'/Connie/RawData/',num2str(mouse),'/wavesurfer/',num2str(date)));
@@ -116,26 +115,12 @@ for file = 1:num_files
         
     difference = [true_sound_pairs(:,2) - true_sound_pairs(:,1)]; 
     all_trial_sounds = [];
-    range_sound_duration = [round(sound_info.sound_duration-(sound_info.sound_duration*0.01)),round(sound_info.sound_duration+(sound_info.sound_duration*0.1))];
-    all_trial_sounds = true_sound_pairs(find(difference >range_sound_duration(1) & difference < range_sound_duration(2)),:); %sounds that are outside limits of sound duration
-    % adding code to also include sounds that are cut off early
-    count = 0; unfinished_sounds = [];unfinished_sounds_toadd =[];
-    
-    unfinished_sounds = setdiff(1:length(difference),find(difference >range_sound_duration(1) & difference < range_sound_duration(2)));
-    if ~isempty(unfinished_sounds)
-        for es = 1:length(unfinished_sounds)
-            extra_sound = unfinished_sounds(es);
-            if extra_sound > 1 && extra_sound<unfinished_sounds(end) && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] < sound_info.distance_within_sounds*.1+sound_info.distance_within_sounds && [sound_pairs(extra_sound,1) - sound_pairs(extra_sound-1,2)] > sound_info.distance_within_sounds-(sound_info.distance_within_sounds*.1) ...
-                    && (difference(extra_sound-1) >range_sound_duration(1) & difference(extra_sound-1) < range_sound_duration(2))==1
-                count = count+1;
-                    unfinished_sounds_toadd(count,:) = [sound_pairs(extra_sound,:)];
-            end
-        end
-        all_trial_sounds = sort([all_trial_sounds; unfinished_sounds_toadd]);
-    end
+   
+
+    all_trial_sounds = true_sound_pairs;
 
     %classify sounds
-[sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (reversedSoundVector,all_trial_sounds,sound_info.mult_spkr);
+[sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr_noise (reversedSoundVector,all_trial_sounds,sound_info.mult_spkr);
 %load('U:/Connie/condition_per_speaker');
 
 %convert to true condition values if there are multiple speakers
@@ -203,11 +188,7 @@ for i = 1:numSounds
     condition_group_array{groupNum, 3}  = offsetTime;
     condition_group_array{groupNum, 4}  = groupNum;
     condition_group_array{groupNum, 5}  = updated_condition_array{1,i}; %actual condition
-    if ismember(offsetTime,unfinished_sounds_toadd)
-        condition_group_array{groupNum, 6} = 1
-    else
-        condition_group_array{groupNum, 6} = 0;
-    end
+    condition_group_array{groupNum, 6} = 0;
     onsettimes=[];
 end
 

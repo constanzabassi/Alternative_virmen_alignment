@@ -1,10 +1,12 @@
 %% provide all inputs
-info.mousename = 'HA10-1L';%'HA1-00';%;
+info.mousename = 'KN8-3L';%;
 info.mouse = info.mousename;
-info.date = '2023-04-03';%'2023-08-28'; %;
-info.mouse_date = {'HA10-1L\2023-04-03'};
-info.server = {'V:'};%'W:'; %/Volumes/Runyan5
-info.runyan5 = "V:";
+info.date = '2026-06-15'; %;
+info.server = 'W:'; %/Volumes/Runyan5
+info.mouse_date = 'KN8-3L/2026-06-15';
+runyan5 = "V:";
+runyan4 = 'W:';
+data_base = 'AGKN-8-3L_260615';%;
 info.sync_base_path = [ info.server '/Connie/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 % info.virmen_base = [info.server '/Connie/RawData/' info.mousename '/virmen/' data_base ];
 info.imaging_base_path=[info.server '/Connie/RawData/' info.mousename '/' info.date '/'];
@@ -12,15 +14,15 @@ info.save_path = [info.server '/Connie/ProcessedData/' info.mousename '/' info.d
 info.processed_path = [info.server '/Connie/ProcessedData/' info.mousename '/' info.date '/'];
 info.is_stim_dataset = 1; 
 % give data inputs!
-info.galvo_channel = 7;
-% info.virmen_channel = 6;
+info.galvo_channel = 6;
+info.virmen_channel = 5;
 
 sound_info = {}; 
-sound_info.spkr_channel_number = [4,8];%[4,5,8];
-sound_info.speaker_ids = [1,2];%[1,2,4]; 
+sound_info.spkr_channel_number = [4,7,8];%[4,5,8];
+sound_info.speaker_ids = [1,3,2];%[1,2,4]; 
 sound_info.mult_spkr = 0; %if multiple speakers are used in a single trial (8 locs)
 %load conditions per speaker in runyan 5 info.server
-load(strcat(info.runyan5,'/Connie/condition_per_speaker'));
+load(strcat(runyan5,'/Connie/condition_per_speaker'));
 %load('/Volumes/Runyan5/Connie/condition_per_speaker.mat');
 sound_info.condition_per_speaker = conditions_per_speaker;
 sound_info.info = info;
@@ -32,11 +34,11 @@ addpath(genpath(code_folder));
 %% do it across mice (above can be ignored)
 for m = 1;%1:length(mouse_date)
     m
-ss = info.server(m);
-ss = ss {1,1};
+ss = info.server;
+ss = ss %{1,1};
 
 
-cd(strcat(num2str(ss),'\Connie\ProcessedData\',num2str(info.mouse_date{1,m}),'\VR\'));
+cd(strcat(num2str(ss),'\Connie\ProcessedData\',num2str(info.mouse_date),'\VR\'));
 load('alignment_variables.mat','info','sound_info');
 info.server = ss;
 
@@ -74,7 +76,7 @@ sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
 sound_info.detection_threshold = 0.9;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 
-[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info,alignment_info,'passive',sound_info);
+[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_simple(info,alignment_info,'passive',sound_info);
 
 %% FIND FRAMES FOR EACH SOUND (AND BINARIZE)
 [passive_frames,new_sound_st,sounds_per_file] = binarize_passive_sounds(sound_st,sound_info,alignment_info);
@@ -96,4 +98,7 @@ end
 
 before_frames = 6;
 after_frames = 91;
-[imaging_st,temp] = align_passive_imagingst_updated(info,before_frames,after_frames)
+info.server = {'W:'}; %/Volumes/Runyan5
+info.mouse_date = {'KN8-3L/2026-06-15'};
+
+[imaging_st,temp] = align_passive_imagingst_updated_noise(info,before_frames,after_frames);

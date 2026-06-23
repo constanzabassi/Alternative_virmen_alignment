@@ -1,11 +1,11 @@
 %% provide all inputs
-info.mousename = 'HA11-1R';%;
+info.mousename = 'KN8-3L';%;
 info.mouse = info.mousename;
-info.date = '2023-05-05'; %;
-info.server = 'V:'; %/Volumes/Runyan5
+info.date = '2026-06-15'; %;
+info.server = 'W:'; %/Volumes/Runyan5
 runyan5 = "V:";
 runyan4 = 'W:';
-data_base = 'CBHA11-1R_230505';%;
+data_base = 'AGKN-8-3L_260615';%;
 info.experimenter_name = 'Connie';
 info.sync_base_path = [ info.server '/' info.experimenter_name '/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 info.virmen_base = [info.server '/' info.experimenter_name '/RawData/' info.mousename '/virmen/' data_base ];
@@ -21,14 +21,14 @@ info.processed_path = [info.server '/' info.experimenter_name '/ProcessedData/' 
 
 info.is_stim_dataset = 1; 
 % give data inputs!
-info.galvo_channel = 7;
-info.virmen_channel = 6;
+info.galvo_channel = 6;
+info.virmen_channel = 5;
 info.vr_sync_string = 'VR'; %string within VR files to look for so it doesn't read other unnecessary files
 
 sound_info = {};
-sound_info.spkr_channel_number = [4,8];%[4,5,8];
-sound_info.speaker_ids = [1,2];%[1,2,4]; 
-sound_info.mult_spkr = 0; %if multiple speakers are used in a single trial (8 locs)
+sound_info.spkr_channel_number = [4,7,8];%[4,5,8];
+sound_info.speaker_ids = [1,3,2];%[1,2,4]; 
+sound_info.mult_spkr = 1; %if multiple speakers are used in a single trial (8 locs)
 %load conditions per speaker in runyan 5 info.server
 load(strcat(runyan5,'/Connie/condition_per_speaker'));
 %load('/Volumes/Runyan5/Connie/condition_per_speaker.mat');
@@ -83,61 +83,47 @@ sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
 sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
-sound_info.detection_threshold = 0.450;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.detection_threshold = 0.9;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 sound_info.corrected_iti = [];%only needed when no thresholds work [file#,trial#,correctorno,start,end] 
 
-sound_info.iti_tone_version = 1;% use version 2 if you have nice data
+sound_info.iti_tone_version = 2;% use version 2 if you have nice data
 
 %if you don't want ITI info (need at least 2 speakers) make sound_info.correct = [];
 
 % include string that is in the name of the abf files you want to read
-[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info,alignment_info,info.vr_sync_string,sound_info,sound_info.iti_tone_version);
+% [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_new(info,alignment_info,info.vr_sync_string,sound_info,sound_info.iti_tone_version);
+[sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_simple(info,alignment_info,info.vr_sync_string,sound_info,sound_info.iti_tone_version);
 
 %% get trial info using the virmen files!
 for tr = 1:length(dataCell.dataCell)
     trial_info(tr).correct = dataCell.dataCell{1,tr}.result.correct;
     trial_info(tr).condition = dataCell.dataCell{1,tr}.maze.condition;
-    if info.is_stim_dataset == 1
-        trial_info(tr).is_stim = dataCell.dataCell{1,tr}.maze.is_stim_trial;
-    end
+%     if info.is_stim_dataset == 1
+%         trial_info(tr).is_stim = dataCell.dataCell{1,tr}.maze.is_stim_trial;
+%     end
 end
 
 %% get digidata iteration locations and difference between them
 
 digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, info.virmen_channel);
+[file_estimated_trial_info,file_matching_trials] = match_trialsperfile_pulse_simple(digidata_its, trial_info,sound_condition_array,task_info,data); %changes to ITI gap distance for pulse maze
+% [file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,info.sync_base_path,task_info);
 
-%% find its in the data that best match the its for each trial dividing files into trials that match them (IF ITERATIONS ARE WEIRD USE THIS)
-
-[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile(digidata_its, trial_info,sound_condition_array,task_info); %uses ITI sounds
-
-%try this one if above does not work
-%[file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile_v2(digidata_its, trial_info,sound_condition_array,task_info,data); %uses ITI sounds if you have positive peaks
-
-%use this one if you have pulse sounds
-% [file_estimated_trial_info,file_matching_trials,sound_condition_array] = match_trialsperfile_pulse_maze(digidata_its, trial_info,sound_condition_array,task_info,data); %changes to ITI gap distance for pulse maze
-
-
-% find the start and end trials that are within the imaging frames!// also
-% puts trials into context of all other trials (file_digidata_trial_info)
-[file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,info.sync_base_path,task_info);
-
-%% shift iterations in time until they match positive peaks or first trial iteration (IF ITERATIONS ARE WEIRD USE THIS!!)
-[virmen_it,trial_its,sound_condition_array] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info);
-
-% IF ITERATIONS ARE GOOD CAN USE THIS AND SKIP CODE ABOVE
-[virmen_it,trial_its,sound_condition_array] = get_virmen_iterations_and_times_digidata_positive_peaks(info.sync_base_path,info.virmen_channel,info.vr_sync_string,sound_condition_array,data,file_trial_ids);
-
+% IF ITERATIONS ARE GOOD CAN USE THIS 
+[virmen_it,trial_its,sound_condition_array] = get_virmen_iterations_and_times_digidata_positive_peaks_simple(info.sync_base_path,info.virmen_channel,info.vr_sync_string,sound_condition_array,data);
 %% binarize trial sounds and determine sounds for trials without speaker
  % (assumes all sounds are the same distance apart)
-[sounds_per_file,vr_sound_frames] = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info);
+% [sounds_per_file,vr_sound_frames] = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info);
+
+%simple does not rely on file_trial_ids
+[vr_sound_frames,new_sound_st,sounds_per_file] = binarize_passive_sounds(sound_st,sound_info,alignment_info,'dir_string','VR'); %change to VR if necessary
 
 % IF ITERATIONS ARE GOOD CAN USE THIS AND SKIP CODE ABOVE - use this if you have all the sounds and are happy with onsets/offsets
 % [sounds_per_file,vr_sound_frames] = binarize_sounds_simple(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info); %can ignore vr_sound_frames
-%% determine reward location (needs file_trial_ids)
-[rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_trial_ids,trial_its,digidata_its,trial_info,alignment_info);
+%% determine reward location 
+[rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_matching_trials,trial_its,digidata_its,trial_info,alignment_info);
 
 %%  align virmen data!
-reward_loc_pure_frames = [];
 %(dff,deconv,virmen_aq,alignment_info,data,dataCell,trial_its,stimulus_info,reward_info)
 imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell,trial_its,sounds_per_file,reward_loc_pure_frames);
 selected_fields = [1,6,7]; %1 y position, 6 reward, 7 ITI %inside movememnt_in_imaging_time
@@ -145,9 +131,11 @@ plot_random_trials_alignment (imaging,selected_fields);
 %% save data!
 mkdir(info.save_path)
 cd(info.save_path)
-save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames','trial_its','file_trial_ids','file_matching_trials','digidata_its','info');
+save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames','trial_its','file_matching_trials','digidata_its','info');
 save('imaging','imaging');
 save('vr_sound_frames',"vr_sound_frames"); 
+vr_sound_frames_updated = fix_vr_sound_frames(vr_sound_frames, imaging, alignment_info);
+save('vr_sound_frames_updated',"vr_sound_frames_updated"); 
 %% redo imaging (loads necesarry info and reruns aling_virmen_data)
 
 redo_imaging(info,0);

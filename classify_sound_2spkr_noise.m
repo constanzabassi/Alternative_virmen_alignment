@@ -1,4 +1,4 @@
-function [sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (sound_signal,all_trial_sounds,mult_spkr)
+function [sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr_noise (sound_signal,all_trial_sounds,mult_spkr)
 
 condition_array = []; onset_array = []; offset_array= []; tt = 0;sound_struc = {};
 num_sounds = size(sound_signal,1);
@@ -15,31 +15,20 @@ for t = 1:length(all_trial_sounds)
 %             sounds(current_sound)=2;
 %         end 
 if mult_spkr ==1
-%     spkr_loc = find(sound_signal(:,all_trial_sounds(t,1)+5));
-%     if length(spkr_loc) < size(sound_signal,1) && length(spkr_loc)>0 %sounds that are across ALL speakers are ITI!!
-%                      tt = tt+1;
-%                     sound_struc(tt).onset = all_trial_sounds(t,1);
-%                     sound_struc(tt).offset = all_trial_sounds(t,2);
-%                     sound_struc(tt).spkr_loc = spkr_loc;
-%                     if length(spkr_loc) > 1
-%                         sound_struc(tt).condition = 4;%sounds(all_trial_sounds(t,1)+2); %if was missing a speaker (so assumed if sound not there then 4?)
-%                     else
-%                         sound_struc(tt).condition = spkr_loc;
-%                     end
-%                     condition_array = [condition_array,sound_struc(tt).condition];
-%                     onset_array = [onset_array,all_trial_sounds(t,1)];
-%                     offset_array = [offset_array,all_trial_sounds(t,2)];
-%                     classified_sounds(current_sound) = sound_struc(tt).condition;
-%     end
-
     spkr_loc = find(sound_signal(:,all_trial_sounds(t,1)+11)); %was 5
     if length(spkr_loc) < size(sound_signal,1) && length(spkr_loc)>0 %sounds that are across ALL speakers are ITI!!
                      tt = tt+1;
                     sound_struc(tt).onset = all_trial_sounds(t,1);
                     sound_struc(tt).offset = all_trial_sounds(t,2);
                     sound_struc(tt).spkr_loc = spkr_loc;
-                    if length(spkr_loc) > 1 || spkr_loc == 2
-                        sound_struc(tt).condition = 2;%sounds(all_trial_sounds(t,1)+2); %if was missing a speaker (so assumed if sound not there then 4?)
+                    if length(spkr_loc) > 1 && any(spkr_loc == 3)
+                        sound_struc(tt).condition = 4;%sounds(all_trial_sounds(t,1)+2); %if was missing a speaker (so assumed if sound not there then 4?)
+                    elseif length(spkr_loc) > 1 && any(spkr_loc == 1)
+                        sound_struc(tt).condition = 3;
+                    elseif length(spkr_loc) == 1 && any(spkr_loc == 2)
+                        sound_struc(tt).condition = 5;
+                    elseif length(spkr_loc) == 1 && any(spkr_loc == 3)
+                        sound_struc(tt).condition = 2;
                     else
                         sound_struc(tt).condition = spkr_loc;
                     end

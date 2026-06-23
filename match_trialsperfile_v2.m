@@ -5,7 +5,7 @@ file_matching_trials = [];
 % find its in the data that best match the its for each trial dividing files into trials that match them
 for file = 1:length(digidata_its)
 file
-big_gaps = find(digidata_its(file).it_gaps > .25*digidata_its(file).sync_sampling_rate); 
+big_gaps = find(digidata_its(file).it_gaps > .15*digidata_its(file).sync_sampling_rate); %originally .25
 
 % figure(); hold on; plot(ex_data(:,6)); plot(rescale(ex_data(:,4),-1,0));plot(digidata_its(file).locs((big_gaps)),0,'*c'); plot(ex_data(:,7)); hold off
 % distance between last correct big bag and next gap is  about 90 (could be
@@ -61,7 +61,7 @@ end
 difference_VR = abs(digidata_its(file).locs(big_gaps(g)) - [sound_condition_array(file).VR_sounds{:,3}]);
 difference_VR_noabs = (digidata_its(file).locs(big_gaps(g)) - [sound_condition_array(file).VR_sounds{:,3}]);
 [~,b]=min((difference_VR)); %finds closest gap
-if  any(difference_VR(b) < .2*digidata_its(file).sync_sampling_rate) %might need to change to 0.2 since that might be the greatest difference
+if  any(difference_VR(b) < .1*digidata_its(file).sync_sampling_rate) %might need to change to 0.2 since that might be the greatest difference
 %     if difference_VR_noabs(b) < 0 %use sound to say this is where the last gap happens
 %         probable_end_trial_gaps(b,1) = sound_condition_array(file).VR_sounds(b,3);
 %     else

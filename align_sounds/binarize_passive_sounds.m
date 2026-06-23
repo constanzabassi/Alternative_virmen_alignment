@@ -1,7 +1,14 @@
-function [all_sounds_together,new_sound_st,sounds_per_file] = binarize_passive_sounds(sound_st,sound_info,alignment_info)
+function [all_sounds_together,new_sound_st,sounds_per_file] = binarize_passive_sounds(sound_st,sound_info,alignment_info,varargin)
 
 %get dir ids for the alignment info!!
-passive_temp_dir = cellfun(@(x) contains(x,'passive'),{alignment_info.sync_id},'UniformOutput',false);
+% Parse optional inputs
+p = inputParser;
+addParameter(p,'dir_string','passive',@(x) ischar(x) || isstring(x));
+parse(p,varargin{:});
+
+dir_string = char(p.Results.dir_string);
+
+passive_temp_dir = cellfun(@(x) contains(x,dir_string),{alignment_info.sync_id},'UniformOutput',false);
 passive_dir = find([passive_temp_dir{1,:}]); %gives the dir IDs of directory with passive in their name
 
 %add up all frames in the prior alignment structures (so things line up
@@ -10,7 +17,11 @@ frame_lengths = cellfun(@length,{alignment_info.frame_times});
 
 for file = 1:length(sound_st)
 
-    previous_sum = sum(frame_lengths(1:passive_dir(file)-1)); %keep track of all previous frames
+    if file > 1 || passive_dir(1) > 1
+        previous_sum = sum(frame_lengths(1:passive_dir(file)-1)); %keep track of all previous frames
+    else
+        previous_sum = 0;
+    end
 
 
     sounds_per_file(file).onsets = [sound_st(file).file.onset];%[[sound_st(file).file.onset],[sound_onsets{:,:}]];
@@ -30,6 +41,9 @@ for file = 1:length(sound_st)
     binary_sounds_imaging_time = zeros(1,length(alignment_info(passive_dir(file)).frame_times));
     
     for p = 1:min([length(sounds_per_file(file).offsets),length(sounds_per_file(file).onsets)])
+        if p == 86
+            a = 1;
+        end
         %binarize signal based on digidata time
         binary_sounds(sounds_per_file(file).onsets(p):sounds_per_file(file).offsets(p)) = 1; %in digidata time
         %find onset and offset frames and binarize based on their positions

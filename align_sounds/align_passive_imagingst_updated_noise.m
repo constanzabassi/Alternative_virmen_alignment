@@ -23,7 +23,7 @@ for m = 1:length(info.mouse_date)
     deconv = deconv.deconv;
 %     load([base_path 'context_stim\60\context_tr.mat']);
 %     load([base_path 'context_stim\60\bad_frames.mat']);
-bad_frames = [];
+     bad_frames = [];
 
     load([base_path 'passive\passive_frames.mat']);
     load([base_path 'corrected_velocity.mat']); %contains 3 channels
@@ -185,7 +185,7 @@ bad_frames = [];
         movement_in_virmen_time(trial).is_reward = [];%zeros(1,trial_length);
         movement_in_virmen_time(trial).in_ITI = [];%zeros(1,trial_length); %add a one or 2 second ITI after sounds are done played
         
-        if ~isnan(start_trial_frame) && ~isnan(end_trial_frame)
+        if ~isnan(start_trial_frame) && ~isnan(end_trial_frame) && end_trial_frame < size(corrected_velocity,2)
             movement_in_imaging_time.y_position = zeros(1,trial_length);
             movement_in_imaging_time.x_position = zeros(1,trial_length);
             movement_in_imaging_time.y_velocity = corrected_velocity(2,start_trial_frame:end_trial_frame); %2 is roll
@@ -244,7 +244,7 @@ bad_frames = [];
             %good trial: the entire trial is usable
             imaging(trial).good_trial = 1;
         else
-            imaging(trial).good_trial = 0;
+            imaging(trial).good_trial = [];
         end
 
 

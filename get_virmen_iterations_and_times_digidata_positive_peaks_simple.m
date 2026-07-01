@@ -1,4 +1,4 @@
-function [acquisitions,updated_trial_its,sound_condition_array]  = get_virmen_iterations_and_times_digidata_positive_peaks_simple(base, virmen_channel_number,string,sound_condition_array,data)
+function [acquisitions,updated_trial_its,sound_condition_array]  = get_virmen_iterations_and_times_digidata_positive_peaks_simple(base, virmen_channel_number,string,sound_condition_array,data,alignment_info)
 file_ind = 0;
 
 %initialize variables
@@ -11,12 +11,32 @@ num_files = length(z);
 
 [updated_trial_its] = virmen_it_rough_estimation(data);
 
+if isfield(alignment_info,'signal')
+    files = find(contains({alignment_info.sync_id}, string));
+    num_files = length(files);
+    z = {};
+    z = alignment_info(files);
+    for f = 1:length(z)
+        z(f).name = z(f).sync_id;
+    end
+end
+    
+    
+
 for n = 1:num_files  %%%%still need to deal with iteration #1
   %keep n file_ind z virmen_channel_number acquisitions string
   %if contains(z(n).name,string)==1
   file_ind = n;
-  [sync_data,sync_sampling_interval,~]= abfload(z(n).name);
-    [sync_data,sync_sampling_interval,~]= abfload(z(n).name);
+
+  if isfield(alignment_info,'signal')
+        sync_data = z(n).signal;
+        sync_sampling_rate = z(n).sync_sampling_rate;
+        sync_sampling_interval = 1/sync_sampling_rate*1e6;
+    else
+        [sync_data,sync_sampling_interval,~]= abfload(z(n).name);
+  end
+
+    
     sync_sampling_rate = 1/sync_sampling_interval*1e6;
     temp = sync_data(:,virmen_channel_number);
     time = 1:length(temp).*1/sync_sampling_rate;

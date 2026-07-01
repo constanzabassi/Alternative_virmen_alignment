@@ -30,18 +30,20 @@ file_digidata_trial_info(file).end_iti_digidata_time = end_iti_digidata_time;
 
 
 ex_data = abfload(strcat(digidata_its(file).directory));
-figure(55);clf;
-title(strcat('Detected trial events file # ', num2str(file)));
-hold on;aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'color',[0.7 0.7 0.7]);  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');
-a = plot(end_trials_digidata_time,0,'*g');b = plot(start_trials_digidata_time,0,'*c');c= plot(end_iti_digidata_time,0,'*r'); movegui(gcf,'center');
-%plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-r');
-legend([aa bb cc  a(1) b(1) c(1)],'Imaging frames','Virmen its','Speaker 1', 'end trial', 'start trial', 'end iti')
-if length(task_info.channel_number)>3
-    dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');
-elseif length(task_info.channel_number)>4
-    plot(rescale(ex_data(:,task_info.channel_number(5)),-1,0),'-r')
+if length(size(ex_data))<3
+    figure(55);clf;
+    title(strcat('Detected trial events file # ', num2str(file)));
+    hold on;aa = plot(ex_data(:,task_info.channel_number(1)));bb = plot(ex_data(:,task_info.channel_number(2)),'color',[0.7 0.7 0.7]);  cc = plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-b');
+    a = plot(end_trials_digidata_time,0,'*g');b = plot(start_trials_digidata_time,0,'*c');c= plot(end_iti_digidata_time,0,'*r'); movegui(gcf,'center');
+    %plot(rescale(ex_data(:,task_info.channel_number(3)),-1,0),'-r');
+    legend([aa bb cc  a(1) b(1) c(1)],'Imaging frames','Virmen its','Speaker 1', 'end trial', 'start trial', 'end iti')
+    if length(task_info.channel_number)>3
+        dd = plot(rescale(ex_data(:,task_info.channel_number(4)),-1,0),'-m');
+    elseif length(task_info.channel_number)>4
+        plot(rescale(ex_data(:,task_info.channel_number(5)),-1,0),'-r')
+    end
+    hold off;
 end
-hold off;
 
 % pause
 

@@ -104,7 +104,7 @@ end
 
 %% get digidata iteration locations and difference between them
 
-digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, info.virmen_channel);
+digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, info.virmen_channel,alignment_info);
 
 %% find its in the data that best match the its for each trial dividing files into trials that match them (IF ITERATIONS ARE WEIRD USE THIS)
 
@@ -125,7 +125,7 @@ digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, 
 [virmen_it,trial_its,sound_condition_array] = shift_sync_data(data,file_trial_ids,digidata_its,file_estimated_trial_info,sound_condition_array,task_info);
 
 % IF ITERATIONS ARE GOOD CAN USE THIS AND SKIP CODE ABOVE
-[virmen_it,trial_its,sound_condition_array] = get_virmen_iterations_and_times_digidata_positive_peaks(info.sync_base_path,info.virmen_channel,info.vr_sync_string,sound_condition_array,data,file_trial_ids);
+[virmen_it,trial_its,sound_condition_array] = get_virmen_iterations_and_times_digidata_positive_peaks(info.sync_base_path,info.virmen_channel,info.vr_sync_string,sound_condition_array,data,file_trial_ids,alignment_info);
 
 %% binarize trial sounds and determine sounds for trials without speaker
  % (assumes all sounds are the same distance apart)

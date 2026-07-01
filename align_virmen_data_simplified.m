@@ -1,11 +1,11 @@
 %% provide all inputs
 info.mousename = 'KN8-3L';%;
 info.mouse = info.mousename;
-info.date = '2026-06-15'; %;
+info.date = '2026-06-26'; %;
 info.server = 'W:'; %/Volumes/Runyan5
 runyan5 = "V:";
 runyan4 = 'W:';
-data_base = 'AGKN-8-3L_260615';%;
+data_base = 'AGKN-8-3L_260626';%;
 info.experimenter_name = 'Connie';
 info.sync_base_path = [ info.server '/' info.experimenter_name '/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 info.virmen_base = [info.server '/' info.experimenter_name '/RawData/' info.mousename '/virmen/' data_base ];
@@ -80,10 +80,10 @@ sound_info.distance_within_sounds = 0.2*sound_info.sync_sampling_rate; %for task
 sound_info.sound_duration = 1*sound_info.sync_sampling_rate;%[0.99*sound_info.sync_sampling_rate,1.1*sound_info.sync_sampling_rate];
 sound_info.correct = .250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
-sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
+sound_info.smoothing_factor = 15;%15; %almost always 15 sometimes 20
 
 sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
-sound_info.detection_threshold = 0.9;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.detection_threshold = 2;%for new recordings ~1 works %for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 sound_info.corrected_iti = [];%only needed when no thresholds work [file#,trial#,correctorno,start,end] 
 
 sound_info.iti_tone_version = 2;% use version 2 if you have nice data
@@ -105,12 +105,12 @@ end
 
 %% get digidata iteration locations and difference between them
 
-digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, info.virmen_channel);
+digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, info.virmen_channel,alignment_info);
 [file_estimated_trial_info,file_matching_trials] = match_trialsperfile_pulse_simple(digidata_its, trial_info,sound_condition_array,task_info,data); %changes to ITI gap distance for pulse maze
 % [file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,info.sync_base_path,task_info);
 
 % IF ITERATIONS ARE GOOD CAN USE THIS 
-[virmen_it,trial_its,sound_condition_array] = get_virmen_iterations_and_times_digidata_positive_peaks_simple(info.sync_base_path,info.virmen_channel,info.vr_sync_string,sound_condition_array,data);
+[virmen_it,trial_its,sound_condition_array] = get_virmen_iterations_and_times_digidata_positive_peaks_simple(info.sync_base_path,info.virmen_channel,info.vr_sync_string,sound_condition_array,data,alignment_info);
 %% binarize trial sounds and determine sounds for trials without speaker
  % (assumes all sounds are the same distance apart)
 % [sounds_per_file,vr_sound_frames] = binarize_sounds(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info);

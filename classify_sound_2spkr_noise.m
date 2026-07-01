@@ -15,7 +15,7 @@ for t = 1:length(all_trial_sounds)
 %             sounds(current_sound)=2;
 %         end 
 if mult_spkr ==1
-    spkr_loc = find(sound_signal(:,all_trial_sounds(t,1)+11)); %was 5
+    spkr_loc = find(sound_signal(:,all_trial_sounds(t,1)+20)); %was 5//11 works too
     if length(spkr_loc) < size(sound_signal,1) && length(spkr_loc)>0 %sounds that are across ALL speakers are ITI!!
                      tt = tt+1;
                     sound_struc(tt).onset = all_trial_sounds(t,1);

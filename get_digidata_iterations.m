@@ -1,13 +1,30 @@
 %% %loop through each file
-function digidata_its = get_digidata_iterations(sync_base_path,string, virmen_channel)
+function digidata_its = get_digidata_iterations(sync_base_path,string, virmen_channel,alignment_info)
 
 cd(sync_base_path);
 sync_dir = dir(strcat('*',string,'*.abf'));
 num_files = length(sync_dir);
 file_ind = 0;
+if isfield(alignment_info,'signal')
+    files = find(contains({alignment_info.sync_id}, string));
+    num_files = length(files);
+    sync_dir = {};
+    sync_dir = alignment_info(files);
+    for f = 1:length(sync_dir)
+        sync_dir(f).name = sync_dir(f).sync_id;
+    end
+end
+
 for file = 1:num_files
     file_ind = file_ind +1
-    [sync_data,sync_sampling_interval,~]  = abfload(sync_dir(file).name);
+    if isfield(alignment_info,'signal')
+        sync_data = sync_dir(file).signal;
+        sync_sampling_rate = sync_dir(file).sync_sampling_rate;
+        sync_sampling_interval = 1/sync_sampling_rate*1e6;
+    else
+        [sync_data,sync_sampling_interval,~]  = abfload(sync_dir(file).name);
+    end
+    
     sync_sampling_rate = 1/sync_sampling_interval*1e6;
     sync_data=sync_data';
     sync_data=double(sync_data);

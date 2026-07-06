@@ -41,9 +41,7 @@ for file = 1:length(sound_st)
     binary_sounds_imaging_time = zeros(1,length(alignment_info(passive_dir(file)).frame_times));
     
     for p = 1:min([length(sounds_per_file(file).offsets),length(sounds_per_file(file).onsets)])
-        if p == 86
-            a = 1;
-        end
+
         %binarize signal based on digidata time
         binary_sounds(sounds_per_file(file).onsets(p):sounds_per_file(file).offsets(p)) = 1; %in digidata time
         %find onset and offset frames and binarize based on their positions

@@ -24,8 +24,8 @@ for dataset = 1:length(mouse_date)
 
     %load alignment info
     load(strcat(num2str(ss),'/Connie/ProcessedData/',num2str(mm),'/alignment_info.mat'));
-    passive_temp_dir = cellfun(@(x) contains(x,'passive'),{alignment_info.sync_id},'UniformOutput',false);
-    passive_dir = find([passive_temp_dir{1,:}]);
+%     passive_temp_dir = cellfun(@(x) contains(x,'passive'),{alignment_info.sync_id},'UniformOutput',false);
+%     passive_dir = find([passive_temp_dir{1,:}]);
 
     if dataset == 4
         vr_sound_frames_updated = vr_sound_frames;
@@ -39,7 +39,7 @@ for dataset = 1:length(mouse_date)
     frame_lengths = [];
     frame_lengths = cellfun(@length,{alignment_info.frame_times}); %across all imaged files 
     frame_lengths = [0,cumsum(frame_lengths)];
-    passive_to_add = frame_lengths(passive_dir(1));
+%     passive_to_add = frame_lengths(passive_dir(1));
 
     % passive.resp = resp_tr;
     passive.alignment_frames_all = passive_frames.corr_frames;%+passive_to_add;

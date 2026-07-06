@@ -68,7 +68,7 @@ sound_info.incorrect = [];
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
 sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
-sound_info.detection_threshold = 1.5;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.detection_threshold = 3.3;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 
 [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_simple(info,alignment_info,'passive',sound_info);
 

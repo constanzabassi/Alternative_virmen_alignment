@@ -1,4 +1,4 @@
-function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_simple(info,alignment_info,string,sound_info,iti_tone_version) 
+function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_alex(info,alignment_info,string,sound_info,iti_tone_version) 
 %find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr,smoothing_factor) 
 %pc=1 if windows, any other number if mac
 % cd(strcat(server,'/Connie/RawData/',num2str(mouse),'/wavesurfer/',num2str(date)));
@@ -6,22 +6,10 @@ cd(info.sync_base_path);
 sync_dir = dir(strcat('*',string,'*.abf'));
 num_files = length(sync_dir);
 file_ind = 0;
-if isfield(alignment_info,'signal')
-    files = find(contains({alignment_info.sync_id}, string));
-    num_files = length(files);
-    sync_dir = {};
-    sync_dir = alignment_info(files);
-end
 
 for file = 1:num_files
     file_ind = file_ind +1
-    if isfield(alignment_info,'signal')
-        sync_data = sync_dir(file).signal;
-        sync_sampling_rate = sync_dir(file).sync_sampling_rate;
-        sync_sampling_interval = 1/sync_sampling_rate*1e6;
-    else
-        [sync_data,sync_sampling_interval,~]  = abfload(sync_dir(file).name);
-    end
+    [sync_data,sync_sampling_interval,~]  = abfload(sync_dir(file).name);
     sync_sampling_rate = 1/sync_sampling_interval*1e6;
     sync_data=sync_data';
     sync_data=double(sync_data);
@@ -132,8 +120,8 @@ for file = 1:num_files
     all_trial_sounds = true_sound_pairs;
 
     %classify sounds
-[sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr_noise (reversedSoundVector,all_trial_sounds,sound_info.mult_spkr);
-% [sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (reversedSoundVector,all_trial_sounds,sound_info.mult_spkr);
+% [sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr_noise (reversedSoundVector,all_trial_sounds,sound_info.mult_spkr);
+[sound_struc, condition_array, onset_array, offset_array,classified_sounds] = classify_sound_2spkr (reversedSoundVector,all_trial_sounds,sound_info.mult_spkr);
 %load('U:/Connie/condition_per_speaker');
 
 %convert to true condition values if there are multiple speakers
@@ -152,7 +140,7 @@ numSounds = length(onset_array);
 if length(unique(condition_array)) < length(sound_info.speaker_ids)
     numConditions = length(sound_info.speaker_ids);
 else
-    numConditions =  max(condition_array);% length(unique(condition_array));
+    numConditions = length(unique(condition_array));
 end
 expectedDistance = sound_info.distance_within_sounds; %distance_between*sync_sampling_rate; 
 
@@ -163,7 +151,6 @@ onsettimes= [];
 condition_group_array = {};%[];
 % Iterate over each sound
 for i = 1:numSounds
-    i
     onsetTime = onset_array(i);
     offsetTime = offset_array(i);
     condition = condition_array(i);

@@ -107,7 +107,9 @@ for m = 1:length(info.mouse_date)
     
     %to keep track of files take difference of original frame and find when
     %the difference in negative (add 1)
-    file_starts = [find(diff(passive_frames.frames(:,1))<0)+1];
+    no_nan_passive_frames = passive_frames;
+    no_nan_passive_frames.frames(find(isnan(passive_frames.frames(:,1))),1) = 0;
+    file_starts = [find(diff(no_nan_passive_frames.frames(:,1))<0)+1];
     file_starts = [file_starts;length(passive_frames.frames)];
 
     %update passive frames to make sure they are aligned with photostim

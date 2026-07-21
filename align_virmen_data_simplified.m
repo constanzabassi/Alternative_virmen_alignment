@@ -1,11 +1,11 @@
 %% provide all inputs
-info.mousename = 'KN7-1R';%;
+info.mousename = 'KN8-3L';%;
 info.mouse = info.mousename;
-info.date = '2026-07-02'; %;
+info.date = '2026-07-15'; %;
 info.server = 'W:'; %/Volumes/Runyan5
 runyan5 = "V:";
 runyan4 = 'W:';
-data_base = 'AGKN-7-1R_260702';%;
+data_base = 'AGKN-8-3L_260715';%;
 info.experimenter_name = 'Connie';
 info.sync_base_path = [ info.server '/' info.experimenter_name '/RawData/' info.mousename '/wavesurfer/' info.date '/'];
 info.virmen_base = [info.server '/' info.experimenter_name '/RawData/' info.mousename '/virmen/' data_base ];
@@ -83,7 +83,7 @@ sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15;%15; %almost always 15 sometimes 20
 
 sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
-sound_info.detection_threshold = 4;%0.9;%for new recordings ~1 works %for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.detection_threshold = 3;%0.9;%for new recordings ~1 works %for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 sound_info.corrected_iti = [];%only needed when no thresholds work [file#,trial#,correctorno,start,end] 
 
 sound_info.iti_tone_version = 2;% use version 2 if you have nice data
@@ -106,7 +106,7 @@ end
 %% get digidata iteration locations and difference between them
 
 digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, info.virmen_channel,alignment_info);
-[file_estimated_trial_info,file_matching_trials] = match_trialsperfile_pulse_simple(digidata_its, trial_info,sound_condition_array,task_info,data); %changes to ITI gap distance for pulse maze
+% [file_estimated_trial_info,file_matching_trials] = match_trialsperfile_pulse_simple(digidata_its, trial_info,sound_condition_array,task_info,data); %changes to ITI gap distance for pulse maze
 % [file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,info.sync_base_path,task_info);
 
 % IF ITERATIONS ARE GOOD CAN USE THIS 
@@ -121,8 +121,8 @@ digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, 
 % IF ITERATIONS ARE GOOD CAN USE THIS AND SKIP CODE ABOVE - use this if you have all the sounds and are happy with onsets/offsets
 % [sounds_per_file,vr_sound_frames] = binarize_sounds_simple(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info); %can ignore vr_sound_frames
 %% determine reward location 
-[rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_matching_trials,trial_its,digidata_its,trial_info,alignment_info);
-
+% [rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_matching_trials,trial_its,digidata_its,trial_info,alignment_info);
+reward_loc_pure_frames = [];
 %%  align virmen data!
 %(dff,deconv,virmen_aq,alignment_info,data,dataCell,trial_its,stimulus_info,reward_info)
 imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell,trial_its,sounds_per_file,reward_loc_pure_frames);
@@ -131,7 +131,7 @@ plot_random_trials_alignment (imaging,selected_fields);
 %% save data!
 mkdir(info.save_path)
 cd(info.save_path)
-save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames','trial_its','file_matching_trials','digidata_its','info');
+save('alignment_variables','task_info','sound_info','sounds_per_file','virmen_it','sound_st', 'sound_trials', 'sound_condition_array','reward_loc_pure_frames','trial_its','digidata_its','info');
 save('imaging','imaging');
 save('vr_sound_frames',"vr_sound_frames"); 
 vr_sound_frames_updated = fix_vr_sound_frames(vr_sound_frames, imaging, alignment_info);

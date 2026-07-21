@@ -1,11 +1,11 @@
 %% provide all inputs
 info.mousename = 'KW-2-1L';%;
 info.mouse = info.mousename;
-info.date = '2026-07-01'; %;
+info.date = '2026-07-10'; %;
 info.server = 'T:'; %/Volumes/Runyan5
 runyan5 = "V:";
 runyan4 = 'W:';
-data_base = 'AGKW-2-1L_260701';%;
+data_base = 'AGKW-2-1L_260710';%;
 info.experimenter_name = 'Alex';
 info.sync_base_path = [ info.server '/' info.experimenter_name '/RawData/' info.mousename '/ClampX/' info.date '/'];
 info.virmen_base = [info.server '/' info.experimenter_name '/RawData/' info.mousename '/virmen/' data_base ];
@@ -78,12 +78,12 @@ sound_info.sync_sampling_rate = alignment_info(1).sync_sampling_rate;
 sound_info.distance_between_sounds = 2*sound_info.sync_sampling_rate ;%min distance between sounds in digidata units in task is ~4 seconds between reward sound and start of trial- (passive at 10k was about 45000)
 sound_info.distance_within_sounds = 0.2*sound_info.sync_sampling_rate; %for task should be 200
 sound_info.sound_duration = 1*sound_info.sync_sampling_rate;%[0.99*sound_info.sync_sampling_rate,1.1*sound_info.sync_sampling_rate];
-sound_info.correct = .250; %correct_trial_ITI_length in seconds
+sound_info.correct = [];%.250; %correct_trial_ITI_length in seconds
 sound_info.incorrect = .40; %incorrect_trial_ITI_length in seconds
 sound_info.smoothing_factor = 15;%15; %almost always 15 sometimes 20
 
 sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
-sound_info.detection_threshold = .96;%for new recordings ~1 works %for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.detection_threshold = 1.5;%for new recordings ~1 works %for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 sound_info.corrected_iti = [];%only needed when no thresholds work [file#,trial#,correctorno,start,end] 
 
 sound_info.iti_tone_version = 2;% use version 2 if you have nice data
@@ -106,7 +106,7 @@ end
 %% get digidata iteration locations and difference between them
 
 digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, info.virmen_channel,alignment_info);
-[file_estimated_trial_info,file_matching_trials] = match_trialsperfile_pulse_simple(digidata_its, trial_info,sound_condition_array,task_info,data); %changes to ITI gap distance for pulse maze
+% [file_estimated_trial_info,file_matching_trials] = match_trialsperfile_pulse_simple(digidata_its, trial_info,sound_condition_array,task_info,data); %changes to ITI gap distance for pulse maze
 % [file_trial_ids,file_digidata_trial_info] = get_trial_ids(file_matching_trials,file_estimated_trial_info,alignment_info,info.sync_base_path,task_info);
 
 % IF ITERATIONS ARE GOOD CAN USE THIS 
@@ -121,8 +121,8 @@ digidata_its = get_digidata_iterations(info.sync_base_path,info.vr_sync_string, 
 % IF ITERATIONS ARE GOOD CAN USE THIS AND SKIP CODE ABOVE - use this if you have all the sounds and are happy with onsets/offsets
 % [sounds_per_file,vr_sound_frames] = binarize_sounds_simple(virmen_it,sound_condition_array, trial_its,sound_info,sound_st,file_trial_ids,alignment_info); %can ignore vr_sound_frames
 %% determine reward location 
-[rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_matching_trials,trial_its,digidata_its,trial_info,alignment_info);
-
+% [rewards_per_file,reward_loc_pure_frames,reward_loc_end_trial,reward_loc_pure] = find_reward(virmen_it,sound_condition_array,mdl_end_trial_sol,mdl_pure_sol,file_matching_trials,trial_its,digidata_its,trial_info,alignment_info);
+ reward_loc_pure_frames =[];
 %%  align virmen data!
 %(dff,deconv,virmen_aq,alignment_info,data,dataCell,trial_its,stimulus_info,reward_info)
 imaging = align_virmen_data(dff,deconv,virmen_it,alignment_info,data,dataCell,trial_its,sounds_per_file,reward_loc_pure_frames);
@@ -136,38 +136,13 @@ save('imaging','imaging');
 save('vr_sound_frames',"vr_sound_frames"); 
 vr_sound_frames_updated = fix_vr_sound_frames(vr_sound_frames, imaging, alignment_info);
 save('vr_sound_frames_updated',"vr_sound_frames_updated"); 
-info.mousename = 'KN8-3L';%;
-info.mouse = info.mousename;
-info.date = '2026-06-24'; %;
-info.server = 'W:'; %/Volumes/Runyan5
-info.mouse_date = 'KN8-3L/2026-06-24';
-runyan5 = "V:";
-runyan4 = 'W:';
-data_base = 'AGKN-8-3L_260624';%;
-info.sync_base_path = [ info.server '/Connie/RawData/' info.mousename '/wavesurfer/' info.date '/'];
-% info.virmen_base = [info.server '/Connie/RawData/' info.mousename '/virmen/' data_base ];
-info.imaging_base_path=[info.server '/Alex/RawData/' info.mousename '/' info.date '/'];
-info.save_path = [info.server '/Alex/ProcessedData/' info.mousename '/' info.date '/passive/'];
-info.processed_path = [info.server '/Alex/ProcessedData/' info.mousename '/' info.date '/'];
+%%
 
+info.save_path = [info.server '/' info.experimenter_name '/ProcessedData/' info.mousename '/' info.date '/passive/'];
 
-info.sync_base_path = [ info.server '/Alex/RawData/' info.mousename '/ClampX/' info.date '/'];
-% info.virmen_base = [info.server '/Connie/RawData/' info.mousename '/virmen/' data_base ];
-info.imaging_base_path=[info.server '/Alex/RawData/' info.mousename '/' info.date '/'];
-info.save_path = [info.server '/Alex/ProcessedData/' info.mousename '/' info.date '/passive/'];
-info.processed_path = [info.server '/Alex/ProcessedData/' info.mousename '/' info.date '/'];
-
-%% LOAD ALIGNMENT DATA!
-% mkdir(strcat(info.server,'/Connie/ProcessedData/',num2str(info.mouse),'/',num2str(info.date)))
-cd(strcat(info.server,'/Connie/ProcessedData/',num2str(info.mouse),'/',num2str(info.date)));
-if isfile("alignment_info.mat")
-    load("alignment_info.mat");
-end
 %% FIND SOUNDS!
 
 %passive data sounds
-info.save_path = [info.server '/Connie/ProcessedData/' info.mousename '/' info.date '/passive/'];
-
 sound_info.sync_sampling_rate = alignment_info(1).sync_sampling_rate;
 sound_info.distance_between_sounds = 2*sound_info.sync_sampling_rate ;%min distance between sounds in digidata units in task is ~4 seconds between reward sound and start of trial- (passive at 10k was about 45000)
 d1 = datetime(date);
@@ -183,7 +158,7 @@ sound_info.incorrect = [];
 sound_info.smoothing_factor = 15; %almost always 15 sometimes 20
 
 sound_info.unique_detection_threshold = [];%list specific file and threshold wanted [file#1,threshold1; file#2,threshold2]
-sound_info.detection_threshold = 1.35;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
+sound_info.detection_threshold = 1.8;%for 1k (0.45)between 0.4 and 0.5 (0.5 gets rid of more noise) - for some 10k 0.8 (one file #8 in HA10-1L\2023-03-24)
 
 [sound_st, sound_trials, sound_condition_array] = find_spkr_output_task_simple(info,alignment_info,'0001',sound_info);
 
@@ -207,11 +182,9 @@ save('passive_frames','passive_frames')
 
 before_frames = 6;
 after_frames = 91;
-info.server = {'W:'}; %/Volumes/Runyan5
-info.mouse_date = {'KN8-3L/2026-06-26'};
 
 info.server = {'T:'}; %/Volumes/Runyan5
-info.mouse_date = {'KW-2-1L/2026-07-01'};
+info.mouse_date = {'KW-2-1L/2026-07-10'};
 
 
 [imaging_st,temp] = align_passive_imagingst_updated_noise(info,before_frames,after_frames);

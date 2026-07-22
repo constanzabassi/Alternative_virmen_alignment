@@ -76,7 +76,10 @@ for file = 1:length(sound_st)
     title(strcat('Frame times sounds in file # ', num2str(file)));
     plot(binary_sounds_imaging_time,'-k')
     hold off
-    pause(2)
+    if isfield(sound_info, 'interactive') ...
+            && sound_info.interactive
+        pause(2);
+    end
     
     sounds_per_file(file).binary_digidata_times = binary_sounds;
     sounds_per_file(file).binary_frame_times = binary_sounds_imaging_time;

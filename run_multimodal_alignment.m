@@ -11,23 +11,40 @@ clc;
 %% ------------------------------------------------------------------------
 % 1. SESSION CONFIGURATION
 % -------------------------------------------------------------------------
+% Replace placeholder values below with local institutional paths and
+% session-specific acquisition settings before running.
+config.mouse = 'MOUSE_ID';
+config.date = 'YYYY-MM-DD';
+config.server = 'X:';
+config.experimenter = 'EXPERIMENTER';
+config.virmen_file_base = 'VIRMEN_FILE_BASE';
 
-config.mouse = 'KN8-3L';
-config.date = '2026-07-20';
-config.server = 'W:';
-config.experimenter = 'Connie';
-config.virmen_file_base = 'AGKN-8-3L_260720';
+config.condition_file = fullfile( ...
+    'PATH_TO_CONDITION_FILE', ...
+    'condition_per_speaker.mat');
 
-%running sensor calibration file path
 config.calibration_file = fullfile( ...
-    'V:', ...
-    'Connie', ...
-    'ball_calibration_summer2026_investigator', ...
+    'PATH_TO_CALIBRATION_FILE', ...
     'calibration_info.mat');
 
+config.code_folder = fileparts(mfilename('fullpath'));
 
-% Code folder containing alignment helper functions
-config.code_folder = 'C:\Code\GitHub\Alternative_virmen_alignment';
+% config.mouse = 'KN8-3L';
+% config.date = '2026-07-20';
+% config.server = 'W:';
+% config.experimenter = 'Connie';
+% config.virmen_file_base = 'AGKN-8-3L_260720';
+% 
+% %running sensor calibration file path
+% config.calibration_file = fullfile( ...
+%     'V:', ...
+%     'Connie', ...
+%     'ball_calibration_summer2026_investigator', ...
+%     'calibration_info.mat');
+% 
+% 
+% % Code folder containing alignment helper functions
+% config.code_folder = 'C:\Code\GitHub\Alternative_virmen_alignment';
 
 %% ------------------------------------------------------------------------
 % 2. ACQUISITION AND TASK/PASSIVE CONFIGURATION
@@ -370,6 +387,8 @@ if run_options.process_passive
         'passive');
 
     passive_sound_info = sound_info;
+    passive_sound_info.interactive = ...
+    run_options.interactive_qc;
     passive_sound_info = apply_passive_sound_config( ...
         passive_sound_info, ...
         passive_sound, ...

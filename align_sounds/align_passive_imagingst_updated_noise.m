@@ -1,4 +1,4 @@
-function [imaging_st,temp] = align_passive_imagingst_updated_noise(info,before_frames,after_frames)
+function [imaging_st,temp] = align_passive_imagingst_updated_noise(info,before_frames,after_frames,experimenter)
 %updated to make sure sounds are aligned with bad_frames (sometimes
 %slightly after)
 % % before_frames = 7; %same as task
@@ -11,8 +11,8 @@ for m = 1:length(info.mouse_date)
     m
     ss = info.server(m);
     ss = ss {1,1};
-    base_path = strcat(num2str(ss),'\Connie\ProcessedData\',num2str(info.mouse_date{1,m}),'\');
-    passive_savepath = strcat(num2str(ss),'\Connie\ProcessedData\',num2str(info.mouse_date{1,m}),'\passive\');
+    base_path = strcat(num2str(ss),'\' experimenter '\ProcessedData\',num2str(info.mouse_date{1,m}),'\');
+    passive_savepath = strcat(num2str(ss),'\' experimenter '\ProcessedData\',num2str(info.mouse_date{1,m}),'\passive\');
 
     
     %1) load data! 

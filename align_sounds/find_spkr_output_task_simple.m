@@ -1,4 +1,6 @@
 function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_output_task_simple(info,alignment_info,string,sound_info,iti_tone_version) 
+%Reads speaker ABF channels, detects onsets/offsets, classifies conditions, and returns sound/trial structures.
+
 %find_spkr_output_task_new(server,mouse,date,alignment_info,spkr_channel_number,string,detection_threshold,distance_between_sounds,distance_within_sounds,sound_duration,correct,incorrect,mult_spkr,smoothing_factor) 
 %pc=1 if windows, any other number if mac
 % cd(strcat(server,'/Connie/RawData/',num2str(mouse),'/wavesurfer/',num2str(date)));
@@ -328,6 +330,10 @@ for t = 1:length(sound_outputs_trials(file).VR_sounds)
     end
 end
 
-pause
+%do you wnat to pause plotting betweein files?
+if isfield(sound_info, 'interactive') ...
+        && sound_info.interactive
+    pause;
+end
 
 end

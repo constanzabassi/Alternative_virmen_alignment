@@ -1,4 +1,5 @@
 function [all_sounds_together,new_sound_st,sounds_per_file] = binarize_passive_sounds(sound_st,sound_info,alignment_info,varargin)
+%Turns detected sounds into binary masks and imaging-frame indices
 
 %get dir ids for the alignment info!!
 % Parse optional inputs

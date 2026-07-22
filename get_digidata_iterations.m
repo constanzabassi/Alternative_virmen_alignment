@@ -1,5 +1,6 @@
 %% %loop through each file
 function digidata_its = get_digidata_iterations(sync_base_path,string, virmen_channel,alignment_info)
+%  Extracts ViRMEn sync-pulse locations and timing gaps from Digidata files.
 
 cd(sync_base_path);
 sync_dir = dir(strcat('*',string,'*.abf'));

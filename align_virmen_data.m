@@ -1,4 +1,6 @@
 function imaging = align_virmen_data(dff,deconv,virmen_aq,alignment_info,data,dataCell,trial_its,stimulus_info,reward_info)
+%Main join: maps movement, stimulus, and neural activity (dff/deconv) into a per-trial imaging struct in frame space.
+
 %z-score all dff (assumes neurons x time)
 z_dff=zscore(dff,0,2);
 
@@ -31,9 +33,6 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
     imaging(vr_trial).virmen_trial_info = virmen_trial_info(vr_trial);
    % for each trial making sure you are within bounds of this tseries folder's iteration numbers else go to the next folder!
     if start_it>= virmen_aq(file_ind).actual_it_values(1)&& end_it <  virmen_aq(file_ind).actual_it_values(end) 
-        if vr_trial == 44
-            a = 1
-        end
         
         output_data = {}; % file_frame_data equivalent to output_data from CR code
         output_data.frame_times = alignment_info(file_ind).frame_times; % frame times from res galvo signal in digidata time

@@ -5,7 +5,13 @@ function [sound_outputs_all,trialConditions, sound_outputs_trials]=find_spkr_out
 %pc=1 if windows, any other number if mac
 % cd(strcat(server,'/Connie/RawData/',num2str(mouse),'/wavesurfer/',num2str(date)));
 cd(info.sync_base_path);
-sync_dir = dir(strcat('*',string,'*.abf'));
+% sync_dir = dir(strcat('*',string,'*.abf'));
+patterns = "*" + string + "*.abf";
+sync_dir = [];
+
+for i = 1:numel(patterns)
+    sync_dir = [sync_dir; dir(patterns(i))];
+end
 num_files = length(sync_dir);
 file_ind = 0;
 if isfield(alignment_info,'signal')

@@ -6,7 +6,10 @@ possible_it_times = [];
 possible_iterations = [];
 
 cd(base);
-z = dir(strcat('*',string,'*.abf'));
+patterns = "*" + string + "*.abf";
+% z = vertcat(arrayfun(@dir, patterns, 'UniformOutput', false){:});
+tmp = arrayfun(@dir, patterns, 'UniformOutput', false);
+z = vertcat(tmp{:});
 num_files = length(z);
 
 [updated_trial_its] = virmen_it_rough_estimation(data);

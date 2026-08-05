@@ -94,7 +94,11 @@ for vr_trial = 1:length(dataCell.dataCell)-1%1:length(dataCell.dataCell)-1 % vir
 
             % include frames for reward period between end of trial and
             % start of iti
+            if length(imaging(vr_trial).frame_id_events.iti) > 1
             imaging(vr_trial).frame_id_events.reward = imaging(vr_trial).frame_id_events.maze(end)+1:imaging(vr_trial).frame_id_events.iti(1)-1;
+            else
+                continue
+            end
             %imaging(vr_trial).frame_id = sort([imaging(vr_trial).frame_id,imaging(vr_trial).frame_id_events.reward]);   
 
             %use frames to get the neural activity - start from first frame

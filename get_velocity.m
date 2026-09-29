@@ -65,9 +65,11 @@ for acq_number=1:length(alignment_info)
     
     for idx=1:length(frame_times)
         
-
+        if frame_times(idx)-round(frame_period/2) < 0
+            window=frame_times(idx): frame_times(idx)+round(frame_period/2); %get the window of 1/2 the frame_period on either side of the TSeries frame
+        else
         window=frame_times(idx)-round(frame_period/2): frame_times(idx)+round(frame_period/2); %get the window of 1/2 the frame_period on either side of the TSeries frame
-
+        end
         temp_pitch=sync_data(window,pitch_chan);
         temp_roll=sync_data(window,roll_chan);
         temp_yaw=sync_data(window,yaw_chan); 

@@ -1,4 +1,4 @@
-function [imaging_st,temp] = align_passive_imagingst_updated_noise(info,before_frames,after_frames,experimenter)
+function [imaging_st,temp] = align_passive_imagingst_updated_noise(info,before_frames,after_frames,experimenter,varargin)
 %updated to make sure sounds are aligned with bad_frames (sometimes
 %slightly after)
 % % before_frames = 7; %same as task
@@ -28,6 +28,14 @@ for m = 1:length(info.mouse_date)
     load([base_path 'passive\passive_frames.mat']);
     load([base_path 'corrected_velocity.mat']); %contains 3 channels
 %     load([base_path 'velocity_vector.mat']); %combines channels 1 & 2
+%   %assume that if there is extra input it is corridor (needed for when
+%   virmen is missing...)
+    if nargin > 4
+        passive_savepath = strcat(num2str(ss),'\', experimenter, '\ProcessedData\',num2str(info.mouse_date{1,m}),'\passive_corridor\');
+        load([base_path 'passive_corridor\passive_corridor_sound_frames.mat']);
+        passive_frames = passive_corridor_sound_frames;
+    end
+
 
 %     oldFolderName = passive_savepath; % Full path to the current folder
 %     newFolderName = strcat(passive_savepath, 'original'); % Generate a new name
@@ -71,7 +79,7 @@ for m = 1:length(info.mouse_date)
         if length(idx) > 3
     
             % add every occurrence after the third
-            extra_first_repeat = [extra_first_repeat idx(4:end)];
+            extra_first_repeat = [extra_first_repeat idx(4:end)'];
             extra_repeatloc = [extra_repeatloc repmat(repeatloc(i),1,length(idx)-3)];
     
         end

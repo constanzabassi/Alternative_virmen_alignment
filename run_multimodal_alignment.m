@@ -13,49 +13,49 @@ clc;
 % -------------------------------------------------------------------------
 % Replace placeholder values below with local institutional paths and
 % session-specific acquisition settings before running.
-config.mouse = 'MOUSE_ID';
-config.date = 'YYYY-MM-DD';
-config.server = 'X:';
-config.experimenter = 'EXPERIMENTER';
-config.virmen_file_base = 'VIRMEN_FILE_BASE';
-
-config.condition_file = fullfile( ...
-    'PATH_TO_CONDITION_FILE', ...
-    'condition_per_speaker.mat');
-
-config.calibration_file = fullfile( ...
-    'PATH_TO_CALIBRATION_FILE', ...
-    'calibration_info.mat');
-
-config.code_folder = fileparts(mfilename('fullpath'));
-
-% config.mouse = 'KN8-3L';
-% config.date = '2026-07-20';
-% config.server = 'W:';
-% config.experimenter = 'Connie';
-% config.virmen_file_base = 'AGKN-8-3L_260720';
+% config.mouse = 'MOUSE_ID';
+% config.date = 'YYYY-MM-DD';
+% config.server = 'X:';
+% config.experimenter = 'EXPERIMENTER';
+% config.virmen_file_base = 'VIRMEN_FILE_BASE';
 % 
-% %running sensor calibration file path
+% config.condition_file = fullfile( ...
+%     'PATH_TO_CONDITION_FILE', ...
+%     'condition_per_speaker.mat');
+% 
 % config.calibration_file = fullfile( ...
-%     'V:', ...
-%     'Connie', ...
-%     'ball_calibration_summer2026_investigator', ...
+%     'PATH_TO_CALIBRATION_FILE', ...
 %     'calibration_info.mat');
 % 
-% 
-% % Code folder containing alignment helper functions
-% config.code_folder = 'C:\Code\GitHub\Alternative_virmen_alignment';
+% config.code_folder = fileparts(mfilename('fullpath'));
+
+config.mouse = 'KN8-3L';
+config.date = '2026-08-05';
+config.server = 'W:';%'\\runyan-fs-02.bns.pitt.edu\Alex Data';%W:';
+config.experimenter = 'Connie';%'Alex';
+config.virmen_file_base = 'AGKN-8-3L_260805';%'AGKW2-1L_260728';%'AGKN-8-3L_260729';
+
+%running sensor calibration file path
+config.calibration_file = fullfile( ...
+    'V:', ...
+    'Connie', ...
+    'ball_calibration_summer2026_2pplus1', ...
+    'calibration_info.mat');
+
+
+% Code folder containing alignment helper functions
+config.code_folder = 'C:\Code\GitHub\Alternative_virmen_alignment';
 
 %% ------------------------------------------------------------------------
 % 2. ACQUISITION AND TASK/PASSIVE CONFIGURATION
 % -------------------------------------------------------------------------
 
-acquisition.galvo_channel = 6;
-acquisition.virmen_channel = 5;
+acquisition.galvo_channel = 6; %7
+acquisition.virmen_channel = 5; %6
 acquisition.vr_sync_string = 'VR';
-acquisition.passive_sync_string = 'passive';
+acquisition.passive_sync_string = 'passive_02';
 
-speaker.channel_numbers = [4, 7, 8];
+speaker.channel_numbers = [4, 7, 8]; %[4,5,8];%
 speaker.ids = [1, 3, 2];
 speaker.multiple_speakers_per_trial = true;
 
@@ -74,10 +74,10 @@ passive_align_info.after_frames = 91;
 task_sound.distance_between_sounds_sec = 2;
 task_sound.distance_within_sounds_sec = 0.2;
 task_sound.sound_duration_sec = 1;
-task_sound.correct_iti_tone_sec = 0.250;
+task_sound.correct_iti_tone_sec = [];%0.250;
 task_sound.incorrect_iti_tone_sec = 0.40;
 task_sound.smoothing_factor = 15;
-task_sound.detection_threshold = 3;
+task_sound.detection_threshold = 8;
 task_sound.unique_detection_threshold = [];
 task_sound.corrected_iti = [];
 task_sound.iti_tone_version = 2;
@@ -85,7 +85,7 @@ task_sound.iti_tone_version = 2;
 passive_sound.distance_between_sounds_sec = 2;
 passive_sound.sound_duration_sec = 1;
 passive_sound.smoothing_factor = 15;
-passive_sound.detection_threshold = 4;
+passive_sound.detection_threshold = 6;
 passive_sound.unique_detection_threshold = [];
 passive_sound.sensor_change_date = datetime(2023, 7, 3);
 passive_sound.distance_within_sounds_before_change_sec = 0.05;
@@ -99,7 +99,7 @@ run_options.process_task = true;
 run_options.process_passive = true;
 run_options.recompute_alignment = false;
 run_options.plot_task_alignment_qc = true;
-run_options.interactive_qc = false;
+run_options.interactive_qc = true;
 run_options.calculate_velocity = true;
 run_options.plot_velocity_qc = true;
 
@@ -160,26 +160,28 @@ task_info.channel_number = [ ...
 %% ------------------------------------------------------------------------
 % 6. VALIDATE CONFIGURATION AND LOAD SUPPORT FILES
 % -------------------------------------------------------------------------
+% 
+% validate_configuration( ...
+%     config, info, sound_info);
+% 
+% addpath(genpath(config.code_folder));
 
-validate_configuration( ...
-    config, info, sound_info);
+% condition_data = load(fullfile(config.condition_file, ...
+%     'conditions_per_speaker.mat'));
+% conditions_per_speaker = ...
+%     condition_data.conditions_per_speaker;
 
-addpath(genpath(config.code_folder));
-
-condition_data = load(config.condition_file, ...
-    'conditions_per_speaker');
-conditions_per_speaker = ...
-    condition_data.conditions_per_speaker;
+load(strcat('V:/Connie/condition_per_speaker'));
 sound_info.condition_per_speaker = ...
     conditions_per_speaker;
 
-reward_pure = load(fullfile( ...
-    config.reward_model_dir, 'mdl_pure_sol.mat'));
-reward_end = load(fullfile( ...
-    config.reward_model_dir, 'mdl_end_trial_sol.mat'));
-
-mdl_pure_sol = reward_pure.mdl_pure_sol;
-mdl_end_trial_sol = reward_end.mdl_end_trial_sol;
+% reward_pure = load(fullfile( ...
+%     config.reward_model_dir, 'mdl_pure_sol.mat'));
+% reward_end = load(fullfile( ...
+%     config.reward_model_dir, 'mdl_end_trial_sol.mat'));
+% 
+% mdl_pure_sol = reward_pure.mdl_pure_sol;
+% mdl_end_trial_sol = reward_end.mdl_end_trial_sol;
 
 %% ------------------------------------------------------------------------
 % 7. LOAD PROCESSED IMAGING DATA
@@ -243,7 +245,7 @@ end
 % %% Calculate frame-aligned ball velocity
 
 calibration_info = load(config.calibration_file).calibration_info;
-if ~isfile(calibration_file)
+if ~isfile(config.calibration_file)
     error( ...
         'Alignment:MissingCalibrationFile', ...
         'Calibration file not found: %s', ...
@@ -269,13 +271,13 @@ if run_options.process_task
         sound_info, ...
         task_sound, ...
         alignment_info);
-
+% sound_info.detection_threshold = 5;
     %process sound inputs
     [sound_st, sound_trials, sound_condition_array] = ...
         find_spkr_output_task_simple( ...
             info, ...
             alignment_info, ...
-            info.vr_sync_string, ...
+            acquisition.vr_sync_string, ...
             sound_info, ...
             sound_info.iti_tone_version);
 
@@ -295,7 +297,7 @@ if run_options.process_task
         get_virmen_iterations_and_times_digidata_positive_peaks_simple( ...
             info.sync_base_path, ...
             info.virmen_channel, ...
-            info.vr_sync_string, ...
+            acquisition.vr_sync_string, ...
             sound_condition_array, ...
             data, ...
             alignment_info);
@@ -306,7 +308,7 @@ if run_options.process_task
             sound_info, ...
             alignment_info, ...
             'dir_string', ...
-            info.vr_sync_string);
+            acquisition.vr_sync_string);
 
     % Reward-event detection is not enabled in this wrapper.
     reward_loc_pure_frames = [];
@@ -410,7 +412,7 @@ if run_options.process_passive
         binarize_passive_sounds( ...
             passive_sound_st, ...
             passive_sound_info, ...
-            alignment_info);
+            alignment_info,'dir_string',acquisition.passive_sync_string);
 
     if ~isfolder(passive_info.save_path)
         mkdir(passive_info.save_path);

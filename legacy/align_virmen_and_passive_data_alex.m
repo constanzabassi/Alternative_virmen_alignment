@@ -184,7 +184,7 @@ before_frames = 6;
 after_frames = 91;
 
 info.server = {'T:'}; %/Volumes/Runyan5
-info.mouse_date = {'KW-2-1L/2026-07-10'};
+info.mouse_date = {'KW-2-1L/2026-07-23'};
 
 
-[imaging_st,temp] = align_passive_imagingst_updated_noise(info,before_frames,after_frames);
+[imaging_st,temp] = align_passive_imagingst_updated_noise(info,before_frames,after_frames,'Alex');

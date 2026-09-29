@@ -34,6 +34,23 @@ for file = 1:num_files
     sync_data=sync_data';
     sync_data=double(sync_data);
     rawSounds=sync_data(sound_info.spkr_channel_number,:);
+%     rawSounds(2,:) = (rawSounds(2,:)+.206)*200;
+% 
+% threshold = 0.011;
+% 
+% signal_clean = rawSounds(2,:);
+% signal_clean(abs(rawSounds(2,:)) < threshold) = 0;
+
+% window = 10000;
+% signal = rawSounds(2,:);
+% baseline = movmedian(signal, window);
+% signal_corrected = signal - baseline;
+% 
+% threshold = 0.01;
+% signal_clean = signal_corrected;
+% signal_clean(abs(signal_clean) < threshold) = 0;
+% 
+% rawSounds(2,:) = signal_clean;
     frames_times{file} = alignment_info(file).frame_times; 
     rescaled_sounds=[];
     figure(109);clf; title('Rescaled Sounds')
@@ -335,6 +352,7 @@ for t = 1:length(sound_outputs_trials(file).VR_sounds)
         sound_outputs_trials(file).VR_sounds{t,5} = setdiff(find(sound_info.condition_per_speaker(:,id)),[find(sound_info.condition_per_speaker(:,sound_info.speaker_ids(1)));find(sound_info.condition_per_speaker(:,sound_info.speaker_ids(2)));find(sound_info.condition_per_speaker(:,sound_info.speaker_ids(3)))]);
     end
 end
+
 
 %do you wnat to pause plotting betweein files?
 if isfield(sound_info, 'interactive') ...
